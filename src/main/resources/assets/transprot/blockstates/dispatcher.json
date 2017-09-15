@@ -1,0 +1,49 @@
+{
+    "forge_marker": 1,
+    "defaults": {
+        "model": "transprot:dispatcher",
+        "textures": {
+            "particle": "blocks/iron_block",
+            "body": "blocks/iron_block",
+            "line": "blocks/gold_block",
+            "pile": "items/ender_pearl",
+            "pileTop": "blocks/slime",
+            "back": "blocks/hopper_inside"
+        }
+    },
+    "variants": {
+        "normal": [
+            {
+            }
+        ],
+        "inventory": [
+            {
+                "transform": "forge:default-block",
+                "y": 90
+            }
+        ],
+        "facing": {
+            "east": {
+                "y": 90,
+                "x": 270
+            },
+            "west": {
+                "y": 270,
+                "x": 270
+            },
+            "north": {
+                "y": 180,
+                "x": 90
+            },
+            "south": {
+                "y": 180,
+                "x": 270
+            },
+            "down": {
+            },
+            "up": {
+                "x": 180
+            }
+        }
+    }
+}

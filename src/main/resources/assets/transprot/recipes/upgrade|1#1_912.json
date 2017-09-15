@@ -1,0 +1,19 @@
+{
+  "result": {
+    "item": "transprot:upgrade",
+    "data": 1
+  },
+  "pattern": [
+    "ueu"
+  ],
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "u": {
+      "item": "transprot:upgrade",
+      "data": 0
+    },
+    "e": {
+      "item": "minecraft:gold_ingot"
+    }
+  }
+}
