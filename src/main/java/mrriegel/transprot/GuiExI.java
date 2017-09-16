@@ -18,11 +18,15 @@ import mrriegel.limelib.gui.GuiDrawer;
 import mrriegel.limelib.gui.GuiDrawer.Direction;
 import mrriegel.limelib.gui.button.CommonGuiButton;
 import mrriegel.limelib.gui.element.AbstractSlot;
+import mrriegel.limelib.gui.element.AbstractSlot.FluidSlot;
 import mrriegel.limelib.gui.element.AbstractSlot.ItemSlot;
 import mrriegel.limelib.helper.ColorHelper;
+import mrriegel.limelib.helper.NBTHelper;
+import mrriegel.limelib.network.PacketHandler;
 import mrriegel.limelib.plugin.JEI;
 import mrriegel.limelib.util.StackWrapper;
 import mrriegel.limelib.util.Utils;
+import mrriegel.transprot.Enums.MessageAction;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.util.ITooltipFlag;
@@ -155,18 +159,26 @@ public class GuiExI extends CommonGuiContainer {
 		//		new MessageRequest().handleMessage(mc.player, nbt, Side.CLIENT);
 	}
 
-	protected void sendRequest(AbstractSlot slot, int mouseButton) {
+	protected void sendSlot(AbstractSlot slot, int mouseButton) {
+		if(mouseButton!=0&&mouseButton!=1)
+			return;
 		NBTTagCompound nbt = new NBTTagCompound();
-//		if (slot != null)
-//			addSlot(slot, nbt);
-		nbt.setInteger("mouse", mouseButton);
-		nbt.setBoolean("shift", isShiftKeyDown());
-		nbt.setBoolean("ctrl", isCtrlKeyDown());
-		nbt.setInteger("SIZE", slot != null ? slot.amount : 0);
-		//		PacketHandler.sendToServer(new MessageRequest(nbt));
+		NBTHelper.set(nbt, "action", MessageAction.SLOT);
+		if (slot instanceof ItemSlot) {
+			if (!((ItemSlot) slot).stack.isEmpty())
+				NBTHelper.set(nbt, "slot", ((ItemSlot) slot).stack.writeToNBT(new NBTTagCompound()));
+		} else if (slot instanceof FluidSlot) {
+			if (((FluidSlot) slot).fluid != null)
+				NBTHelper.set(nbt, "slot", ((FluidSlot) slot).fluid.writeToNBT(new NBTTagCompound()));
+		} else
+			throw new RuntimeException();
+		NBTHelper.set(nbt, "mouse", mouseButton);
+		NBTHelper.set(nbt, "shift", isShiftKeyDown());
+		NBTHelper.set(nbt, "ctrl", isCtrlKeyDown());
+		PacketHandler.sendToServer(new MessageInventory(nbt));
 	}
 
-//	abstract protected void addSlot(AbstractSlot slot, NBTTagCompound nbt);
+	//	abstract protected void addSlot(AbstractSlot slot, NBTTagCompound nbt);
 
 	@Override
 	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
@@ -178,15 +190,10 @@ public class GuiExI extends CommonGuiContainer {
 				JEI.setFilterText(searchBar.getText());
 		}
 		if (canClick()) {
-			if (over != null && mc.player.inventory.getItemStack() == null)
-				sendRequest(over, mouseButton);
-			else if (mc.player.inventory.getItemStack() != null && isPointInRegion(7, 7, 18 * 13, 18 * 6, GuiDrawer.getMouseX(), GuiDrawer.getMouseY())) {
-				NBTTagCompound nbt = new NBTTagCompound();
-				mc.player.inventory.getItemStack().writeToNBT(nbt);
-				nbt.setInteger("button", 1001);
-				nbt.setInteger("mouse", mouseButton);
-				//				PacketHandler.sendToServer(new MessageRequest(nbt));
-			}
+			if (over != null)
+				sendSlot(over, mouseButton);
+			else
+				;//TODO dump item/fluid
 			lastClick = System.currentTimeMillis();
 		}
 	}
@@ -266,8 +273,9 @@ public class GuiExI extends CommonGuiContainer {
 					return true;
 			} else if (word.startsWith("#")) {
 				List<String> tooltip = stack.getTooltip(mc.player, mc.gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
+				if (!tooltip.isEmpty() && tooltip.get(0).contains(stack.getDisplayName()))
+					tooltip.remove(0);
 				for (String s : tooltip) {
-					s.replaceAll(stack.getDisplayName(), " ");
 					if (TextFormatting.getTextWithoutFormattingCodes(s).toLowerCase().contains(word.substring(1))) {
 						return true;
 					}

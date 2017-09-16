@@ -7,6 +7,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import com.google.common.collect.Lists;
 
 import mrriegel.limelib.gui.CommonContainer;
+import mrriegel.limelib.gui.slot.SlotGhost;
 import mrriegel.limelib.util.FilterItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -19,6 +20,7 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.inventory.SlotCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.wrapper.PlayerMainInvWrapper;
@@ -26,12 +28,21 @@ import net.minecraftforge.items.wrapper.PlayerMainInvWrapper;
 public class ContainerExI extends CommonContainer<EntityPlayer> {
 
 	public boolean space, shift, ctrl;
+	IRecipe recipe;
 
 	public ContainerExI(InventoryPlayer invPlayer) {
 		super(invPlayer, invPlayer.player, Pair.of("matrix", new InventoryBasic("matrix", false, 9)), Pair.of("result", new InventoryCraftResult()));
 		invs.put("matrix", new InventoryCrafting(this, 3, 3));
 		for (int i = 0; i < getMatrixList().size(); i++)
 			getMatrix().setInventorySlotContents(i, getMatrixList().get(i));
+		new SlotGhost(getMatrix(), 0, 0, 0) {
+			@Override
+			public boolean canTakeStack(EntityPlayer playerIn) {
+//				ELCH
+				this.putStack(playerIn.inventory.getItemStack());
+				return false;
+			}
+		};
 		addSlotToContainer(new SlotCrafting(invPlayer.player, getMatrix(), (IInventory) invs.get("result"), 0, 44, 196) {
 			@Override
 			public ItemStack onTake(EntityPlayer playerIn, ItemStack stack) {
@@ -188,7 +199,9 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 	@Override
 	public void onCraftMatrixChanged(IInventory inventoryIn) {
 		super.onCraftMatrixChanged(inventoryIn);
-		invs.get("result").setInventorySlotContents(0, CraftingManager.findMatchingResult(getMatrix(), invPlayer.player.world));
+		recipe = CraftingManager.findMatchingRecipe(getMatrix(), getPlayer().world);
+		if (recipe != null)
+			invs.get("result").setInventorySlotContents(0, recipe.getCraftingResult(getMatrix()));
 	}
 
 	@Override

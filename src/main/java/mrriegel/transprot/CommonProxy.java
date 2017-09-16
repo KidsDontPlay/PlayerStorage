@@ -16,6 +16,7 @@ public class CommonProxy implements IGuiHandler {
 	public void preInit(FMLPreInitializationEvent event) {
 		ConfigHandler.refreshConfig(event.getSuggestedConfigurationFile());
 		ExInventory.register();
+		PlayerStorage.interfac.registerBlock();
 	}
 
 	public void init(FMLInitializationEvent event) {

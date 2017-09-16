@@ -1,7 +1,9 @@
 package mrriegel.transprot;
 
+import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.tile.CommonTile;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.capabilities.Capability;
@@ -38,6 +40,18 @@ public class TileInterface extends CommonTile {
 
 	public void setPlayer(String player) {
 		this.player = player;
+	}
+
+	@Override
+	public void readFromNBT(NBTTagCompound compound) {
+		player = NBTHelper.get(compound, "player", String.class);
+		super.readFromNBT(compound);
+	}
+
+	@Override
+	public NBTTagCompound writeToNBT(NBTTagCompound compound) {
+		NBTHelper.set(compound, "player", player);
+		return super.writeToNBT(compound);
 	}
 
 }

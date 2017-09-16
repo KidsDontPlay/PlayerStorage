@@ -8,15 +8,17 @@ import java.util.function.Predicate;
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.PacketHandler;
 import mrriegel.limelib.util.StackWrapper;
+import mrriegel.transprot.Enums.GuiMode;
+import mrriegel.transprot.Enums.Sort;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.capabilities.Capability;
@@ -27,7 +29,6 @@ import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingJumpEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.Clone;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.FluidTankProperties;
@@ -48,26 +49,29 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	EntityPlayer player;
 	List<StackWrapper> items = new LinkedList<>();
 	List<FluidStack> fluids = new LinkedList<>();
-	List<CraftingPattern> patterns = new LinkedList<>();
-	List<CraftingTask> tasks = new LinkedList<>();
+	//	List<CraftingPattern> patterns = new LinkedList<>();
+	//	List<CraftingTask> tasks = new LinkedList<>();
 	int itemLimit = 2000, fluidLimit = 20000;
 	boolean dirty = true;
-	public List<ItemStack> matrix = new ArrayList<>();
+	public List<ItemStack> matrix = NonNullList.withSize(9, ItemStack.EMPTY);
 
-	public boolean jeiSearch, topdown;
-	public Sort sort;
+	public boolean jeiSearch = false, topdown = true;
+	public Sort sort = Sort.NAME;
+	public GuiMode mode = GuiMode.ITEM;
 
 	private void update() {
-		//TODO
 		if (dirty && player.ticksExisted % 4 == 0) {
 			sync((EntityPlayerMP) player);
+			items.removeIf(s -> s.getSize() == 0);
+			fluids.removeIf(s -> s == null || s.amount == 0);
+
 			dirty = false;
 		}
-		if (!tasks.isEmpty()) {
-			CraftingTask t = tasks.remove(0);
-			t.step();
-			tasks.add(t);
-		}
+		//		if (!tasks.isEmpty()) {
+		//			CraftingTask t = tasks.remove(0);
+		//			t.step();
+		//			tasks.add(t);
+		//		}
 	}
 
 	public List<StackWrapper> getItems() {
@@ -107,7 +111,6 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 				else
 					return ItemHandlerHelper.copyStackWithSize(s.getStack(), s.getSize());
 			}
-		items.removeIf(s -> s.getSize() == 0);
 		dirty = true;
 		return ItemStack.EMPTY;
 	}
@@ -116,24 +119,25 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		return extractItem(s -> ItemHandlerHelper.canItemStacksStack(s, stack), size, simulate);
 	}
 
-	public FluidStack insertFluid(FluidStack stack, boolean simulate) {
+	public int insertFluid(FluidStack stack, boolean simulate) {
 		int fluidCount = getFluidCount();
-		FluidStack rest = stack.copy();
-		rest.amount = Math.max(0, ConfigHandler.infiniteSpace ? 0 : (stack.amount + fluidCount) - fluidLimit);
-		if (rest.amount == stack.amount)
-			return rest;
+		int canFill = ConfigHandler.infiniteSpace ? stack.amount : Math.max(0, fluidLimit - (stack.amount + fluidCount));
+		if (canFill == 0)
+			return 0;
 		for (FluidStack s : fluids)
 			if (s.isFluidEqual(stack)) {
 				if (!simulate)
-					s.amount += stack.amount - rest.amount;
+					s.amount += stack.amount - canFill;
 				dirty = true;
-				return rest;
+				return canFill;
 			}
-		stack = stack.copy();
-		if (!simulate)
-			stack.amount -= rest.amount;
+		if (!simulate) {
+			stack = stack.copy();
+			stack.amount = canFill;
+			fluids.add(stack);
+		}
 		dirty = true;
-		return rest;
+		return canFill;
 	}
 
 	public FluidStack extractFluid(Predicate<FluidStack> pred, int size, boolean simulate) {
@@ -152,7 +156,6 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 				dirty = true;
 				return res;
 			}
-		fluids.removeIf(s -> s == null || s.amount == 0);
 		return null;
 	}
 
@@ -188,6 +191,10 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		NBTHelper.set(nbt, "itemLimit", itemLimit);
 		NBTHelper.set(nbt, "fluidLimit", fluidLimit);
 		NBTHelper.setList(nbt, "matrix", matrix);
+		NBTHelper.set(nbt, "jei", jeiSearch);
+		NBTHelper.set(nbt, "top", topdown);
+		NBTHelper.set(nbt, "sort", sort);
+		NBTHelper.set(nbt, "mode", mode);
 		return nbt;
 	}
 
@@ -204,6 +211,10 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		itemLimit = NBTHelper.get(nbt, "itemLimit", Integer.class);
 		fluidLimit = NBTHelper.get(nbt, "fluidLimit", Integer.class);
 		matrix = NBTHelper.getList(nbt, "matrix", ItemStack.class);
+		jeiSearch = NBTHelper.get(nbt, "jei", Boolean.class);
+		topdown = NBTHelper.get(nbt, "top", Boolean.class);
+		sort = NBTHelper.get(nbt, "sort", Sort.class);
+		mode = NBTHelper.get(nbt, "mode", GuiMode.class);
 	}
 
 	@CapabilityInject(ExInventory.class)
@@ -231,17 +242,6 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		if (player == null)
 			return null;
 		return player.getCapability(EXINVENTORY, null);
-	}
-
-	@SubscribeEvent
-	public static void jump(LivingJumpEvent event) {
-		if (event.getEntityLiving() instanceof EntityPlayer) {
-			if (event.getEntityLiving().isSneaking()) {
-				event.getEntityLiving().getCapability(EXINVENTORY, null).insertItem(new ItemStack(Blocks.GOLD_BLOCK), false);
-				System.out.println("added");
-			} else
-				System.out.println(event.getEntityLiving().getCapability(EXINVENTORY, null).getItems());
-		}
 	}
 
 	@SubscribeEvent
@@ -279,8 +279,9 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 	@SubscribeEvent
 	public static void join(EntityJoinWorldEvent event) {
-		if (event.getEntity() instanceof EntityPlayerMP)
+		if (event.getEntity() instanceof EntityPlayerMP) {
 			sync((EntityPlayerMP) event.getEntity());
+		}
 	}
 
 	public static void sync(EntityPlayerMP player) {
@@ -327,11 +328,13 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 		@Override
 		public int getSlots() {
-			return ei.items.size();
+			return ei.items.size() + 1;
 		}
 
 		@Override
 		public ItemStack getStackInSlot(int slot) {
+			if (ei.items.size() <= slot)
+				return ItemStack.EMPTY;
 			return ei.items.get(slot).getStack();
 		}
 
@@ -342,7 +345,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 		@Override
 		public ItemStack extractItem(int slot, int amount, boolean simulate) {
-			return ei.extractItem(ei.items.get(slot).getStack(), amount, simulate);
+			return ei.extractItem(getStackInSlot(slot), amount, simulate);
 		}
 
 		@Override
@@ -357,7 +360,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 		@Override
 		public int fill(FluidStack resource, boolean doFill) {
-			return resource.amount - ei.insertFluid(resource, !doFill).amount;
+			return ei.insertFluid(resource, !doFill);
 		}
 
 		@Override
@@ -373,15 +376,6 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 				return null;
 		}
 
-	}
-
-	static public enum Sort {
-		AMOUNT, NAME, MOD;
-		private static Sort[] vals = values();
-
-		public Sort next() {
-			return vals[(this.ordinal() + 1) % vals.length];
-		}
 	}
 
 }
