@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import mrriegel.limelib.gui.CommonContainer;
 import mrriegel.limelib.gui.slot.SlotGhost;
 import mrriegel.limelib.util.FilterItem;
+import mrriegel.transprot.Enums.Sort;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.ClickType;
@@ -29,6 +30,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 
 	public boolean space, shift, ctrl;
 	IRecipe recipe;
+	ExInventory ei = ExInventory.getInventory(getPlayer());
 
 	public ContainerExI(InventoryPlayer invPlayer) {
 		super(invPlayer, invPlayer.player, Pair.of("matrix", new InventoryBasic("matrix", false, 9)), Pair.of("result", new InventoryCraftResult()));
@@ -38,7 +40,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 		new SlotGhost(getMatrix(), 0, 0, 0) {
 			@Override
 			public boolean canTakeStack(EntityPlayer playerIn) {
-//				ELCH
+				//				ELCH
 				this.putStack(playerIn.inventory.getItemStack());
 				return false;
 			}
@@ -59,7 +61,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 				detectAndSendChanges();
 				for (int i = 0; i < getMatrix().getSizeInventory(); i++)
 					if (getMatrix().getStackInSlot(i) == null && lis.get(i) != null) {
-						ItemStack req = ExInventory.getInventory(playerIn).extractItem(new FilterItem(lis.get(i), true, false, true), 1, false);
+						ItemStack req = ei.extractItem(new FilterItem(lis.get(i), true, false, true), 1, false);
 						getMatrix().setInventorySlotContents(i, req);
 					}
 				detectAndSendChanges();
@@ -79,23 +81,24 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 	}
 
 	public List<ItemStack> getMatrixList() {
-		return ExInventory.getInventory(getPlayer()).matrix;
+		return ei.matrix;
 	}
 
 	protected void saveMatrix() {
-		ExInventory.getInventory(getPlayer()).matrix.clear();
 		for (int i = 0; i < 9; i++)
-			ExInventory.getInventory(getPlayer()).matrix.add(getMatrix().getStackInSlot(i));
+			ei.matrix.set(i, getMatrix().getStackInSlot(i));
 	}
 
-	//	abstract public Sort getSort();
+	public Sort getSort() {
+		return ei.sort;
+	}
 
 	public boolean isTopdown() {
-		return true;
+		return ei.topdown;
 	}
 
 	public boolean isJEI() {
-		return true;
+		return ei.jeiSearch;
 	}
 
 	@Override
@@ -135,26 +138,26 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 				ItemStack stack = getSlot(slotId).getStack();
 				for (Slot s : getSlotsFor(player.inventory)) {
 					if (s.getHasStack() && s.getStack().isItemEqual(stack)) {
-						ItemStack rest = ExInventory.getInventory(player).insertItem(s.getStack(), false);
+						ItemStack rest = ei.insertItem(s.getStack(), false);
 						s.putStack(rest);
-						if (rest != null)
+						if (!rest.isEmpty())
 							break;
 					}
 				}
 				detectAndSendChanges();
-				return null;
+				return ItemStack.EMPTY;
 			}
 			if (ctrl && space && getSlot(slotId) != null && getSlot(slotId).getHasStack() && getSlot(slotId).inventory instanceof InventoryPlayer && getSlot(slotId).getSlotIndex() > 8) {
 				for (Slot s : getSlotsFor(player.inventory)) {
 					if (s.getSlotIndex() <= 8)
 						continue;
 					if (s.getHasStack()) {
-						ItemStack rest = ExInventory.getInventory(player).insertItem(s.getStack(), false);
+						ItemStack rest = ei.insertItem(s.getStack(), false);
 						s.putStack(rest);
 					}
 				}
 				detectAndSendChanges();
-				return null;
+				return ItemStack.EMPTY;
 			}
 		}
 		return super.slotClick(slotId, dragType, clickTypeIn, player);

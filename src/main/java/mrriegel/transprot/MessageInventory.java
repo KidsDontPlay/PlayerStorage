@@ -13,7 +13,6 @@ import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
-import net.minecraftforge.fluids.capability.IFluidTankProperties;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.wrapper.PlayerMainInvWrapper;
@@ -51,14 +50,19 @@ public class MessageInventory extends AbstractMessage {
 				ei.sort = ei.sort.next();
 				break;
 			case GUIMODE:
-				ei.mode = GuiMode.values()[(ei.mode.ordinal() + 1) % 2];
+				//				ei.mode = GuiMode.values()[(ei.mode.ordinal() + 1) % 2];
+				ei.mode = ei.mode == GuiMode.ITEM ? GuiMode.FLUID : GuiMode.ITEM;
+				if (!player.world.isRemote)
+					player.openGui(PlayerStorage.instance, 0, player.world, 0, 0, 0);
 				break;
 			case SLOT:
-				if (player.world.isRemote || slot == null)
+				if (player.world.isRemote)
 					break;
 				ItemStack hand = player.inventory.getItemStack().copy();
 				if (ei.mode == GuiMode.ITEM) {
 					if (hand.isEmpty()) {
+						if (slot == null)
+							break;
 						ItemStack stack = new ItemStack(slot);
 						int size = ctrl ? 1 : mouse == 0 ? stack.getMaxStackSize() : Math.max(1, stack.getMaxStackSize() / 2);
 						ItemStack newStack = ei.extractItem(stack, size, false);
@@ -84,28 +88,47 @@ public class MessageInventory extends AbstractMessage {
 					}
 					con.detectAndSendChanges();
 				} else {
+					int size = (shift ? 10 : 1) * Fluid.BUCKET_VOLUME;
 					if (hand.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {
-						FluidStack stack = FluidStack.loadFluidStackFromNBT(slot);
 						IFluidHandlerItem handler = hand.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
-						int size = (shift ? 10 : 1) * Fluid.BUCKET_VOLUME;
-						FluidStack resource = stack.copy();
 						if (mouse == 0) {
+							if (slot == null)
+								break;
+							FluidStack resource = FluidStack.loadFluidStackFromNBT(slot).copy();
 							resource.amount = size;
 							int filled = handler.fill(resource, false);
 							FluidStack newStack = ei.extractFluid(resource, filled, false);
 							handler.fill(newStack, true);
 						} else if (mouse == 1) {
-							resource.amount = size;
-							int filled = ei.insertFluid(resource, true);
-							resource.amount = filled;
-							FluidStack newStack = handler.drain(resource, true);
+							FluidStack bucket = handler.drain(size, false);
+							int filled = ei.insertFluid(bucket, true);
+							FluidStack newStack = handler.drain(filled, true);
 							ei.insertFluid(newStack, false);
 						}
-
+						hand = handler.getContainer();
+						player.inventory.setItemStack(hand);
+						((EntityPlayerMP) player).connection.sendPacket(new SPacketSetSlot(-1, 0, hand));
+					} else if (hand.isEmpty() && slot != null) {
+						FluidStack resource = FluidStack.loadFluidStackFromNBT(slot).copy();
+						for (int i = 0; i < player.inventory.getSizeInventory(); i++) {
+							ItemStack s = player.inventory.getStackInSlot(i);
+							if (s.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {
+								IFluidHandlerItem fh = s.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
+								resource.amount = size;
+								int filled = fh.fill(resource, false);
+								FluidStack newStack = ei.extractFluid(resource, filled, false);
+								if (fh.fill(newStack, true) > 0) {
+									player.inventory.setInventorySlotContents(i, fh.getContainer());
+									con.detectAndSendChanges();
+									break;
+								}
+							}
+						}
 					}
 				}
 				break;
 			}
+			ei.dirty = true;
 		}
 	}
 

@@ -60,13 +60,14 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	public GuiMode mode = GuiMode.ITEM;
 
 	private void update() {
-		if (dirty && player.ticksExisted % 4 == 0) {
-			sync((EntityPlayerMP) player);
+		if (dirty && player.openContainer instanceof ContainerExI) {
 			items.removeIf(s -> s.getSize() == 0);
 			fluids.removeIf(s -> s == null || s.amount == 0);
-
+			sync((EntityPlayerMP) player);
 			dirty = false;
 		}
+		//				fluids.clear();
+		//		sort=Sort.NAME;	
 		//		if (!tasks.isEmpty()) {
 		//			CraftingTask t = tasks.remove(0);
 		//			t.step();
@@ -120,14 +121,17 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	}
 
 	public int insertFluid(FluidStack stack, boolean simulate) {
+		if (stack == null)
+			return 0;
 		int fluidCount = getFluidCount();
 		int canFill = ConfigHandler.infiniteSpace ? stack.amount : Math.max(0, fluidLimit - (stack.amount + fluidCount));
 		if (canFill == 0)
 			return 0;
+		canFill = Math.min(stack.amount, canFill);
 		for (FluidStack s : fluids)
 			if (s.isFluidEqual(stack)) {
 				if (!simulate)
-					s.amount += stack.amount - canFill;
+					s.amount += canFill;
 				dirty = true;
 				return canFill;
 			}
@@ -147,7 +151,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 			if (pred.test(s)) {
 				FluidStack res = null;
 				int drain = Math.min(s.amount, size);
-				if (drain < s.amount) {
+				if (drain <= s.amount) {
 					if (!simulate)
 						s.amount -= drain;
 					res = s.copy();
@@ -160,7 +164,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	}
 
 	public FluidStack extractFluid(FluidStack stack, int size, boolean simulate) {
-		return extractFluid(s -> stack.isFluidEqual(stack), size, simulate);
+		return extractFluid(s -> s.isFluidEqual(stack), size, simulate);
 	}
 
 	public int getItemCount() {

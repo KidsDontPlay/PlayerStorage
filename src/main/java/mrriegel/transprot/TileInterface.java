@@ -1,7 +1,11 @@
 package mrriegel.transprot;
 
+import java.util.Collections;
+import java.util.List;
+
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.tile.CommonTile;
+import mrriegel.limelib.tile.IHUDProvider;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
@@ -11,7 +15,7 @@ import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.items.CapabilityItemHandler;
 
-public class TileInterface extends CommonTile {
+public class TileInterface extends CommonTile implements IHUDProvider{
 
 	private String player;
 
@@ -52,6 +56,11 @@ public class TileInterface extends CommonTile {
 	public NBTTagCompound writeToNBT(NBTTagCompound compound) {
 		NBTHelper.set(compound, "player", player);
 		return super.writeToNBT(compound);
+	}
+
+	@Override
+	public List<String> getData(boolean sneak, EnumFacing facing) {
+		return Collections.singletonList("Owner: "+player);
 	}
 
 }

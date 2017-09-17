@@ -22,6 +22,7 @@ public class CommonProxy implements IGuiHandler {
 	public void init(FMLInitializationEvent event) {
 		NetworkRegistry.INSTANCE.registerGuiHandler(PlayerStorage.instance, this);
 		PacketHandler.registerMessage(MessageCapaSync.class, Side.CLIENT);
+		PacketHandler.registerMessage(MessageInventory.class,Side.SERVER);
 	}
 
 	public void postInit(FMLPostInitializationEvent event) {
