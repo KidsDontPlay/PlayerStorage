@@ -1,5 +1,6 @@
-package mrriegel.transprot;
+package mrriegel.playerstorage;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,18 +17,21 @@ import mrriegel.limelib.gui.GuiDrawer.Direction;
 import mrriegel.limelib.gui.button.CommonGuiButton;
 import mrriegel.limelib.gui.button.CommonGuiButton.Design;
 import mrriegel.limelib.gui.element.AbstractSlot;
+import mrriegel.limelib.gui.element.GuiElement;
 import mrriegel.limelib.gui.element.AbstractSlot.FluidSlot;
 import mrriegel.limelib.gui.element.AbstractSlot.ItemSlot;
 import mrriegel.limelib.gui.element.ScrollBar;
+import mrriegel.limelib.helper.ColorHelper;
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.PacketHandler;
 import mrriegel.limelib.plugin.JEI;
 import mrriegel.limelib.util.StackWrapper;
 import mrriegel.limelib.util.Utils;
-import mrriegel.transprot.Enums.GuiMode;
-import mrriegel.transprot.Enums.MessageAction;
+import mrriegel.playerstorage.Enums.GuiMode;
+import mrriegel.playerstorage.Enums.MessageAction;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Items;
@@ -47,47 +51,49 @@ public class GuiExI extends CommonGuiContainer {
 	public List<FluidStack> fluids;
 	protected List<AbstractSlot<?>> slots;
 	protected long lastClick;
-	protected CommonGuiButton sort, direction, clear, jei, modeButton;
+	protected CommonGuiButton sort, direction, clear, jei, modeButton, inc, dec;
 	protected GuiTextField searchBar;
 	protected int currentPos = 0, maxPos = 0;
 	protected AbstractSlot<?> over;
 	protected final GuiMode mode;
 	protected ScrollBar scrollBar;
 
-	private int gridWidth = 12, gridHeight = 6;
+	private int gridWidth = 12, gridHeight;
+	private ContainerExI con;
 
 	public boolean canClick() {
-		return System.currentTimeMillis() > lastClick + 200L;
+		return System.currentTimeMillis() > lastClick + 150L;
 	}
 
 	public GuiExI(ContainerExI inventorySlotsIn) {
 		super(inventorySlotsIn);
-		ySize = 220;
-		xSize += 72;
 		lastClick = System.currentTimeMillis();
-		mode = Validate.notNull(getContainer().ei.mode);
-	}
-
-	private ContainerExI getContainer() {
-		return (ContainerExI) inventorySlots;
+		con = inventorySlotsIn;
+		mode = Validate.notNull(con.ei.mode);
+		gridHeight = con.ei.gridHeight;
 	}
 
 	@Override
 	public void initGui() {
+		xSize = 248;
+		ySize = 112 + 18 * gridHeight;
 		super.initGui();
-		searchBar = new GuiTextField(0, fontRenderer, guiLeft + 154, guiTop + 121, 85, fontRenderer.FONT_HEIGHT);
+		searchBar = new GuiTextField(0, fontRenderer, guiLeft + 154, guiTop + 13 + 18 * gridHeight, 85, fontRenderer.FONT_HEIGHT);
 		searchBar.setMaxStringLength(30);
 		searchBar.setEnableBackgroundDrawing(!false);
 		searchBar.setVisible(true);
 		searchBar.setTextColor(16777215);
 		searchBar.setFocused(true);
-		buttonList.add(sort = new CommonGuiButton(MessageAction.SORT.ordinal(), guiLeft + 7, guiTop + 116, 42, 12, null).setDesign(Design.SIMPLE));
-		buttonList.add(direction = new CommonGuiButton(MessageAction.DIRECTION.ordinal(), guiLeft + 55, guiTop + 116, 42, 12, null).setDesign(Design.SIMPLE));
-		buttonList.add(clear = new CommonGuiButton(MessageAction.CLEAR.ordinal(), guiLeft + 62, guiTop + 137, 7, 7, null).setTooltip("Clear grid").setDesign(Design.SIMPLE));
-		buttonList.add(modeButton = new CommonGuiButton(MessageAction.GUIMODE.ordinal(), guiLeft - 23, guiTop + ySize - 20, 20, 20, "").setTooltip("Toggle Mode").setDesign(Design.SIMPLE));
+		buttonList.add(sort = new CommonGuiButton(MessageAction.SORT.ordinal(), guiLeft + 7, guiTop + 11 + 18 * gridHeight, 42, 12, null).setDesign(Design.SIMPLE));
+		buttonList.add(direction = new CommonGuiButton(MessageAction.DIRECTION.ordinal(), guiLeft + 55, guiTop + 11 + 18 * gridHeight, 42, 12, null).setDesign(Design.SIMPLE));
+		if (mode == GuiMode.ITEM)
+			buttonList.add(clear = new CommonGuiButton(MessageAction.CLEAR.ordinal(), guiLeft + 62, guiTop + 29 + 18 * gridHeight, 7, 7, null).setTooltip("Clear grid").setDesign(Design.SIMPLE));
 		if (LimeLib.jeiLoaded)
-			buttonList.add(jei = new CommonGuiButton(MessageAction.JEI.ordinal(), guiLeft + 103, guiTop + 116, 42, 12, null).setTooltip("Enable synchronized search with JEI").setDesign(Design.SIMPLE));
-		scrollBar = new ScrollBar(0, 227, 7, 14, 108, drawer, Plane.VERTICAL);
+			buttonList.add(jei = new CommonGuiButton(MessageAction.JEI.ordinal(), guiLeft + 103, guiTop + 11 + 18 * gridHeight, 42, 12, null).setTooltip("Enable synchronized search with JEI").setDesign(Design.SIMPLE));
+		buttonList.add(modeButton = new CommonGuiButton(MessageAction.GUIMODE.ordinal(), guiLeft - 23, guiTop + ySize - 20, 20, 20, "").setTooltip("Toggle Mode").setDesign(Design.SIMPLE));
+		buttonList.add(inc = new CommonGuiButton(MessageAction.INCGRID.ordinal(), guiLeft - 23, guiTop + 1, 20, 10, "+").setTooltip("Increase Grid Height").setDesign(Design.SIMPLE));
+		buttonList.add(dec = new CommonGuiButton(MessageAction.DECGRID.ordinal(), guiLeft - 23, guiTop + 14, 20, 10, "-").setTooltip("Decrease Grid Height").setDesign(Design.SIMPLE));
+		scrollBar = new ScrollBar(0, 227, 7, 14, 18 * gridHeight, drawer, Plane.VERTICAL);
 		slots = new ArrayList<>();
 		for (int i = 0; i < gridHeight; i++) {
 			for (int j = 0; j < gridWidth; j++) {
@@ -103,13 +109,16 @@ public class GuiExI extends CommonGuiContainer {
 	protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
 		drawDefaultBackground();
 		super.drawGuiContainerBackgroundLayer(partialTicks, mouseX, mouseY);
+		drawer.drawBackgroundTexture(xSize - 35, -15, 35, 20);
 		drawer.drawBackgroundTexture();
-		drawer.drawPlayerSlots(79, 137);
+		drawer.drawPlayerSlots(79, 29 + 18 * gridHeight);
 		drawer.drawSlots(7, 7, gridWidth, gridHeight);
 		searchBar.drawTextBox();
-		drawer.drawSlots(7, 137, 3, 3);
-		drawer.drawProgressArrow(13, 196, 0F, Direction.RIGHT);
-		drawer.drawSlot(43, 195);
+		if (mode == GuiMode.ITEM) {
+			drawer.drawSlots(7, 29 + 18 * gridHeight, 3, 3);
+			drawer.drawProgressArrow(13, 88 + 18 * gridHeight, 0F, Direction.RIGHT);
+			drawer.drawSlot(43, 87 + 18 * gridHeight);
+		}
 		scrollBar.draw(mouseX, mouseY);
 		boolean uni = fontRenderer.getUnicodeFlag();
 		fontRenderer.setUnicodeFlag(true);
@@ -121,12 +130,40 @@ public class GuiExI extends CommonGuiContainer {
 
 	@Override
 	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-		fontRenderer.drawString("x", 63, 136, 0xE0E0E0);
+		if (mode == GuiMode.ITEM)
+			fontRenderer.drawString("x", 63, 28 + 18 * gridHeight, 0xE0E0E0);
+		fontRenderer.drawString(TextFormatting.BOLD + "INFO", xSize - 30, -9, 0x3e3e3e);
 		super.drawGuiContainerForegroundLayer(mouseX, mouseY);
 		for (AbstractSlot<?> slot : slots) {
 			if (slot.isMouseOver(mouseX, mouseY))
 				slot.drawTooltip(mouseX - guiLeft, mouseY - guiTop);
 		}
+	}
+
+	@Override
+	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+		super.drawScreen(mouseX, mouseY, partialTicks);
+		if (isPointInRegion(xSize - 35, -15, 35, 17, mouseX, mouseY) && true) {
+			RenderHelper.disableStandardItemLighting();
+			drawer.zLevel += 301f;
+			drawer.drawColoredRectangle(xSize - 100 - 3, 1, 100, 100, 0xFF555555);
+			drawer.drawFrame(xSize - 100 - 3, 1, 100, 100, 2, 0xFF999999);
+
+			int c = Color.orange.getRGB();
+			drawer.drawColoredRectangle(xSize - 88, 13, 70, 11, ColorHelper.darker(c, .6));
+			double foo = con.ei.getItemCount() / (double) con.ei.itemLimit;
+			drawer.drawColoredRectangle(xSize - 88, 13, (int) (70 * foo), 11, c);
+			drawer.drawFrame(xSize - 88, 13, 70, 11, 1, 0xFF000000);
+			drawCenteredString(fontRenderer, "fshjgfadas", guiLeft+xSize-98, guiTop+23, 14737632);
+			c = 0xff00c5cd;
+			drawer.drawColoredRectangle(xSize - 88, 55, 70, 11, ColorHelper.darker(c, .6));
+			foo = con.ei.getFluidCount() / (double) con.ei.fluidLimit;
+			drawer.drawColoredRectangle(xSize - 88, 55, (int) (70 * foo), 11, c);
+			drawer.drawFrame(xSize - 88, 55, 70, 11, 1, 0xFF000000);
+
+			drawer.zLevel -= 301f;
+		}
+
 	}
 
 	@Override
@@ -138,7 +175,8 @@ public class GuiExI extends CommonGuiContainer {
 		over = null;
 		if (mode == GuiMode.ITEM) {
 			items = ExInventory.getInventory(mc.player).getItems();
-			int invisible = items.size() - gridWidth * gridHeight;
+			List<StackWrapper> tmp = getFilteredItems();
+			int invisible = tmp.size() - gridWidth * gridHeight;
 			if (invisible <= 0)
 				maxPos = 0;
 			else {
@@ -148,10 +186,9 @@ public class GuiExI extends CommonGuiContainer {
 			}
 			if (currentPos > maxPos)
 				currentPos = maxPos;
-			List<StackWrapper> tmp = getFilteredItems();
 			int index = currentPos * gridWidth;
 			int s = 0;
-			line: for (int i = 0; i < gridHeight; i++) {
+			for (int i = 0; i < gridHeight; i++) {
 				for (int j = 0; j < gridWidth; j++) {
 					ItemSlot slot = (ItemSlot) slots.get(s);
 					if (index >= tmp.size())
@@ -167,7 +204,8 @@ public class GuiExI extends CommonGuiContainer {
 			}
 		} else {
 			fluids = ExInventory.getInventory(mc.player).getFluids();
-			int invisible = fluids.size() - gridWidth * gridHeight;
+			List<FluidStack> tmp = getFilteredFluids();
+			int invisible = tmp.size() - gridWidth * gridHeight;
 			if (invisible <= 0)
 				maxPos = 0;
 			else {
@@ -177,10 +215,9 @@ public class GuiExI extends CommonGuiContainer {
 			}
 			if (currentPos > maxPos)
 				currentPos = maxPos;
-			List<FluidStack> tmp = getFilteredFluids();
 			int index = currentPos * gridWidth;
 			int s = 0;
-			line: for (int i = 0; i < gridHeight; i++) {
+			for (int i = 0; i < gridHeight; i++) {
 				for (int j = 0; j < gridWidth; j++) {
 					FluidSlot slot = (FluidSlot) slots.get(s);
 					if (index >= tmp.size())
@@ -195,27 +232,30 @@ public class GuiExI extends CommonGuiContainer {
 				}
 			}
 		}
-		scrollBar.status = currentPos / (double) maxPos;
 
 		for (AbstractSlot<?> slot : slots)
 			if (slot.isMouseOver(GuiDrawer.getMouseX(), GuiDrawer.getMouseY())) {
 				over = slot;
 				break;
 			}
-		
-		if(scrollDrag) {
+
+		scrollBar.status = currentPos / (double) maxPos;
+		if (scrollDrag) {
 			scrollBar.status = (GuiDrawer.getMouseY() - guiTop - scrollBar.y) / (double) scrollBar.height;
-			scrollBar.status=MathHelper.clamp(scrollBar.status, 0, 1);
+			scrollBar.status = MathHelper.clamp(scrollBar.status, 0, 1);
 			currentPos = MathHelper.clamp((int) Math.round(maxPos * scrollBar.status), 0, maxPos);
 		}
 
-		sort.setTooltip("Sort by " + getContainer().getSort().name().toLowerCase());
-		sort.displayString = getContainer().getSort().name();
-		direction.setTooltip("Sort direction: " + (getContainer().isTopdown() ? "top-down" : "bottom-up"));
-		direction.displayString = getContainer().isTopdown() ? "TD" : "BU";
+		dec.visible = gridHeight > 1;
+		inc.visible = guiTop > 5;
+
+		sort.setTooltip("Sort by " + con.ei.sort.name().toLowerCase());
+		sort.displayString = con.ei.sort.name();
+		direction.setTooltip("Sort direction: " + (con.ei.topdown ? "top-down" : "bottom-up"));
+		direction.displayString = con.ei.topdown ? "TD" : "BU";
 		modeButton.setStack(new ItemStack(mode == GuiMode.ITEM ? Items.WATER_BUCKET : Items.APPLE));
 		if (jei != null)
-			jei.displayString = (getContainer().isJEI() ? TextFormatting.GREEN : TextFormatting.RED) + "JEI";
+			jei.displayString = (con.ei.jeiSearch ? TextFormatting.GREEN : TextFormatting.RED) + "JEI";
 	}
 
 	@Override
@@ -245,8 +285,8 @@ public class GuiExI extends CommonGuiContainer {
 		NBTHelper.set(nbt, "ctrl", isCtrlKeyDown());
 		PacketHandler.sendToServer(new MessageInventory(nbt));
 	}
-	
-	private boolean scrollDrag=false;
+
+	private boolean scrollDrag = false;
 
 	@Override
 	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
@@ -255,7 +295,7 @@ public class GuiExI extends CommonGuiContainer {
 		searchBar.mouseClicked(mouseX, mouseY, mouseButton);
 		if (searchBar.isFocused() && mouseButton == 1) {
 			searchBar.setText("");
-			if (LimeLib.jeiLoaded && getContainer().isJEI())
+			if (LimeLib.jeiLoaded && con.ei.jeiSearch)
 				JEI.setFilterText(searchBar.getText());
 		}
 		if (canClick()) {
@@ -266,14 +306,14 @@ public class GuiExI extends CommonGuiContainer {
 		if (scrollBar.isMouseOver(mouseX - guiLeft, mouseY - guiTop)) {
 			scrollBar.status = (mouseY - guiTop - scrollBar.y) / (double) scrollBar.height;
 			currentPos = MathHelper.clamp((int) Math.round(maxPos * scrollBar.status), 0, maxPos);
-			scrollDrag=true;
+			scrollDrag = true;
 		}
 	}
-	
+
 	@Override
 	protected void mouseReleased(int mouseX, int mouseY, int state) {
-		if(scrollDrag)
-			scrollDrag=false;
+		if (scrollDrag)
+			scrollDrag = false;
 		super.mouseReleased(mouseX, mouseY, state);
 	}
 
@@ -300,13 +340,13 @@ public class GuiExI extends CommonGuiContainer {
 	@Override
 	protected void keyTyped(char typedChar, int keyCode) throws IOException {
 		if (!this.checkHotbarKeys(keyCode)) {
-			if (over != null && LimeLib.jeiLoaded && (!searchBar.isFocused() || searchBar.getText().isEmpty())) {
+			if (over != null && LimeLib.jeiLoaded && (keyCode == Keyboard.KEY_R || keyCode == Keyboard.KEY_U) && (!searchBar.isFocused() || searchBar.getText().isEmpty())) {
 				if (keyCode == Keyboard.KEY_R)
 					JEI.showRecipes(over.stack);
-				else if (keyCode == Keyboard.KEY_U)
+				else
 					JEI.showUsage(over.stack);
 			} else if (this.searchBar.textboxKeyTyped(typedChar, keyCode)) {
-				if (getContainer().isJEI() && LimeLib.jeiLoaded)
+				if (con.ei.jeiSearch && LimeLib.jeiLoaded)
 					JEI.setFilterText(searchBar.getText());
 			}
 		}
@@ -322,9 +362,9 @@ public class GuiExI extends CommonGuiContainer {
 					tmp.add(w);
 
 			}
-		int mul = !getContainer().isTopdown() ? -1 : 1;
+		int mul = !con.ei.topdown ? -1 : 1;
 		tmp.sort((StackWrapper o2, StackWrapper o1) -> {
-			switch (getContainer().getSort()) {
+			switch (con.ei.sort) {
 			case AMOUNT:
 				return Integer.compare(o1.getSize(), o2.getSize()) * mul;
 			case NAME:
@@ -346,9 +386,9 @@ public class GuiExI extends CommonGuiContainer {
 					tmp.add(w);
 
 			}
-		int mul = !getContainer().isTopdown() ? -1 : 1;
+		int mul = !con.ei.topdown ? -1 : 1;
 		tmp.sort((FluidStack o2, FluidStack o1) -> {
-			switch (getContainer().getSort()) {
+			switch (con.ei.sort) {
 			case AMOUNT:
 				return Integer.compare(o1.amount, o2.amount) * mul;
 			case NAME:

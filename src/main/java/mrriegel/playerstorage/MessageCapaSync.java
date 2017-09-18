@@ -1,4 +1,4 @@
-package mrriegel.transprot;
+package mrriegel.playerstorage;
 
 import mrriegel.limelib.network.AbstractMessage;
 import net.minecraft.entity.player.EntityPlayer;

@@ -1,0 +1,22 @@
+{
+    "forge_marker": 1,
+    "defaults": {
+        "model": "cube_all",
+        "textures": {
+            "particle": "playerstorage:blocks/interface",
+            "all": "playerstorage:blocks/interface"
+        }
+    },
+    "variants": {
+        "normal": [
+            {
+            }
+        ],
+        "inventory": [
+            {
+                "transform": "forge:default-block",
+                "y": 90
+            }
+        ]
+    }
+}

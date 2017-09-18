@@ -1,4 +1,4 @@
-package mrriegel.transprot;
+package mrriegel.playerstorage;
 
 import net.minecraft.item.ItemStack;
 

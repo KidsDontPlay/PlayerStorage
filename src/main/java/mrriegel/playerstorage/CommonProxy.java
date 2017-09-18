@@ -1,4 +1,4 @@
-package mrriegel.transprot;
+package mrriegel.playerstorage;
 
 import mrriegel.limelib.network.PacketHandler;
 import net.minecraft.entity.player.EntityPlayer;
@@ -22,7 +22,7 @@ public class CommonProxy implements IGuiHandler {
 	public void init(FMLInitializationEvent event) {
 		NetworkRegistry.INSTANCE.registerGuiHandler(PlayerStorage.instance, this);
 		PacketHandler.registerMessage(MessageCapaSync.class, Side.CLIENT);
-		PacketHandler.registerMessage(MessageInventory.class,Side.SERVER);
+		PacketHandler.registerMessage(MessageInventory.class, Side.SERVER);
 	}
 
 	public void postInit(FMLPostInitializationEvent event) {
@@ -30,16 +30,19 @@ public class CommonProxy implements IGuiHandler {
 
 	@Override
 	public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
-		if (!world.isRemote)
+		if (!world.isRemote) {
 			ExInventory.sync((EntityPlayerMP) player);
-		if(ID==0)
+			if (player.openContainer instanceof ContainerExI)
+				((ContainerExI) player.openContainer).saveMatrix();
+		}
+		if (ID == 0)
 			return new ContainerExI(player.inventory);
 		return null;
 	}
 
 	@Override
 	public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
-		if(ID==0)
+		if (ID == 0)
 			return new GuiExI(new ContainerExI(player.inventory));
 		return null;
 	}

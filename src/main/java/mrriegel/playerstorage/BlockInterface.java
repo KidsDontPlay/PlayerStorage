@@ -1,4 +1,4 @@
-package mrriegel.transprot;
+package mrriegel.playerstorage;
 
 import mrriegel.limelib.block.CommonBlockContainer;
 import net.minecraft.block.material.Material;

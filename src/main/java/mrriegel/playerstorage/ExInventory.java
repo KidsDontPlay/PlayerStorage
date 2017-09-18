@@ -1,4 +1,4 @@
-package mrriegel.transprot;
+package mrriegel.playerstorage;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -8,8 +8,8 @@ import java.util.function.Predicate;
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.PacketHandler;
 import mrriegel.limelib.util.StackWrapper;
-import mrriegel.transprot.Enums.GuiMode;
-import mrriegel.transprot.Enums.Sort;
+import mrriegel.playerstorage.Enums.GuiMode;
+import mrriegel.playerstorage.Enums.Sort;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -20,6 +20,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.Capability.IStorage;
@@ -51,7 +52,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	List<FluidStack> fluids = new LinkedList<>();
 	//	List<CraftingPattern> patterns = new LinkedList<>();
 	//	List<CraftingTask> tasks = new LinkedList<>();
-	int itemLimit = 2000, fluidLimit = 20000;
+	int itemLimit = 2000, fluidLimit = 20000, gridHeight = 6;
 	boolean dirty = true;
 	public List<ItemStack> matrix = NonNullList.withSize(9, ItemStack.EMPTY);
 
@@ -66,7 +67,16 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 			sync((EntityPlayerMP) player);
 			dirty = false;
 		}
-		//				fluids.clear();
+		//		items.clear();
+		//		for (Item i : ForgeRegistries.ITEMS) {
+		//			List<ItemStack> l = NonNullList.create();
+		//			if (i.getCreativeTab() != null)
+		//				i.getSubItems(i.getCreativeTab(), (NonNullList<ItemStack>) l);
+		//			for (ItemStack s : l)
+		//				if (!s.isEmpty())
+		//					items.add(new StackWrapper(s, 1111111));
+		//		}
+
 		//		sort=Sort.NAME;	
 		//		if (!tasks.isEmpty()) {
 		//			CraftingTask t = tasks.remove(0);
@@ -85,7 +95,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 	public ItemStack insertItem(ItemStack stack, boolean simulate) {
 		int itemCount = getItemCount();
-		ItemStack rest = ItemHandlerHelper.copyStackWithSize(stack, Math.max(0, ConfigHandler.infiniteSpace ? 0 : (stack.getCount() + itemCount) - itemLimit));
+		ItemStack rest = ItemHandlerHelper.copyStackWithSize(stack, Math.max(0, (stack.getCount() + itemCount) - (ConfigHandler.infiniteSpace ? Integer.MAX_VALUE : itemLimit)));
 		if (rest.getCount() == stack.getCount())
 			return rest;
 		for (StackWrapper s : items)
@@ -124,7 +134,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		if (stack == null)
 			return 0;
 		int fluidCount = getFluidCount();
-		int canFill = ConfigHandler.infiniteSpace ? stack.amount : Math.max(0, fluidLimit - (stack.amount + fluidCount));
+		int canFill = Math.max(0, (ConfigHandler.infiniteSpace ? Integer.MAX_VALUE : fluidLimit) - (stack.amount + fluidCount));
 		if (canFill == 0)
 			return 0;
 		canFill = Math.min(stack.amount, canFill);
@@ -168,11 +178,11 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	}
 
 	public int getItemCount() {
-		return items.stream().mapToInt(StackWrapper::getSize).sum();
+		return MathHelper.clamp(items.stream().mapToInt(StackWrapper::getSize).sum(), 0, Integer.MAX_VALUE);
 	}
 
 	public int getFluidCount() {
-		return fluids.stream().mapToInt(s -> s.amount).sum();
+		return MathHelper.clamp(fluids.stream().mapToInt(s -> s.amount).sum(), 0, Integer.MAX_VALUE);
 	}
 
 	public int getAmountItem(Predicate<ItemStack> pred) {
@@ -199,6 +209,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		NBTHelper.set(nbt, "top", topdown);
 		NBTHelper.set(nbt, "sort", sort);
 		NBTHelper.set(nbt, "mode", mode);
+		NBTHelper.set(nbt, "gridHeight", gridHeight);
 		return nbt;
 	}
 
@@ -219,6 +230,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		topdown = NBTHelper.get(nbt, "top", Boolean.class);
 		sort = NBTHelper.get(nbt, "sort", Sort.class);
 		mode = NBTHelper.get(nbt, "mode", GuiMode.class);
+		gridHeight = NBTHelper.get(nbt, "gridHeight", Integer.class);
 	}
 
 	@CapabilityInject(ExInventory.class)
@@ -246,6 +258,10 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		if (player == null)
 			return null;
 		return player.getCapability(EXINVENTORY, null);
+	}
+
+	public static void sync(EntityPlayerMP player) {
+		PacketHandler.sendTo(new MessageCapaSync(player), (EntityPlayerMP) player);
 	}
 
 	@SubscribeEvent
@@ -286,10 +302,6 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		if (event.getEntity() instanceof EntityPlayerMP) {
 			sync((EntityPlayerMP) event.getEntity());
 		}
-	}
-
-	public static void sync(EntityPlayerMP player) {
-		PacketHandler.sendTo(new MessageCapaSync(player), (EntityPlayerMP) player);
 	}
 
 	static class Provider implements ICapabilitySerializable<NBTTagCompound> {

@@ -1,4 +1,4 @@
-package mrriegel.transprot;
+package mrriegel.playerstorage;
 
 public class Enums {
 	public static enum Sort {
@@ -14,6 +14,6 @@ public class Enums {
 		ITEM, FLUID;
 	}
 	public static enum MessageAction{
-		SORT,DIRECTION,CLEAR,JEI,GUIMODE,SLOT;
+		SORT,DIRECTION,CLEAR,JEI,GUIMODE,SLOT,INCGRID,DECGRID;
 	}
 }

@@ -1,5 +1,6 @@
-package mrriegel.transprot;
+package mrriegel.playerstorage;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -9,12 +10,10 @@ import com.google.common.collect.Lists;
 import mrriegel.limelib.gui.CommonContainer;
 import mrriegel.limelib.gui.slot.SlotGhost;
 import mrriegel.limelib.util.FilterItem;
-import mrriegel.transprot.Enums.Sort;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.inventory.InventoryCraftResult;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.inventory.Slot;
@@ -22,6 +21,7 @@ import net.minecraft.inventory.SlotCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.Ingredient;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.wrapper.PlayerMainInvWrapper;
@@ -30,75 +30,22 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 
 	public boolean space, shift, ctrl;
 	IRecipe recipe;
-	ExInventory ei = ExInventory.getInventory(getPlayer());
+	ExInventory ei;
 
 	public ContainerExI(InventoryPlayer invPlayer) {
-		super(invPlayer, invPlayer.player, Pair.of("matrix", new InventoryBasic("matrix", false, 9)), Pair.of("result", new InventoryCraftResult()));
+		super(invPlayer, invPlayer.player, Pair.of("result", new InventoryCraftResult()));
+		ei = ExInventory.getInventory(getPlayer());
 		invs.put("matrix", new InventoryCrafting(this, 3, 3));
-		for (int i = 0; i < getMatrixList().size(); i++)
-			getMatrix().setInventorySlotContents(i, getMatrixList().get(i));
-		new SlotGhost(getMatrix(), 0, 0, 0) {
-			@Override
-			public boolean canTakeStack(EntityPlayer playerIn) {
-				//				ELCH
-				this.putStack(playerIn.inventory.getItemStack());
-				return false;
-			}
-		};
-		addSlotToContainer(new SlotCrafting(invPlayer.player, getMatrix(), (IInventory) invs.get("result"), 0, 44, 196) {
-			@Override
-			public ItemStack onTake(EntityPlayer playerIn, ItemStack stack) {
-				if (playerIn.world.isRemote) {
-					return stack;
-				}
-				List<ItemStack> lis = Lists.newArrayList();
-				for (int i = 0; i < getMatrix().getSizeInventory(); i++)
-					if (getMatrix().getStackInSlot(i) == null)
-						lis.add(null);
-					else
-						lis.add(getMatrix().getStackInSlot(i).copy());
-				super.onTake(playerIn, stack);
-				detectAndSendChanges();
-				for (int i = 0; i < getMatrix().getSizeInventory(); i++)
-					if (getMatrix().getStackInSlot(i) == null && lis.get(i) != null) {
-						ItemStack req = ei.extractItem(new FilterItem(lis.get(i), true, false, true), 1, false);
-						getMatrix().setInventorySlotContents(i, req);
-					}
-				detectAndSendChanges();
-				return stack;
-			}
-
-			@Override
-			public void onSlotChanged() {
-				super.onSlotChanged();
-				saveMatrix();
-			}
-		});
-		initSlots(getMatrix(), 8, 138, 3, 3);
-		initPlayerSlots(80, 138);
-		//		if (!invPlayer.player.worldObj.isRemote)
-		//			PacketHandler.sendTo(new MessageItemListRequest(getNetworkCore(invPlayer.player.worldObj).network.getItemstacks()), (EntityPlayerMP) invPlayer.player);
-	}
-
-	public List<ItemStack> getMatrixList() {
-		return ei.matrix;
+		for (int i = 0; i < ei.matrix.size(); i++)
+			getMatrix().setInventorySlotContents(i, ei.matrix.get(i));
+		addSlotToContainer(new SlotResult(invPlayer.player, getMatrix(), (IInventory) invs.get("result"), 0, 44, 88 + 18 * ei.gridHeight));
+		initSlots(getMatrix(), 8, 30 + 18 * ei.gridHeight, 3, 3, 0/*, SlotIng.class, ei*/);
+		initPlayerSlots(80, 30 + 18 * ei.gridHeight);
 	}
 
 	protected void saveMatrix() {
 		for (int i = 0; i < 9; i++)
 			ei.matrix.set(i, getMatrix().getStackInSlot(i));
-	}
-
-	public Sort getSort() {
-		return ei.sort;
-	}
-
-	public boolean isTopdown() {
-		return ei.topdown;
-	}
-
-	public boolean isJEI() {
-		return ei.jeiSearch;
 	}
 
 	@Override
@@ -108,7 +55,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 	@Override
 	protected List<Area> allowedSlots(ItemStack stack, IInventory inv, int index) {
 		if (inv == getMatrix())
-			return Lists.newArrayList(getAreaForEntireInv(invPlayer));
+			return Collections.singletonList(getAreaForEntireInv(invPlayer));
 		return null;
 	}
 
@@ -122,10 +69,10 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 					slot.putStack(ExInventory.getInventory(playerIn).insertItem(slot.getStack(), false));
 				}
 				detectAndSendChanges();
-				return null;
+				return ItemStack.EMPTY;
 			} else if (inv == invs.get("result")) {
 				craftShift();
-				return null;
+				return ItemStack.EMPTY;
 			}
 		}
 		return super.transferStackInSlot(playerIn, index);
@@ -171,7 +118,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 
 	public void craftShift() {
 		IInventory result = invs.get("result");
-		SlotCrafting sl = new SlotCrafting(save, getMatrix(), result, 0, 0, 0);
+		SlotCrafting sl = new SlotCrafting(getPlayer(), getMatrix(), result, 0, 0, 0);
 		int crafted = 0;
 		List<ItemStack> lis = Lists.newArrayList();
 		for (int i = 0; i < getMatrix().getSizeInventory(); i++)
@@ -203,8 +150,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 	public void onCraftMatrixChanged(IInventory inventoryIn) {
 		super.onCraftMatrixChanged(inventoryIn);
 		recipe = CraftingManager.findMatchingRecipe(getMatrix(), getPlayer().world);
-		if (recipe != null)
-			invs.get("result").setInventorySlotContents(0, recipe.getCraftingResult(getMatrix()));
+		invs.get("result").setInventorySlotContents(0, recipe == null ? ItemStack.EMPTY : recipe.getCraftingResult(getMatrix()));
 	}
 
 	@Override
@@ -214,11 +160,111 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 
 	@Override
 	public boolean canMergeSlot(ItemStack stack, Slot slot) {
-		return slot.inventory != invs.get("result") && super.canMergeSlot(stack, slot);
+		return slot.inventory != invs.get("result") /*&& slot.inventory != getMatrix()*/ && super.canMergeSlot(stack, slot);
 	}
 
 	public InventoryCrafting getMatrix() {
 		return (InventoryCrafting) invs.get("matrix");
+	}
+
+	public static class SlotIng extends SlotGhost {
+
+		ExInventory ei;
+
+		public SlotIng(IInventory inventoryIn, int index, int xPosition, int yPosition, ExInventory ei) {
+			super(inventoryIn, index, xPosition, yPosition);
+			this.ei = ei;
+		}
+
+		@Override
+		public boolean canTakeStack(EntityPlayer playerIn) {
+			return super.canTakeStack(playerIn);
+		}
+
+		@Override
+		public boolean isItemValid(ItemStack stack) {
+			if (getHasStack())
+				return false;
+			ItemStack copy = ItemHandlerHelper.copyStackWithSize(stack, 1);
+			ItemStack rest = ei.insertItem(copy, false);
+			if (rest.isEmpty())
+				stack.shrink(1);
+			this.putStack(copy);
+			return false;
+		}
+
+	}
+
+	public static class SlotResult extends SlotCrafting {
+		ExInventory ei;
+
+		public SlotResult(EntityPlayer player, InventoryCrafting craftingInventory, IInventory inventoryIn, int slotIndex, int xPosition, int yPosition) {
+			super(player, craftingInventory, inventoryIn, slotIndex, xPosition, yPosition);
+			ei = ExInventory.getInventory(player);
+		}
+
+		private ContainerExI con() {
+			return (ContainerExI) ei.player.openContainer;
+		}
+
+		@Override
+		public void onSlotChanged() {
+			super.onSlotChanged();
+			//			con().saveMatrix();
+		}
+
+		public ItemStack onTake(EntityPlayer playerIn, ItemStack stack) {
+			if (playerIn.world.isRemote) {
+				return stack;
+			}
+			List<ItemStack> lis = Lists.newArrayList();
+			for (int i = 0; i < con().getMatrix().getSizeInventory(); i++)
+				lis.add(con().getMatrix().getStackInSlot(i).copy());
+			List<Ingredient> ings = con().recipe.getIngredients();
+			super.onTake(playerIn, stack);
+			//			this.onCrafting(stack);
+			//			net.minecraftforge.common.ForgeHooks.setCraftingPlayer(playerIn);
+			//			NonNullList<ItemStack> nonnulllist = CraftingManager.getRemainingItems(con().getMatrix(), playerIn.world);
+			//			net.minecraftforge.common.ForgeHooks.setCraftingPlayer(null);
+			//
+			//			for (int i = 0; i < nonnulllist.size(); ++i) {
+			//				ItemStack itemstack = con().getMatrix().getStackInSlot(i);
+			//				ItemStack itemstack1 = nonnulllist.get(i);
+			//
+			//				if (!itemstack.isEmpty()) {
+			//					con().getMatrix().decrStackSize(i, 1);
+			//					itemstack = con().getMatrix().getStackInSlot(i);
+			//				}
+			//
+			//				if (!itemstack1.isEmpty()) {
+			//					if (itemstack.isEmpty()) {
+			//						con().getMatrix().setInventorySlotContents(i, itemstack1);
+			//					} else if (ItemStack.areItemsEqual(itemstack, itemstack1) && ItemStack.areItemStackTagsEqual(itemstack, itemstack1)) {
+			//						itemstack1.grow(itemstack.getCount());
+			//						con().getMatrix().setInventorySlotContents(i, itemstack1);
+			//					} else if (!ei.player.inventory.addItemStackToInventory(itemstack1)) {
+			//						ei.player.dropItem(itemstack1, false);
+			//					}
+			//				}
+			//			}
+
+			con().detectAndSendChanges();
+			boolean empty = con().getMatrix().isEmpty();
+			for (int i = 0; i < con().getMatrix().getSizeInventory(); i++)
+				if (con().getMatrix().getStackInSlot(i).isEmpty() && !lis.get(i).isEmpty()) {
+					ItemStack req = ei.extractItem(lis.get(i), 1, false);
+					if (req.isEmpty() && empty)
+						req = ei.extractItem(getIng(ings, lis.get(i)), 1, false);
+					con().getMatrix().setInventorySlotContents(i, req);
+				}
+			con().detectAndSendChanges();
+			return stack;
+		}
+
+		private Ingredient getIng(List<Ingredient> ings, ItemStack stack) {
+			return ings.stream().filter(i -> i.apply(stack)).findAny().orElse(null);
+		}
+
 	}
 
 }
