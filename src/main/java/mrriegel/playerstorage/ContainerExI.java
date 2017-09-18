@@ -9,7 +9,8 @@ import com.google.common.collect.Lists;
 
 import mrriegel.limelib.gui.CommonContainer;
 import mrriegel.limelib.gui.slot.SlotGhost;
-import mrriegel.limelib.util.FilterItem;
+import mrriegel.playerstorage.Enums.GuiMode;
+import mrriegel.playerstorage.ExInventory.Handler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.ClickType;
@@ -22,6 +23,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.Ingredient;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidActionResult;
+import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.wrapper.PlayerMainInvWrapper;
@@ -35,17 +39,20 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 	public ContainerExI(InventoryPlayer invPlayer) {
 		super(invPlayer, invPlayer.player, Pair.of("result", new InventoryCraftResult()));
 		ei = ExInventory.getInventory(getPlayer());
-		invs.put("matrix", new InventoryCrafting(this, 3, 3));
-		for (int i = 0; i < ei.matrix.size(); i++)
-			getMatrix().setInventorySlotContents(i, ei.matrix.get(i));
-		addSlotToContainer(new SlotResult(invPlayer.player, getMatrix(), (IInventory) invs.get("result"), 0, 44, 88 + 18 * ei.gridHeight));
-		initSlots(getMatrix(), 8, 30 + 18 * ei.gridHeight, 3, 3, 0/*, SlotIng.class, ei*/);
+		if (ei.mode == GuiMode.ITEM) {
+			invs.put("matrix", new InventoryCrafting(this, 3, 3));
+			for (int i = 0; i < ei.matrix.size(); i++)
+				getMatrix().setInventorySlotContents(i, ei.matrix.get(i));
+			addSlotToContainer(new SlotResult(invPlayer.player, getMatrix(), (IInventory) invs.get("result"), 0, 44, 88 + 18 * ei.gridHeight));
+			initSlots(getMatrix(), 8, 30 + 18 * ei.gridHeight, 3, 3, 0/*, SlotIng.class, ei*/);
+		}
 		initPlayerSlots(80, 30 + 18 * ei.gridHeight);
 	}
 
 	protected void saveMatrix() {
-		for (int i = 0; i < 9; i++)
-			ei.matrix.set(i, getMatrix().getStackInSlot(i));
+		if (getMatrix() != null)
+			for (int i = 0; i < 9; i++)
+				ei.matrix.set(i, getMatrix().getStackInSlot(i));
 	}
 
 	@Override
@@ -66,7 +73,13 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 			IInventory inv = slot.inventory;
 			if (inv instanceof InventoryPlayer) {
 				if (!ctrl && !space) {
-					slot.putStack(ExInventory.getInventory(playerIn).insertItem(slot.getStack(), false));
+					if (ei.mode == GuiMode.ITEM)
+						slot.putStack(ExInventory.getInventory(playerIn).insertItem(slot.getStack(), false));
+					else {
+						FluidActionResult far = FluidUtil.tryEmptyContainer(slot.getStack(), new Handler(playerIn), 10 * Fluid.BUCKET_VOLUME, playerIn, true);
+						if (far.success)
+							slot.putStack(far.result);
+					}
 				}
 				detectAndSendChanges();
 				return ItemStack.EMPTY;
@@ -118,25 +131,17 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 
 	public void craftShift() {
 		IInventory result = invs.get("result");
-		SlotCrafting sl = new SlotCrafting(getPlayer(), getMatrix(), result, 0, 0, 0);
+		SlotResult sl = (SlotResult) inventorySlots.stream().filter(s -> s instanceof SlotResult).findFirst().get();
 		int crafted = 0;
-		List<ItemStack> lis = Lists.newArrayList();
-		for (int i = 0; i < getMatrix().getSizeInventory(); i++)
-			lis.add(getMatrix().getStackInSlot(i));
 		ItemStack res = result.getStackInSlot(0);
 		detectAndSendChanges();
 		IItemHandler inv = new PlayerMainInvWrapper(invPlayer);
 		while (crafted + res.getCount() <= res.getMaxStackSize()) {
-			if (ItemHandlerHelper.insertItemStacked(inv, res.copy(), true) != null)
+			if (!ItemHandlerHelper.insertItemStacked(inv, res.copy(), true).isEmpty())
 				break;
 			ItemHandlerHelper.insertItemStacked(inv, res.copy(), false);
-			sl.onTake(save, res);
+			sl.onTake(getPlayer(), res);
 			crafted += res.getCount();
-			for (int i = 0; i < getMatrix().getSizeInventory(); i++)
-				if (getMatrix().getStackInSlot(i) == null && lis.get(i) != null) {
-					ItemStack req = ExInventory.getInventory(getPlayer()).extractItem(new FilterItem(lis.get(i), true, false, true), 1, false);
-					getMatrix().setInventorySlotContents(i, req);
-				}
 			onCraftMatrixChanged(null);
 			if (!ItemHandlerHelper.canItemStacksStack(res, result.getStackInSlot(0)))
 				break;

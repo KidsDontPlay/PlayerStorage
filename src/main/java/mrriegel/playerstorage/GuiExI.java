@@ -17,7 +17,6 @@ import mrriegel.limelib.gui.GuiDrawer.Direction;
 import mrriegel.limelib.gui.button.CommonGuiButton;
 import mrriegel.limelib.gui.button.CommonGuiButton.Design;
 import mrriegel.limelib.gui.element.AbstractSlot;
-import mrriegel.limelib.gui.element.GuiElement;
 import mrriegel.limelib.gui.element.AbstractSlot.FluidSlot;
 import mrriegel.limelib.gui.element.AbstractSlot.ItemSlot;
 import mrriegel.limelib.gui.element.ScrollBar;
@@ -42,6 +41,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.oredict.OreDictionary;
 
@@ -91,8 +91,8 @@ public class GuiExI extends CommonGuiContainer {
 		if (LimeLib.jeiLoaded)
 			buttonList.add(jei = new CommonGuiButton(MessageAction.JEI.ordinal(), guiLeft + 103, guiTop + 11 + 18 * gridHeight, 42, 12, null).setTooltip("Enable synchronized search with JEI").setDesign(Design.SIMPLE));
 		buttonList.add(modeButton = new CommonGuiButton(MessageAction.GUIMODE.ordinal(), guiLeft - 23, guiTop + ySize - 20, 20, 20, "").setTooltip("Toggle Mode").setDesign(Design.SIMPLE));
-		buttonList.add(inc = new CommonGuiButton(MessageAction.INCGRID.ordinal(), guiLeft - 23, guiTop + 1, 20, 10, "+").setTooltip("Increase Grid Height").setDesign(Design.SIMPLE));
-		buttonList.add(dec = new CommonGuiButton(MessageAction.DECGRID.ordinal(), guiLeft - 23, guiTop + 14, 20, 10, "-").setTooltip("Decrease Grid Height").setDesign(Design.SIMPLE));
+		buttonList.add(inc = new CommonGuiButton(MessageAction.INCGRID.ordinal(), guiLeft - 23, guiTop + 1, 20, 10, "+").setTooltip("Increase Grid Height").setDesign(Design.SIMPLE).setButtonColor(Color.GRAY.getRGB()));
+		buttonList.add(dec = new CommonGuiButton(MessageAction.DECGRID.ordinal(), guiLeft - 23, guiTop + 14, 20, 10, "-").setTooltip("Decrease Grid Height").setDesign(Design.SIMPLE).setButtonColor(Color.GRAY.getRGB()));
 		scrollBar = new ScrollBar(0, 227, 7, 14, 18 * gridHeight, drawer, Plane.VERTICAL);
 		slots = new ArrayList<>();
 		for (int i = 0; i < gridHeight; i++) {
@@ -132,7 +132,7 @@ public class GuiExI extends CommonGuiContainer {
 	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
 		if (mode == GuiMode.ITEM)
 			fontRenderer.drawString("x", 63, 28 + 18 * gridHeight, 0xE0E0E0);
-		fontRenderer.drawString(TextFormatting.BOLD + "INFO", xSize - 30, -9, 0x3e3e3e);
+		fontRenderer.drawString(TextFormatting.BOLD + "INFO", xSize - 30, -9, isPointInRegion(xSize - 35, -15, 35, 17, mouseX, mouseY) ? 0x6e6e6e : 0x3e3e3e);
 		super.drawGuiContainerForegroundLayer(mouseX, mouseY);
 		for (AbstractSlot<?> slot : slots) {
 			if (slot.isMouseOver(mouseX, mouseY))
@@ -143,25 +143,8 @@ public class GuiExI extends CommonGuiContainer {
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
 		super.drawScreen(mouseX, mouseY, partialTicks);
-		if (isPointInRegion(xSize - 35, -15, 35, 17, mouseX, mouseY) && true) {
-			RenderHelper.disableStandardItemLighting();
-			drawer.zLevel += 301f;
-			drawer.drawColoredRectangle(xSize - 100 - 3, 1, 100, 100, 0xFF555555);
-			drawer.drawFrame(xSize - 100 - 3, 1, 100, 100, 2, 0xFF999999);
+		if (isPointInRegion(xSize - 35, -15, 35, 17, mouseX, mouseY)) {
 
-			int c = Color.orange.getRGB();
-			drawer.drawColoredRectangle(xSize - 88, 13, 70, 11, ColorHelper.darker(c, .6));
-			double foo = con.ei.getItemCount() / (double) con.ei.itemLimit;
-			drawer.drawColoredRectangle(xSize - 88, 13, (int) (70 * foo), 11, c);
-			drawer.drawFrame(xSize - 88, 13, 70, 11, 1, 0xFF000000);
-			drawCenteredString(fontRenderer, "fshjgfadas", guiLeft+xSize-98, guiTop+23, 14737632);
-			c = 0xff00c5cd;
-			drawer.drawColoredRectangle(xSize - 88, 55, 70, 11, ColorHelper.darker(c, .6));
-			foo = con.ei.getFluidCount() / (double) con.ei.fluidLimit;
-			drawer.drawColoredRectangle(xSize - 88, 55, (int) (70 * foo), 11, c);
-			drawer.drawFrame(xSize - 88, 55, 70, 11, 1, 0xFF000000);
-
-			drawer.zLevel -= 301f;
 		}
 
 	}
@@ -291,7 +274,6 @@ public class GuiExI extends CommonGuiContainer {
 	@Override
 	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
 		super.mouseClicked(mouseX, mouseY, mouseButton);
-		//		searchBar.setFocused(isPointInRegion(searchBar.x, searchBar.y, searchBar.width, searchBar.height, mouseX + guiLeft, mouseY + guiTop));
 		searchBar.mouseClicked(mouseX, mouseY, mouseButton);
 		if (searchBar.isFocused() && mouseButton == 1) {
 			searchBar.setText("");
@@ -307,6 +289,11 @@ public class GuiExI extends CommonGuiContainer {
 			scrollBar.status = (mouseY - guiTop - scrollBar.y) / (double) scrollBar.height;
 			currentPos = MathHelper.clamp((int) Math.round(maxPos * scrollBar.status), 0, maxPos);
 			scrollDrag = true;
+		}
+		if (isPointInRegion(xSize - 35, -15, 35, 17, mouseX, mouseY)) {
+			if (mouseButton == 0)
+				GuiDrawer.openGui(new GuiInfo());
+
 		}
 	}
 

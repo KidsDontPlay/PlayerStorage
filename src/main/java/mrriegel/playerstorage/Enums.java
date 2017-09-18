@@ -13,7 +13,8 @@ public class Enums {
 	public static enum GuiMode {
 		ITEM, FLUID;
 	}
-	public static enum MessageAction{
-		SORT,DIRECTION,CLEAR,JEI,GUIMODE,SLOT,INCGRID,DECGRID;
+
+	public static enum MessageAction {
+		SORT, DIRECTION, CLEAR, JEI, GUIMODE, SLOT, INCGRID, DECGRID;
 	}
 }

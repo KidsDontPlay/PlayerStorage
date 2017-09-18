@@ -1,8 +1,14 @@
 package mrriegel.playerstorage;
 
+import static java.util.HashMap.hash;
+
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Predicate;
 
 import mrriegel.limelib.helper.NBTHelper;
@@ -52,13 +58,19 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	List<FluidStack> fluids = new LinkedList<>();
 	//	List<CraftingPattern> patterns = new LinkedList<>();
 	//	List<CraftingTask> tasks = new LinkedList<>();
-	int itemLimit = 2000, fluidLimit = 20000, gridHeight = 6;
+	int itemLimit = 2000, fluidLimit = 20000, gridHeight = 5;
 	boolean dirty = true;
 	public List<ItemStack> matrix = NonNullList.withSize(9, ItemStack.EMPTY);
 
 	public boolean jeiSearch = false, topdown = true;
 	public Sort sort = Sort.NAME;
 	public GuiMode mode = GuiMode.ITEM;
+
+	private Map<String, Integer> extractCache = new HashMap<String, Integer>() {
+		public Integer get(Object key) {
+			return containsKey(key) ? super.get(key) : 0;
+		};
+	};
 
 	private void update() {
 		if (dirty && player.openContainer instanceof ContainerExI) {
@@ -67,15 +79,30 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 			sync((EntityPlayerMP) player);
 			dirty = false;
 		}
-		//		items.clear();
-		//		for (Item i : ForgeRegistries.ITEMS) {
-		//			List<ItemStack> l = NonNullList.create();
-		//			if (i.getCreativeTab() != null)
-		//				i.getSubItems(i.getCreativeTab(), (NonNullList<ItemStack>) l);
-		//			for (ItemStack s : l)
-		//				if (!s.isEmpty())
-		//					items.add(new StackWrapper(s, 1111111));
-		//		}
+		if (player.ticksExisted % 1200 == 0)
+			extractCache.clear();
+		if (player.ticksExisted % 20 == 0) {
+			List<Entry<String, Integer>> entries=new ArrayList<>(extractCache.entrySet());
+			entries.sort((e1, e2) -> Integer.compare(e1.getValue(), e2.getValue()));
+			items.sort((s1, s2) -> {
+				fehler
+					int i1 = entries.indexOf(s1.getStack().toString()), i2 = entries.indexOf(s2.getStack().toString());
+					return Integer.compare(i1 == -1 ? 999 : i1, i2 == -1 ? 999 : i2);
+				});
+			extractCache.entrySet().stream().sorted((e1, e2) -> Integer.compare(e1.getValue(), e2.getValue()))//
+					.forEach(e -> {
+						List<StackWrapper> add = new LinkedList<StackWrapper>();
+						Iterator<StackWrapper> it = items.iterator();
+						while (it.hasNext()) {
+							StackWrapper next = it.next();
+							if (next.getStack().toString().equals(e.getKey())) {
+								add.add(next);
+								it.remove();
+							}
+						}
+						add.stream().forEach(s -> items.add(0, s));
+					});
+		}
 
 		//		sort=Sort.NAME;	
 		//		if (!tasks.isEmpty()) {
@@ -116,6 +143,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 			return ItemStack.EMPTY;
 		for (StackWrapper s : items)
 			if (pred.test(s.getStack())) {
+				extractCache.put(s.getStack().toString(), extractCache.get(s.getStack().toString()) + 1);
 				dirty = true;
 				if (!simulate)
 					return s.extract(size);
