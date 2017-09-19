@@ -1,0 +1,7 @@
+{
+    "parent": "item/generated",
+    "textures": {
+        "layer0": "playerstorage:items/apple0",
+        "layer1": "playerstorage:items/apple1"
+    }
+}

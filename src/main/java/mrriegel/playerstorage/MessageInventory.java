@@ -35,7 +35,7 @@ public class MessageInventory extends AbstractMessage {
 				return;
 			NBTTagCompound slot = NBTHelper.get(nbt, "slot", NBTTagCompound.class);
 			int mouse = NBTHelper.get(nbt, "mouse", Integer.class);
-			boolean shift = NBTHelper.get(nbt, "shift", Boolean.class), ctrl = NBTHelper.get(nbt, "ctrl", Boolean.class);
+			boolean shift = NBTHelper.get(nbt, "shift", Boolean.class), ctrl = NBTHelper.get(nbt, "ctrl", Boolean.class), space = NBTHelper.get(nbt, "space", Boolean.class);
 			switch (NBTHelper.get(nbt, "action", MessageAction.class)) {
 			case CLEAR:
 				for (int i = 0; i < con.getMatrix().getSizeInventory(); i++)
@@ -140,6 +140,11 @@ public class MessageInventory extends AbstractMessage {
 				if (!player.world.isRemote) {
 					player.openGui(PlayerStorage.instance, 0, player.world, 0, 0, 0);
 				}
+				break;
+			case KEYUPDATE:
+				con.ctrl = ctrl;
+				con.space = space;
+				con.shift = shift;
 				break;
 			}
 			ei.dirty = true;

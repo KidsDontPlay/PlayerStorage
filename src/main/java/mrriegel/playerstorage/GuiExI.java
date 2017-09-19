@@ -71,6 +71,7 @@ public class GuiExI extends CommonGuiContainer {
 		con = inventorySlotsIn;
 		mode = Validate.notNull(con.ei.mode);
 		gridHeight = con.ei.gridHeight;
+		con.ei.dirty = true;
 	}
 
 	@Override
@@ -132,7 +133,7 @@ public class GuiExI extends CommonGuiContainer {
 	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
 		if (mode == GuiMode.ITEM)
 			fontRenderer.drawString("x", 63, 28 + 18 * gridHeight, 0xE0E0E0);
-		fontRenderer.drawString(TextFormatting.BOLD + "INFO", xSize - 30, -9, isPointInRegion(xSize - 35, -15, 35, 17, mouseX, mouseY) ? 0x6e6e6e : 0x3e3e3e);
+		fontRenderer.drawString(TextFormatting.BOLD + "INFO", xSize - 30, -9, !isPointInRegion(xSize - 35, -15, 35, 17, mouseX, mouseY) ? 0x6e6e6e : 0x3e3e3e);
 		super.drawGuiContainerForegroundLayer(mouseX, mouseY);
 		for (AbstractSlot<?> slot : slots) {
 			if (slot.isMouseOver(mouseX, mouseY))
@@ -157,7 +158,10 @@ public class GuiExI extends CommonGuiContainer {
 
 		over = null;
 		if (mode == GuiMode.ITEM) {
-			items = ExInventory.getInventory(mc.player).getItems();
+			if (con.ei.dirty) {
+				items = con.ei.getItems();
+				con.ei.dirty = false;
+			}
 			List<StackWrapper> tmp = getFilteredItems();
 			int invisible = tmp.size() - gridWidth * gridHeight;
 			if (invisible <= 0)
@@ -186,7 +190,10 @@ public class GuiExI extends CommonGuiContainer {
 				}
 			}
 		} else {
-			fluids = ExInventory.getInventory(mc.player).getFluids();
+			if (con.ei.dirty) {
+				fluids = con.ei.getFluids();
+				con.ei.dirty = false;
+			}
 			List<FluidStack> tmp = getFilteredFluids();
 			int invisible = tmp.size() - gridWidth * gridHeight;
 			if (invisible <= 0)
@@ -321,7 +328,12 @@ public class GuiExI extends CommonGuiContainer {
 	@Override
 	public void handleKeyboardInput() throws IOException {
 		super.handleKeyboardInput();
-		//		PacketHandler.sendToServer(new MessageInvTweaks(Keyboard.isKeyDown(Keyboard.KEY_SPACE), isShiftKeyDown(), isCtrlKeyDown()));
+		NBTTagCompound nbt = new NBTTagCompound();
+		NBTHelper.set(nbt, "action", MessageAction.KEYUPDATE);
+		NBTHelper.set(nbt, "space", Keyboard.isKeyDown(Keyboard.KEY_SPACE));
+		NBTHelper.set(nbt, "shift", isShiftKeyDown());
+		NBTHelper.set(nbt, "ctrl", isCtrlKeyDown());
+		PacketHandler.sendToServer(new MessageInventory(nbt));
 	}
 
 	@Override

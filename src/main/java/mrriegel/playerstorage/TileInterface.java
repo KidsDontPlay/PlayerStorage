@@ -9,13 +9,14 @@ import mrriegel.limelib.tile.IHUDProvider;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.items.CapabilityItemHandler;
 
-public class TileInterface extends CommonTile implements IHUDProvider{
+public class TileInterface extends CommonTile implements IHUDProvider {
 
 	private String player;
 
@@ -60,7 +61,18 @@ public class TileInterface extends CommonTile implements IHUDProvider{
 
 	@Override
 	public List<String> getData(boolean sneak, EnumFacing facing) {
-		return Collections.singletonList("Owner: "+player);
+		return Collections.singletonList(TextFormatting.GOLD + "Owner: " + player);
+	}
+	
+	@Override
+	public double scale(boolean sneak, EnumFacing facing) {
+		return 1.;
+	}
+	
+	@Override
+	public boolean lineBreak(boolean sneak, EnumFacing facing) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }

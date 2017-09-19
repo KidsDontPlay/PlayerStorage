@@ -15,6 +15,6 @@ public class Enums {
 	}
 
 	public static enum MessageAction {
-		SORT, DIRECTION, CLEAR, JEI, GUIMODE, SLOT, INCGRID, DECGRID;
+		SORT, DIRECTION, CLEAR, JEI, GUIMODE, SLOT, INCGRID, DECGRID,KEYUPDATE;
 	}
 }

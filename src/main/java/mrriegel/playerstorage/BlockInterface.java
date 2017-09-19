@@ -3,6 +3,7 @@ package mrriegel.playerstorage;
 import mrriegel.limelib.block.CommonBlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -14,6 +15,7 @@ public class BlockInterface extends CommonBlockContainer<TileInterface> {
 	public BlockInterface() {
 		super(Material.IRON, "interface");
 		setHardness(2.8f);
+		setCreativeTab(CreativeTabs.MISC);
 	}
 
 	@Override

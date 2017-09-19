@@ -8,7 +8,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import com.google.common.collect.Lists;
 
 import mrriegel.limelib.gui.CommonContainer;
-import mrriegel.limelib.gui.slot.SlotGhost;
 import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.ExInventory.Handler;
 import net.minecraft.entity.player.EntityPlayer;
@@ -26,6 +25,7 @@ import net.minecraft.item.crafting.Ingredient;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidActionResult;
 import net.minecraftforge.fluids.FluidUtil;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.wrapper.PlayerMainInvWrapper;
@@ -41,18 +41,11 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 		ei = ExInventory.getInventory(getPlayer());
 		if (ei.mode == GuiMode.ITEM) {
 			invs.put("matrix", new InventoryCrafting(this, 3, 3));
-			for (int i = 0; i < ei.matrix.size(); i++)
-				getMatrix().setInventorySlotContents(i, ei.matrix.get(i));
+			ReflectionHelper.setPrivateValue(InventoryCrafting.class, getMatrix(), ei.matrix, 0);
 			addSlotToContainer(new SlotResult(invPlayer.player, getMatrix(), (IInventory) invs.get("result"), 0, 44, 88 + 18 * ei.gridHeight));
 			initSlots(getMatrix(), 8, 30 + 18 * ei.gridHeight, 3, 3, 0/*, SlotIng.class, ei*/);
 		}
 		initPlayerSlots(80, 30 + 18 * ei.gridHeight);
-	}
-
-	protected void saveMatrix() {
-		if (getMatrix() != null)
-			for (int i = 0; i < 9; i++)
-				ei.matrix.set(i, getMatrix().getStackInSlot(i));
 	}
 
 	@Override
@@ -82,11 +75,10 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 					}
 				}
 				detectAndSendChanges();
-				return ItemStack.EMPTY;
 			} else if (inv == invs.get("result")) {
 				craftShift();
-				return ItemStack.EMPTY;
 			}
+			return ItemStack.EMPTY;
 		}
 		return super.transferStackInSlot(playerIn, index);
 	}
@@ -94,39 +86,35 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 	@Override
 	public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player) {
 		if (!player.world.isRemote) {
-			if (ctrl && shift && getSlot(slotId) != null && getSlot(slotId).getHasStack() && getSlot(slotId).inventory instanceof InventoryPlayer) {
+			if (ei.mode == GuiMode.ITEM && clickTypeIn == ClickType.PICKUP &&slotId>=0&& slotId<inventorySlots.size()&&getSlot(slotId) != null && getSlot(slotId).getHasStack() && getSlot(slotId).inventory instanceof InventoryPlayer) {
 				ItemStack stack = getSlot(slotId).getStack();
+				boolean apply = false;
 				for (Slot s : getSlotsFor(player.inventory)) {
-					if (s.getHasStack() && s.getStack().isItemEqual(stack)) {
-						ItemStack rest = ei.insertItem(s.getStack(), false);
-						s.putStack(rest);
-						if (!rest.isEmpty())
-							break;
+					if (ctrl && shift) {
+						apply = true;
+						if (s.getHasStack() && s.getStack().isItemEqual(stack)) {
+							ItemStack rest = ei.insertItem(s.getStack(), false);
+							s.putStack(rest);
+							if (!rest.isEmpty())
+								break;
+						}
+					} else if (ctrl && space && getSlot(slotId).getSlotIndex() > 8) {
+						apply = true;
+						if (s.getSlotIndex() <= 8)
+							continue;
+						if (s.getHasStack()) {
+							ItemStack rest = ei.insertItem(s.getStack(), false);
+							s.putStack(rest);
+						}
 					}
 				}
-				detectAndSendChanges();
-				return ItemStack.EMPTY;
-			}
-			if (ctrl && space && getSlot(slotId) != null && getSlot(slotId).getHasStack() && getSlot(slotId).inventory instanceof InventoryPlayer && getSlot(slotId).getSlotIndex() > 8) {
-				for (Slot s : getSlotsFor(player.inventory)) {
-					if (s.getSlotIndex() <= 8)
-						continue;
-					if (s.getHasStack()) {
-						ItemStack rest = ei.insertItem(s.getStack(), false);
-						s.putStack(rest);
-					}
+				if (apply) {
+					detectAndSendChanges();
+					return ItemStack.EMPTY;
 				}
-				detectAndSendChanges();
-				return ItemStack.EMPTY;
 			}
 		}
 		return super.slotClick(slotId, dragType, clickTypeIn, player);
-	}
-
-	@Override
-	public void onContainerClosed(EntityPlayer playerIn) {
-		super.onContainerClosed(playerIn);
-		saveMatrix();
 	}
 
 	public void craftShift() {
@@ -139,7 +127,6 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 		while (crafted + res.getCount() <= res.getMaxStackSize()) {
 			if (!ItemHandlerHelper.insertItemStacked(inv, res.copy(), true).isEmpty())
 				break;
-			ItemHandlerHelper.insertItemStacked(inv, res.copy(), false);
 			sl.onTake(getPlayer(), res);
 			crafted += res.getCount();
 			onCraftMatrixChanged(null);
@@ -159,45 +146,12 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 	}
 
 	@Override
-	public boolean canInteractWith(EntityPlayer playerIn) {
-		return super.canInteractWith(playerIn);
-	}
-
-	@Override
 	public boolean canMergeSlot(ItemStack stack, Slot slot) {
 		return slot.inventory != invs.get("result") /*&& slot.inventory != getMatrix()*/ && super.canMergeSlot(stack, slot);
 	}
 
 	public InventoryCrafting getMatrix() {
 		return (InventoryCrafting) invs.get("matrix");
-	}
-
-	public static class SlotIng extends SlotGhost {
-
-		ExInventory ei;
-
-		public SlotIng(IInventory inventoryIn, int index, int xPosition, int yPosition, ExInventory ei) {
-			super(inventoryIn, index, xPosition, yPosition);
-			this.ei = ei;
-		}
-
-		@Override
-		public boolean canTakeStack(EntityPlayer playerIn) {
-			return super.canTakeStack(playerIn);
-		}
-
-		@Override
-		public boolean isItemValid(ItemStack stack) {
-			if (getHasStack())
-				return false;
-			ItemStack copy = ItemHandlerHelper.copyStackWithSize(stack, 1);
-			ItemStack rest = ei.insertItem(copy, false);
-			if (rest.isEmpty())
-				stack.shrink(1);
-			this.putStack(copy);
-			return false;
-		}
-
 	}
 
 	public static class SlotResult extends SlotCrafting {
@@ -212,12 +166,6 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 			return (ContainerExI) ei.player.openContainer;
 		}
 
-		@Override
-		public void onSlotChanged() {
-			super.onSlotChanged();
-			//			con().saveMatrix();
-		}
-
 		public ItemStack onTake(EntityPlayer playerIn, ItemStack stack) {
 			if (playerIn.world.isRemote) {
 				return stack;
@@ -227,33 +175,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 				lis.add(con().getMatrix().getStackInSlot(i).copy());
 			List<Ingredient> ings = con().recipe.getIngredients();
 			super.onTake(playerIn, stack);
-			//			this.onCrafting(stack);
-			//			net.minecraftforge.common.ForgeHooks.setCraftingPlayer(playerIn);
-			//			NonNullList<ItemStack> nonnulllist = CraftingManager.getRemainingItems(con().getMatrix(), playerIn.world);
-			//			net.minecraftforge.common.ForgeHooks.setCraftingPlayer(null);
-			//
-			//			for (int i = 0; i < nonnulllist.size(); ++i) {
-			//				ItemStack itemstack = con().getMatrix().getStackInSlot(i);
-			//				ItemStack itemstack1 = nonnulllist.get(i);
-			//
-			//				if (!itemstack.isEmpty()) {
-			//					con().getMatrix().decrStackSize(i, 1);
-			//					itemstack = con().getMatrix().getStackInSlot(i);
-			//				}
-			//
-			//				if (!itemstack1.isEmpty()) {
-			//					if (itemstack.isEmpty()) {
-			//						con().getMatrix().setInventorySlotContents(i, itemstack1);
-			//					} else if (ItemStack.areItemsEqual(itemstack, itemstack1) && ItemStack.areItemStackTagsEqual(itemstack, itemstack1)) {
-			//						itemstack1.grow(itemstack.getCount());
-			//						con().getMatrix().setInventorySlotContents(i, itemstack1);
-			//					} else if (!ei.player.inventory.addItemStackToInventory(itemstack1)) {
-			//						ei.player.dropItem(itemstack1, false);
-			//					}
-			//				}
-			//			}
-
-			con().detectAndSendChanges();
+//			con().detectAndSendChanges();
 			boolean empty = con().getMatrix().isEmpty();
 			for (int i = 0; i < con().getMatrix().getSizeInventory(); i++)
 				if (con().getMatrix().getStackInSlot(i).isEmpty() && !lis.get(i).isEmpty()) {

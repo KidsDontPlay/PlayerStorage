@@ -16,7 +16,7 @@ public class CommonProxy implements IGuiHandler {
 	public void preInit(FMLPreInitializationEvent event) {
 		ConfigHandler.refreshConfig(event.getSuggestedConfigurationFile());
 		ExInventory.register();
-		PlayerStorage.interfac.registerBlock();
+		Registry.init();
 	}
 
 	public void init(FMLInitializationEvent event) {
@@ -32,8 +32,6 @@ public class CommonProxy implements IGuiHandler {
 	public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
 		if (!world.isRemote) {
 			ExInventory.sync((EntityPlayerMP) player);
-			if (player.openContainer instanceof ContainerExI)
-				((ContainerExI) player.openContainer).saveMatrix();
 		}
 		if (ID == 0)
 			return new ContainerExI(player.inventory);
