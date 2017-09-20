@@ -2,9 +2,9 @@ package mrriegel.playerstorage;
 
 import java.util.List;
 
-import org.apache.commons.lang3.text.WordUtils;
-
+import mrriegel.limelib.LimeLib;
 import mrriegel.limelib.helper.RegistryHelper;
+import mrriegel.limelib.particle.CommonParticle;
 import mrriegel.playerstorage.ConfigHandler.Unit2;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.resources.I18n;
@@ -16,6 +16,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
+import net.minecraftforge.oredict.OreDictionary;
 
 public class ItemApple extends ItemFood {
 
@@ -28,6 +29,7 @@ public class ItemApple extends ItemFood {
 		setUnlocalizedName(getRegistryName().toString());
 		setHasSubtypes(true);
 		setCreativeTab(CreativeTabs.MISC);
+		setAlwaysEdible();
 	}
 
 	public void registerItem() {
@@ -54,33 +56,44 @@ public class ItemApple extends ItemFood {
 	@Override
 	public String getItemStackDisplayName(ItemStack stack) {
 		String ore = ConfigHandler.appleList.get(stack.getItemDamage());
-		int firstUp = -1;
-		for (int i = 0; i < ore.length(); i++) {
-			if (Character.isUpperCase(ore.charAt(i))) {
-				firstUp = i;
-				break;
-			}
-		}
-		ore = firstUp != -1 ? ore = ore.substring(firstUp) : WordUtils.capitalize(ore);
+		List<ItemStack> ores = OreDictionary.getOres(ore);
+		if (!ores.isEmpty())
+			ore = ores.get(0).getDisplayName();
 		return I18n.format("item.playerstorage:apple.name") + " (" + ore + ")";
+	}
+
+	@Override
+	public boolean hasEffect(ItemStack stack) {
+		List<ItemStack> ores = OreDictionary.getOres(ConfigHandler.appleList.get(stack.getItemDamage()));
+		if (!ores.isEmpty())
+			return ores.get(0).getItem().hasEffect(ores.get(0));
+		return super.hasEffect(stack);
 	}
 
 	@Override
 	protected void onFoodEaten(ItemStack stack, World worldIn, EntityPlayer player) {
 		super.onFoodEaten(stack, worldIn, player);
-		if (!worldIn.isRemote && !ConfigHandler.infiniteSpace) {
+		if (!ConfigHandler.infiniteSpace) {
 			ExInventory ei = ExInventory.getInventory(player);
 			Unit2 u = ConfigHandler.apples.get(ConfigHandler.appleList.get(stack.getItemDamage()));
+			if (u == null)
+				return;
 			ei.itemLimit += Math.abs(u.itemLimit);
 			ei.fluidLimit += Math.abs(u.fluidLimit);
-			player.sendStatusMessage(new TextComponentString("Player Storage increased by " + u.itemLimit + "/" + u.fluidLimit + "."), true);
+			if (worldIn.isRemote) {
+				player.sendStatusMessage(new TextComponentString("Player Storage increased by " + u.itemLimit + "/" + u.fluidLimit + "."), true);
+				for (int i = 0; i < 70; i++)
+					LimeLib.proxy.renderParticle(new CommonParticle(player.posX, player.posY + .3, player.posZ).//
+							setFlouncing(.015).setScale(1f).setGravity(-.025f).setMaxAge2(80).setColor(ClientProxy.colorMap.get(stack.getItemDamage()), 255, 10));
+			}
 		}
 	}
 
 	@Override
 	public void addInformation(ItemStack stack, World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
 		Unit2 u = ConfigHandler.apples.get(ConfigHandler.appleList.get(stack.getItemDamage()));
-		tooltip.add(u.itemLimit + "/" + u.fluidLimit);
+		if (u != null)
+			tooltip.add(u.itemLimit + "/" + u.fluidLimit);
 	}
 
 }

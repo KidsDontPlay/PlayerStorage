@@ -9,6 +9,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.SPacketSetSlot;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
@@ -17,17 +18,18 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.wrapper.PlayerMainInvWrapper;
 
-public class MessageInventory extends AbstractMessage {
+public class Message2Server extends AbstractMessage {
 
-	public MessageInventory() {
+	public Message2Server() {
 	}
 
-	public MessageInventory(NBTTagCompound nbt) {
+	public Message2Server(NBTTagCompound nbt) {
 		this.nbt = nbt;
 	}
 
 	@Override
 	public void handleMessage(EntityPlayer player, NBTTagCompound nbt, Side side) {
+		MessageAction ma = NBTHelper.get(nbt, "action", MessageAction.class);
 		if (player.openContainer instanceof ContainerExI) {
 			ContainerExI con = (ContainerExI) player.openContainer;
 			ExInventory ei = con.ei;
@@ -36,7 +38,7 @@ public class MessageInventory extends AbstractMessage {
 			NBTTagCompound slot = NBTHelper.get(nbt, "slot", NBTTagCompound.class);
 			int mouse = NBTHelper.get(nbt, "mouse", Integer.class);
 			boolean shift = NBTHelper.get(nbt, "shift", Boolean.class), ctrl = NBTHelper.get(nbt, "ctrl", Boolean.class), space = NBTHelper.get(nbt, "space", Boolean.class);
-			switch (NBTHelper.get(nbt, "action", MessageAction.class)) {
+			switch (ma) {
 			case CLEAR:
 				for (int i = 0; i < con.getMatrix().getSizeInventory(); i++)
 					con.getMatrix().setInventorySlotContents(i, ei.insertItem(con.getMatrix().getStackInSlot(i), false));
@@ -146,8 +148,40 @@ public class MessageInventory extends AbstractMessage {
 				con.space = space;
 				con.shift = shift;
 				break;
+			default:
+				break;
 			}
-			ei.dirty = true;
+			if (ma.name().toLowerCase().startsWith("team")) {
+				EntityPlayer p1 = player.world.getPlayerEntityByName(NBTHelper.get(nbt, "player1", String.class));
+				EntityPlayer p2 = player.world.getPlayerEntityByName(NBTHelper.get(nbt, "player2", String.class));
+				if (p1 == null || p2 == null || p1 == p2)
+					return;
+				ExInventory ei1 = ExInventory.getInventory(p1), ei2 = ExInventory.getInventory(p2);
+				if (ei1 == null || ei2 == null)
+					return;
+				switch (ma) {
+				case TEAMINVITE:
+					if (ei1.members.contains(p2.getName()))
+						break;
+					ei1.members.add(p2.getName());
+					ei2.members.add(p1.getName());
+					ei1.dirty = ei2.dirty = true;
+					p1.sendStatusMessage(new TextComponentString(p2.getName() + " accepted your invitation."), true);
+					p2.sendStatusMessage(new TextComponentString("You accepted " + p1.getName() + "'s invitation."), true);
+					break;
+				case TEAMKICK:
+					if (!ei1.members.contains(p2.getName()))
+						break;
+					ei1.members.remove(p2.getName());
+					ei2.members.remove(p1.getName());
+					ei1.dirty = ei2.dirty = true;
+					p1.sendStatusMessage(new TextComponentString("You broke up with " + p2.getName() + "."), true);
+					p2.sendStatusMessage(new TextComponentString(p1.getName() + " broke up with you."), true);
+					break;
+				default:
+					break;
+				}
+			}
 		}
 	}
 

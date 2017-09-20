@@ -39,6 +39,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 	public ContainerExI(InventoryPlayer invPlayer) {
 		super(invPlayer, invPlayer.player, Pair.of("result", new InventoryCraftResult()));
 		ei = ExInventory.getInventory(getPlayer());
+		ei.dirty = true;
 		if (ei.mode == GuiMode.ITEM) {
 			invs.put("matrix", new InventoryCrafting(this, 3, 3));
 			ReflectionHelper.setPrivateValue(InventoryCrafting.class, getMatrix(), ei.matrix, 0);
@@ -86,7 +87,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 	@Override
 	public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player) {
 		if (!player.world.isRemote) {
-			if (ei.mode == GuiMode.ITEM && clickTypeIn == ClickType.PICKUP &&slotId>=0&& slotId<inventorySlots.size()&&getSlot(slotId) != null && getSlot(slotId).getHasStack() && getSlot(slotId).inventory instanceof InventoryPlayer) {
+			if (ei.mode == GuiMode.ITEM && clickTypeIn == ClickType.PICKUP && slotId >= 0 && slotId < inventorySlots.size() && getSlot(slotId) != null && getSlot(slotId).getHasStack() && getSlot(slotId).inventory instanceof InventoryPlayer) {
 				ItemStack stack = getSlot(slotId).getStack();
 				boolean apply = false;
 				for (Slot s : getSlotsFor(player.inventory)) {
@@ -175,7 +176,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 				lis.add(con().getMatrix().getStackInSlot(i).copy());
 			List<Ingredient> ings = con().recipe.getIngredients();
 			super.onTake(playerIn, stack);
-//			con().detectAndSendChanges();
+			//			con().detectAndSendChanges();
 			boolean empty = con().getMatrix().isEmpty();
 			for (int i = 0; i < con().getMatrix().getSizeInventory(); i++)
 				if (con().getMatrix().getStackInSlot(i).isEmpty() && !lis.get(i).isEmpty()) {

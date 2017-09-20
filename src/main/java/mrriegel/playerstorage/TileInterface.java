@@ -45,6 +45,7 @@ public class TileInterface extends CommonTile implements IHUDProvider {
 
 	public void setPlayer(String player) {
 		this.player = player;
+		markDirty();
 	}
 
 	@Override
@@ -71,7 +72,6 @@ public class TileInterface extends CommonTile implements IHUDProvider {
 	
 	@Override
 	public boolean lineBreak(boolean sneak, EnumFacing facing) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 

@@ -1,0 +1,26 @@
+{
+  "result": {
+    "item": "playerstorage:interface",
+    "count": 2
+  },
+  "pattern": [
+    "ses",
+    "did",
+    "ses"
+  ],
+  "type": "forge:ore_shaped",
+  "key": {
+    "s": {
+      "item": "#STONE"
+    },
+    "d": {
+      "item": "#GEMDIAMOND"
+    },
+    "e": {
+      "item": "#ENDERPEARL"
+    },
+    "i": {
+      "item": "#INGOTIRON"
+    }
+  }
+}

@@ -17,16 +17,23 @@ public class ConfigHandler {
 
 	public static Configuration config;
 
-	public static boolean infiniteSpace;
-	public static Map<String, Unit2> apples = new HashMap<>();
-	public static List<String> appleList=new ArrayList<String>(6);
+	public static boolean infiniteSpace, remote;
+	public static Map<String, Unit2> apples = new HashMap<>() ;
+	public static List<String> appleList = new ArrayList<String>(6) {
+		public String get(int index) {
+			if (index >= size())
+				return "";
+			return super.get(index);
+		}
+	};
 
 	public static void refreshConfig(File file) {
 		config = new Configuration(file);
 		Gson gson = new Gson();
-		config.getBoolean("infiniteSpace", Configuration.CATEGORY_GENERAL, false, "Enable infinite inventory.");
+		infiniteSpace = config.getBoolean("infiniteSpace", Configuration.CATEGORY_GENERAL, false, "Enable infinite inventory.");
+		remote = config.getBoolean("remote", Configuration.CATEGORY_GENERAL, false, "Enable remote item to access your inventory without pressing the key.");
 		Property prop = config.get(Configuration.CATEGORY_GENERAL, "appleTiers", ImmutableList.builder()//
-				.add(new Unit("blockIron", 1000, 10000), new Unit("blockGold", 3000, 30000), new Unit("blockDiamond", 9000, 90000)).build().stream().map(gson::toJson).toArray(String[]::new));
+				.add(new Unit("blockIron", 3200, 32000), new Unit("blockGold", 25600, 256000), new Unit("blockDiamond", 102400, 1024000), new Unit("netherStar", 1000000, 10000000)).build().stream().map(gson::toJson).toArray(String[]::new));
 		prop.setLanguageKey("appleTiers");
 		prop.setComment("Tiers for apples");
 		for (String s : prop.getStringList()) {

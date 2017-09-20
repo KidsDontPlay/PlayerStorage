@@ -20,7 +20,6 @@ import mrriegel.limelib.gui.element.AbstractSlot;
 import mrriegel.limelib.gui.element.AbstractSlot.FluidSlot;
 import mrriegel.limelib.gui.element.AbstractSlot.ItemSlot;
 import mrriegel.limelib.gui.element.ScrollBar;
-import mrriegel.limelib.helper.ColorHelper;
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.PacketHandler;
 import mrriegel.limelib.plugin.JEI;
@@ -30,7 +29,6 @@ import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.Enums.MessageAction;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Items;
@@ -41,7 +39,6 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.oredict.OreDictionary;
 
@@ -60,6 +57,7 @@ public class GuiExI extends CommonGuiContainer {
 
 	private int gridWidth = 12, gridHeight;
 	private ContainerExI con;
+	private boolean listDirty=true;
 
 	public boolean canClick() {
 		return System.currentTimeMillis() > lastClick + 150L;
@@ -133,21 +131,12 @@ public class GuiExI extends CommonGuiContainer {
 	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
 		if (mode == GuiMode.ITEM)
 			fontRenderer.drawString("x", 63, 28 + 18 * gridHeight, 0xE0E0E0);
-		fontRenderer.drawString(TextFormatting.BOLD + "INFO", xSize - 30, -9, !isPointInRegion(xSize - 35, -15, 35, 17, mouseX, mouseY) ? 0x6e6e6e : 0x3e3e3e);
+		fontRenderer.drawString(TextFormatting.BOLD + "MORE", xSize - 31, -9, !isPointInRegion(xSize - 35, -15, 35, 17, mouseX, mouseY) ? 0x6e6e6e : 0x3e3e3e);
 		super.drawGuiContainerForegroundLayer(mouseX, mouseY);
 		for (AbstractSlot<?> slot : slots) {
 			if (slot.isMouseOver(mouseX, mouseY))
 				slot.drawTooltip(mouseX - guiLeft, mouseY - guiTop);
 		}
-	}
-
-	@Override
-	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-		super.drawScreen(mouseX, mouseY, partialTicks);
-		if (isPointInRegion(xSize - 35, -15, 35, 17, mouseX, mouseY)) {
-
-		}
-
 	}
 
 	@Override
@@ -159,8 +148,8 @@ public class GuiExI extends CommonGuiContainer {
 		over = null;
 		if (mode == GuiMode.ITEM) {
 			if (con.ei.dirty) {
-				items = con.ei.getItems();
 				con.ei.dirty = false;
+				items = con.ei.getItems();
 			}
 			List<StackWrapper> tmp = getFilteredItems();
 			int invisible = tmp.size() - gridWidth * gridHeight;
@@ -191,8 +180,8 @@ public class GuiExI extends CommonGuiContainer {
 			}
 		} else {
 			if (con.ei.dirty) {
-				fluids = con.ei.getFluids();
 				con.ei.dirty = false;
+				fluids = con.ei.getFluids();
 			}
 			List<FluidStack> tmp = getFilteredFluids();
 			int invisible = tmp.size() - gridWidth * gridHeight;
@@ -253,8 +242,8 @@ public class GuiExI extends CommonGuiContainer {
 		super.actionPerformed(button);
 		NBTTagCompound nbt = new NBTTagCompound();
 		NBTHelper.set(nbt, "action", MessageAction.values()[button.id]);
-		PacketHandler.sendToServer(new MessageInventory(nbt));
-		new MessageInventory().handleMessage(mc.player, nbt, Side.CLIENT);
+		PacketHandler.sendToServer(new Message2Server(nbt));
+		new Message2Server().handleMessage(mc.player, nbt, Side.CLIENT);
 	}
 
 	protected void sendSlot(AbstractSlot<?> slot, int mouseButton) {
@@ -273,7 +262,7 @@ public class GuiExI extends CommonGuiContainer {
 		NBTHelper.set(nbt, "mouse", mouseButton);
 		NBTHelper.set(nbt, "shift", isShiftKeyDown());
 		NBTHelper.set(nbt, "ctrl", isCtrlKeyDown());
-		PacketHandler.sendToServer(new MessageInventory(nbt));
+		PacketHandler.sendToServer(new Message2Server(nbt));
 	}
 
 	private boolean scrollDrag = false;
@@ -300,7 +289,6 @@ public class GuiExI extends CommonGuiContainer {
 		if (isPointInRegion(xSize - 35, -15, 35, 17, mouseX, mouseY)) {
 			if (mouseButton == 0)
 				GuiDrawer.openGui(new GuiInfo());
-
 		}
 	}
 
@@ -333,7 +321,7 @@ public class GuiExI extends CommonGuiContainer {
 		NBTHelper.set(nbt, "space", Keyboard.isKeyDown(Keyboard.KEY_SPACE));
 		NBTHelper.set(nbt, "shift", isShiftKeyDown());
 		NBTHelper.set(nbt, "ctrl", isCtrlKeyDown());
-		PacketHandler.sendToServer(new MessageInventory(nbt));
+		PacketHandler.sendToServer(new Message2Server(nbt));
 	}
 
 	@Override
