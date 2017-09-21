@@ -8,12 +8,17 @@ import org.lwjgl.input.Keyboard;
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import mrriegel.limelib.helper.ColorHelper;
+import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.OpenGuiMessage;
 import mrriegel.limelib.network.PacketHandler;
+import mrriegel.playerstorage.Enums.MessageAction;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -26,7 +31,7 @@ import net.minecraftforge.oredict.OreDictionary;
 public class ClientProxy extends CommonProxy {
 
 	public static final KeyBinding GUI = new KeyBinding("Open GUI", Keyboard.KEY_I, PlayerStorage.MODID);
-	public static Int2IntOpenHashMap colorMap = new Int2IntOpenHashMap(3);
+	public static Int2IntOpenHashMap colorMap = new Int2IntOpenHashMap(4);
 
 	@Override
 	public void preInit(FMLPreInitializationEvent event) {
@@ -87,6 +92,24 @@ public class ClientProxy extends CommonProxy {
 	public static void key(InputEvent.KeyInputEvent event) {
 		if (Minecraft.getMinecraft().inGameHasFocus && GUI.isPressed() && Minecraft.getMinecraft().player.hasCapability(ExInventory.EXINVENTORY, null)) {
 			PacketHandler.sendToServer(new OpenGuiMessage(PlayerStorage.MODID, 0, null));
+		}
+	}
+
+	public static final String TEAMCODE = "²³¼′°°!^’â^^Ô`¸'";
+
+	@SubscribeEvent
+	public static void chat(ClientChatEvent event) {
+		if (event.getMessage().contains(TEAMCODE)) {
+			EntityPlayer sender = Minecraft.getMinecraft().world.getPlayerEntityByName(event.getMessage().replace(TEAMCODE, ""));
+			if (sender != null) {
+				NBTTagCompound nbt = new NBTTagCompound();
+				NBTHelper.set(nbt, "action", MessageAction.TEAMACCEPT);
+				NBTHelper.set(nbt, "player1", Minecraft.getMinecraft().player.getName());
+				NBTHelper.set(nbt, "player2", sender.getName());
+				PacketHandler.sendToServer(new Message2Server(nbt));
+			}
+			event.setMessage("");
+
 		}
 	}
 

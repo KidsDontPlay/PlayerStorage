@@ -64,12 +64,12 @@ public class TileInterface extends CommonTile implements IHUDProvider {
 	public List<String> getData(boolean sneak, EnumFacing facing) {
 		return Collections.singletonList(TextFormatting.GOLD + "Owner: " + player);
 	}
-	
+
 	@Override
 	public double scale(boolean sneak, EnumFacing facing) {
 		return 1.;
 	}
-	
+
 	@Override
 	public boolean lineBreak(boolean sneak, EnumFacing facing) {
 		return false;

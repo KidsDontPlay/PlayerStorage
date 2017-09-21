@@ -1,6 +1,5 @@
 package mrriegel.playerstorage;
 
-import mrriegel.limelib.block.CommonBlock;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
@@ -29,6 +28,7 @@ public class PlayerStorage {
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
 		proxy.init(event);
+
 	}
 
 	@EventHandler

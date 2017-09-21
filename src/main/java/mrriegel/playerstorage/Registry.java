@@ -21,8 +21,7 @@ public class Registry {
 	public static void init() {
 		interfac.registerBlock();
 		apple.registerItem();
-		if (ConfigHandler.remote)
-			remote.registerItem();
+		remote.registerItem();
 
 		for (int i = 0; i < ConfigHandler.appleList.size(); i++) {
 			String ore = ConfigHandler.appleList.get(i);
@@ -36,8 +35,7 @@ public class Registry {
 	public static void initClient() {
 		interfac.initModel();
 		apple.initModel();
-		if (ConfigHandler.remote)
-			remote.initModel();
+		remote.initModel();
 	}
 
 }

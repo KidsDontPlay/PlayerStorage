@@ -9,7 +9,12 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.SPacketSetSlot;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.event.ClickEvent;
+import net.minecraft.util.text.event.HoverEvent;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
@@ -163,18 +168,47 @@ public class Message2Server extends AbstractMessage {
 				case TEAMINVITE:
 					if (ei1.members.contains(p2.getName()))
 						break;
-					ei1.members.add(p2.getName());
-					ei2.members.add(p1.getName());
-					ei1.dirty = ei2.dirty = true;
-					p1.sendStatusMessage(new TextComponentString(p2.getName() + " accepted your invitation."), true);
-					p2.sendStatusMessage(new TextComponentString("You accepted " + p1.getName() + "'s invitation."), true);
+					ITextComponent text = new TextComponentString(p1.getName() + " invites you to join their PlayerStorage team.");
+					ITextComponent yes = new TextComponentString("[Accept]");
+
+					//		ITextComponent no = new TextComponentString("[Decline]");
+					Style yesno = new Style();
+					yesno.setColor(TextFormatting.GREEN);
+					yesno.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString("Click here")));
+					yesno.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, ClientProxy.TEAMCODE + p1.getName()));
+					yes.setStyle(yesno);
+					//		yesno = yesno.createShallowCopy();
+					//		yesno.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "") {
+					//			@Override
+					//			public Action getAction() {
+					//				System.out.println("no");
+					//				return super.getAction();
+					//			}
+					//		});
+					//		no.setStyle(yesno);
+					text.appendText(" ");
+					text.appendSibling(yes);
+					//		text.appendText(" / ");
+					//		text.appendSibling(no);
+					p2.sendMessage(text);
 					break;
-				case TEAMKICK:
+				//				case TEAMACCEPT:
+				//					System.out.println("acc");
+				//					if (ei1.members.contains(p2.getName()))
+				//						break;
+				//					ei1.members.add(p2.getName());
+				//					ei2.members.add(p1.getName());
+				//					ei1.dirty = ei2.dirty = true;
+				//					p1.sendStatusMessage(new TextComponentString(p2.getName() + " accepted your invitation."), true);
+				//					p2.sendStatusMessage(new TextComponentString("You accepted " + p1.getName() + "'s invitation."), true);
+				//					break;
+				case TEAMUNINVITE:
 					if (!ei1.members.contains(p2.getName()))
 						break;
 					ei1.members.remove(p2.getName());
 					ei2.members.remove(p1.getName());
-					ei1.dirty = ei2.dirty = true;
+					ei1.markForSync();
+					ei2.markForSync();
 					p1.sendStatusMessage(new TextComponentString("You broke up with " + p2.getName() + "."), true);
 					p2.sendStatusMessage(new TextComponentString(p1.getName() + " broke up with you."), true);
 					break;
@@ -182,6 +216,27 @@ public class Message2Server extends AbstractMessage {
 					break;
 				}
 			}
+		}
+		switch (ma) {
+		case TEAMACCEPT:
+			EntityPlayer p1 = player.world.getPlayerEntityByName(NBTHelper.get(nbt, "player1", String.class));
+			EntityPlayer p2 = player.world.getPlayerEntityByName(NBTHelper.get(nbt, "player2", String.class));
+			if (p1 == null || p2 == null || p1 == p2)
+				return;
+			ExInventory ei1 = ExInventory.getInventory(p1), ei2 = ExInventory.getInventory(p2);
+			if (ei1 == null || ei2 == null)
+				return;
+			if (ei1.members.contains(p2.getName()))
+				break;
+			ei1.members.add(p2.getName());
+			ei2.members.add(p1.getName());
+			ei1.markForSync();
+			ei2.markForSync();
+			p1.sendStatusMessage(new TextComponentString("You accepted " + p1.getName() + "'s invitation."), true);
+			p2.sendStatusMessage(new TextComponentString(p2.getName() + " accepted your invitation."), true);
+			break;
+		default:
+			break;
 		}
 	}
 

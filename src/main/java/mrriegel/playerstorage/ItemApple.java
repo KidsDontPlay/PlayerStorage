@@ -13,9 +13,11 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.oredict.OreDictionary;
 
 public class ItemApple extends ItemFood {
@@ -91,9 +93,17 @@ public class ItemApple extends ItemFood {
 
 	@Override
 	public void addInformation(ItemStack stack, World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+		tooltip.add("Increase your storage with apples.");
 		Unit2 u = ConfigHandler.apples.get(ConfigHandler.appleList.get(stack.getItemDamage()));
 		if (u != null)
 			tooltip.add(u.itemLimit + "/" + u.fluidLimit);
+	}
+	
+	@Override
+	public ICapabilityProvider initCapabilities(ItemStack stack, NBTTagCompound nbt) {
+		if(ConfigHandler.appleList.get(stack.getItemDamage()).isEmpty())
+			stack.setCount(0);
+		return super.initCapabilities(stack, nbt);
 	}
 
 }

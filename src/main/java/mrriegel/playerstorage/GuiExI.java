@@ -57,7 +57,7 @@ public class GuiExI extends CommonGuiContainer {
 
 	private int gridWidth = 12, gridHeight;
 	private ContainerExI con;
-	private boolean listDirty=true;
+	private boolean listDirty = true;
 
 	public boolean canClick() {
 		return System.currentTimeMillis() > lastClick + 150L;
@@ -69,7 +69,7 @@ public class GuiExI extends CommonGuiContainer {
 		con = inventorySlotsIn;
 		mode = Validate.notNull(con.ei.mode);
 		gridHeight = con.ei.gridHeight;
-		con.ei.dirty = true;
+		con.ei.needSync = true;
 	}
 
 	@Override
@@ -147,8 +147,8 @@ public class GuiExI extends CommonGuiContainer {
 
 		over = null;
 		if (mode == GuiMode.ITEM) {
-			if (con.ei.dirty) {
-				con.ei.dirty = false;
+			if (con.ei.needSync) {
+				con.ei.needSync = false;
 				items = con.ei.getItems();
 			}
 			List<StackWrapper> tmp = getFilteredItems();
@@ -179,8 +179,8 @@ public class GuiExI extends CommonGuiContainer {
 				}
 			}
 		} else {
-			if (con.ei.dirty) {
-				con.ei.dirty = false;
+			if (con.ei.needSync) {
+				con.ei.needSync = false;
 				fluids = con.ei.getFluids();
 			}
 			List<FluidStack> tmp = getFilteredFluids();

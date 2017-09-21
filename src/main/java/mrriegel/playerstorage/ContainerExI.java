@@ -39,11 +39,11 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 	public ContainerExI(InventoryPlayer invPlayer) {
 		super(invPlayer, invPlayer.player, Pair.of("result", new InventoryCraftResult()));
 		ei = ExInventory.getInventory(getPlayer());
-		ei.dirty = true;
+		ei.markForSync();
 		if (ei.mode == GuiMode.ITEM) {
 			invs.put("matrix", new InventoryCrafting(this, 3, 3));
 			ReflectionHelper.setPrivateValue(InventoryCrafting.class, getMatrix(), ei.matrix, 0);
-			addSlotToContainer(new SlotResult(invPlayer.player, getMatrix(), (IInventory) invs.get("result"), 0, 44, 88 + 18 * ei.gridHeight));
+			addSlotToContainer(new SlotResult(invPlayer.player, getMatrix(), invs.get("result"), 0, 44, 88 + 18 * ei.gridHeight));
 			initSlots(getMatrix(), 8, 30 + 18 * ei.gridHeight, 3, 3, 0/*, SlotIng.class, ei*/);
 		}
 		initPlayerSlots(80, 30 + 18 * ei.gridHeight);
@@ -167,6 +167,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 			return (ContainerExI) ei.player.openContainer;
 		}
 
+		@Override
 		public ItemStack onTake(EntityPlayer playerIn, ItemStack stack) {
 			if (playerIn.world.isRemote) {
 				return stack;
