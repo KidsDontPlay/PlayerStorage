@@ -57,7 +57,6 @@ public class GuiExI extends CommonGuiContainer {
 
 	private int gridWidth = 12, gridHeight;
 	private ContainerExI con;
-	private boolean listDirty = true;
 
 	public boolean canClick() {
 		return System.currentTimeMillis() > lastClick + 150L;
@@ -90,6 +89,7 @@ public class GuiExI extends CommonGuiContainer {
 		if (LimeLib.jeiLoaded)
 			buttonList.add(jei = new CommonGuiButton(MessageAction.JEI.ordinal(), guiLeft + 103, guiTop + 11 + 18 * gridHeight, 42, 12, null).setTooltip("Enable synchronized search with JEI").setDesign(Design.SIMPLE));
 		buttonList.add(modeButton = new CommonGuiButton(MessageAction.GUIMODE.ordinal(), guiLeft - 23, guiTop + ySize - 20, 20, 20, "").setTooltip("Toggle Mode").setDesign(Design.SIMPLE));
+		buttonList.add(new CommonGuiButton(1000, guiLeft - 23, guiTop + ySize - 45, 20, 20, "\u2261").setTooltip("More Options").setDesign(Design.SIMPLE));
 		buttonList.add(inc = new CommonGuiButton(MessageAction.INCGRID.ordinal(), guiLeft - 23, guiTop + 1, 20, 10, "+").setTooltip("Increase Grid Height").setDesign(Design.SIMPLE).setButtonColor(Color.GRAY.getRGB()));
 		buttonList.add(dec = new CommonGuiButton(MessageAction.DECGRID.ordinal(), guiLeft - 23, guiTop + 14, 20, 10, "-").setTooltip("Decrease Grid Height").setDesign(Design.SIMPLE).setButtonColor(Color.GRAY.getRGB()));
 		scrollBar = new ScrollBar(0, 227, 7, 14, 18 * gridHeight, drawer, Plane.VERTICAL);
@@ -108,7 +108,7 @@ public class GuiExI extends CommonGuiContainer {
 	protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
 		drawDefaultBackground();
 		super.drawGuiContainerBackgroundLayer(partialTicks, mouseX, mouseY);
-		drawer.drawBackgroundTexture(xSize - 35, -15, 35, 20);
+		//		drawer.drawBackgroundTexture(xSize - 35, -15, 35, 20);
 		drawer.drawBackgroundTexture();
 		drawer.drawPlayerSlots(79, 29 + 18 * gridHeight);
 		drawer.drawSlots(7, 7, gridWidth, gridHeight);
@@ -131,12 +131,13 @@ public class GuiExI extends CommonGuiContainer {
 	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
 		if (mode == GuiMode.ITEM)
 			fontRenderer.drawString("x", 63, 28 + 18 * gridHeight, 0xE0E0E0);
-		fontRenderer.drawString(TextFormatting.BOLD + "MORE", xSize - 31, -9, !isPointInRegion(xSize - 35, -15, 35, 17, mouseX, mouseY) ? 0x6e6e6e : 0x3e3e3e);
+		//		fontRenderer.drawString(TextFormatting.BOLD + "MORE", xSize - 31, -9, !isPointInRegion(xSize - 35, -15, 35, 17, mouseX, mouseY) ? 0x6e6e6e : 0x3e3e3e);
 		super.drawGuiContainerForegroundLayer(mouseX, mouseY);
 		for (AbstractSlot<?> slot : slots) {
 			if (slot.isMouseOver(mouseX, mouseY))
 				slot.drawTooltip(mouseX - guiLeft, mouseY - guiTop);
 		}
+		fontRenderer.drawString(TextFormatting.BOLD + "A", sort.x - guiLeft + 3, sort.y - guiTop + 3, 0xff000000);
 	}
 
 	@Override
@@ -240,10 +241,14 @@ public class GuiExI extends CommonGuiContainer {
 	@Override
 	protected void actionPerformed(GuiButton button) throws IOException {
 		super.actionPerformed(button);
-		NBTTagCompound nbt = new NBTTagCompound();
-		NBTHelper.set(nbt, "action", MessageAction.values()[button.id]);
-		PacketHandler.sendToServer(new Message2Server(nbt));
-		new Message2Server().handleMessage(mc.player, nbt, Side.CLIENT);
+		if (button.id == 1000) {
+			GuiDrawer.openGui(new GuiInfo());
+		} else {
+			NBTTagCompound nbt = new NBTTagCompound();
+			NBTHelper.set(nbt, "action", MessageAction.values()[button.id]);
+			PacketHandler.sendToServer(new Message2Server(nbt));
+			new Message2Server().handleMessage(mc.player, nbt, Side.CLIENT);
+		}
 	}
 
 	protected void sendSlot(AbstractSlot<?> slot, int mouseButton) {
@@ -286,10 +291,10 @@ public class GuiExI extends CommonGuiContainer {
 			currentPos = MathHelper.clamp((int) Math.round(maxPos * scrollBar.status), 0, maxPos);
 			scrollDrag = true;
 		}
-		if (isPointInRegion(xSize - 35, -15, 35, 17, mouseX, mouseY)) {
-			if (mouseButton == 0)
-				GuiDrawer.openGui(new GuiInfo());
-		}
+		//		if (isPointInRegion(xSize - 35, -15, 35, 17, mouseX, mouseY)) {
+		//			if (mouseButton == 0)
+		//				GuiDrawer.openGui(new GuiInfo());
+		//		}
 	}
 
 	@Override

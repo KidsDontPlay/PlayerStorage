@@ -5,6 +5,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -27,8 +28,8 @@ public class BlockInterface extends CommonBlockContainer<TileInterface> {
 	public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
 		super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
 		TileEntity t;
-		if ((t = worldIn.getTileEntity(pos)) instanceof TileInterface)
-			((TileInterface) t).setPlayer(placer.getName());
+		if ((t = worldIn.getTileEntity(pos)) instanceof TileInterface && placer instanceof EntityPlayer)
+			((TileInterface) t).setPlayer((EntityPlayer) placer);
 	}
 
 }

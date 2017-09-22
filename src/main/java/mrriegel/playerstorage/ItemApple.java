@@ -7,7 +7,6 @@ import mrriegel.limelib.helper.RegistryHelper;
 import mrriegel.limelib.particle.CommonParticle;
 import mrriegel.playerstorage.ConfigHandler.Unit2;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -16,6 +15,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.oredict.OreDictionary;
@@ -61,7 +61,7 @@ public class ItemApple extends ItemFood {
 		List<ItemStack> ores = OreDictionary.getOres(ore);
 		if (!ores.isEmpty())
 			ore = ores.get(0).getDisplayName();
-		return I18n.format("item.playerstorage:apple.name") + " (" + ore + ")";
+		return I18n.translateToLocal("item.playerstorage:apple.name") + " (" + ore + ")";
 	}
 
 	@Override
@@ -98,10 +98,10 @@ public class ItemApple extends ItemFood {
 		if (u != null)
 			tooltip.add(u.itemLimit + "/" + u.fluidLimit);
 	}
-	
+
 	@Override
 	public ICapabilityProvider initCapabilities(ItemStack stack, NBTTagCompound nbt) {
-		if(ConfigHandler.appleList.get(stack.getItemDamage()).isEmpty())
+		if (ConfigHandler.appleList.get(stack.getItemDamage()).isEmpty())
 			stack.setCount(0);
 		return super.initCapabilities(stack, nbt);
 	}

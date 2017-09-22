@@ -15,7 +15,6 @@ import mrriegel.playerstorage.Enums.MessageAction;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.client.event.ClientChatEvent;
@@ -100,12 +99,12 @@ public class ClientProxy extends CommonProxy {
 	@SubscribeEvent
 	public static void chat(ClientChatEvent event) {
 		if (event.getMessage().contains(TEAMCODE)) {
-			EntityPlayer sender = Minecraft.getMinecraft().world.getPlayerEntityByName(event.getMessage().replace(TEAMCODE, ""));
+			String sender = event.getMessage().replace(TEAMCODE, "");
 			if (sender != null) {
 				NBTTagCompound nbt = new NBTTagCompound();
 				NBTHelper.set(nbt, "action", MessageAction.TEAMACCEPT);
 				NBTHelper.set(nbt, "player1", Minecraft.getMinecraft().player.getName());
-				NBTHelper.set(nbt, "player2", sender.getName());
+				NBTHelper.set(nbt, "player2", sender);
 				PacketHandler.sendToServer(new Message2Server(nbt));
 			}
 			event.setMessage("");

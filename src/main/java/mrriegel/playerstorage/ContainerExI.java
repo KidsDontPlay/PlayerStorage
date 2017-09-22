@@ -87,6 +87,9 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 	@Override
 	public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player) {
 		if (!player.world.isRemote) {
+			if (slotId >= 0 && slotId < inventorySlots.size() && getSlot(slotId) != null && getSlot(slotId).inventory == invs.get("result")) {
+				onCraftMatrixChanged(null);
+			}
 			if (ei.mode == GuiMode.ITEM && clickTypeIn == ClickType.PICKUP && slotId >= 0 && slotId < inventorySlots.size() && getSlot(slotId) != null && getSlot(slotId).getHasStack() && getSlot(slotId).inventory instanceof InventoryPlayer) {
 				ItemStack stack = getSlot(slotId).getStack();
 				boolean apply = false;
@@ -128,9 +131,10 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 		while (crafted + res.getCount() <= res.getMaxStackSize()) {
 			if (!ItemHandlerHelper.insertItemStacked(inv, res.copy(), true).isEmpty())
 				break;
+			ItemHandlerHelper.insertItemStacked(inv, res.copy(), false);
 			sl.onTake(getPlayer(), res);
 			crafted += res.getCount();
-			onCraftMatrixChanged(null);
+			//			onCraftMatrixChanged(null);
 			if (!ItemHandlerHelper.canItemStacksStack(res, result.getStackInSlot(0)))
 				break;
 			else
@@ -186,7 +190,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 						req = ei.extractItem(getIng(ings, lis.get(i)), 1, false);
 					con().getMatrix().setInventorySlotContents(i, req);
 				}
-			con().detectAndSendChanges();
+			con().onCraftMatrixChanged(null);
 			return stack;
 		}
 

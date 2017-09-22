@@ -51,13 +51,14 @@ public class GuiInfo extends CommonGuiScreenSub {
 			drawer.drawColoredRectangle(10, 55, (int) (w * foo), h, c);
 			drawer.drawFrame(10, 55, w, h, 1, 0xFF000000);
 			fontRenderer.drawString((isShiftKeyDown() ? ei.getFluidCount() : Utils.formatNumber(ei.getFluidCount())) + "/" + (isShiftKeyDown() ? ei.fluidLimit : Utils.formatNumber(ei.fluidLimit)) + " mB", guiLeft + 11, guiTop + 70, 0x3e3e3e);
+
+			//			fontRenderer.drawString("Team: " + ei.members, guiLeft + 11, guiTop + 90, 0x3e3e3e);
+
 		}));
 		tabs.add(new Tab("Team", () -> {
 			List<String> lis = mc.world.playerEntities.stream().filter(p -> p != mc.player).map(EntityPlayer::getName).collect(Collectors.toList());
 			team = lis.stream().filter(s -> ei.members.contains(s)).collect(Collectors.toList());
 			other = lis.stream().filter(s -> !ei.members.contains(s)).collect(Collectors.toList());
-			//			team = Stream.of("hasl", "fgsdgasva", "klsidsd", "muas", "fgsadv").collect(Collectors.toList());
-			//			other = new ArrayList<>(Lists.reverse(team));
 			for (GuiButton but : buttonList) {
 				if (but.id < 30) {
 					but.visible = but.id < team.size();

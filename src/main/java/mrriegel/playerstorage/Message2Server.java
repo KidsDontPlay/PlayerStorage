@@ -1,11 +1,16 @@
 package mrriegel.playerstorage;
 
+import java.util.List;
+
+import mrriegel.limelib.helper.InvHelper;
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.AbstractMessage;
+import mrriegel.limelib.util.FilterItem;
 import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.Enums.MessageAction;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.SPacketSetSlot;
@@ -22,6 +27,7 @@ import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.wrapper.PlayerMainInvWrapper;
+import net.minecraftforge.oredict.OreDictionary;
 
 public class Message2Server extends AbstractMessage {
 
@@ -45,8 +51,10 @@ public class Message2Server extends AbstractMessage {
 			boolean shift = NBTHelper.get(nbt, "shift", Boolean.class), ctrl = NBTHelper.get(nbt, "ctrl", Boolean.class), space = NBTHelper.get(nbt, "space", Boolean.class);
 			switch (ma) {
 			case CLEAR:
-				for (int i = 0; i < con.getMatrix().getSizeInventory(); i++)
+				for (int i = 0; i < con.getMatrix().getSizeInventory(); i++) {
 					con.getMatrix().setInventorySlotContents(i, ei.insertItem(con.getMatrix().getStackInSlot(i), false));
+					con.getMatrix().setInventorySlotContents(i, ItemHandlerHelper.insertItemStacked(new PlayerMainInvWrapper(player.inventory), con.getMatrix().getStackInSlot(i), false));
+				}
 				break;
 			case DIRECTION:
 				ei.topdown ^= true;
@@ -153,12 +161,51 @@ public class Message2Server extends AbstractMessage {
 				con.space = space;
 				con.shift = shift;
 				break;
+			case JEITRANSFER:
+				if (!player.world.isRemote) {
+					handleMessage(player, NBTHelper.set(new NBTTagCompound(), "action", MessageAction.CLEAR), side);
+					boolean isempty = true;
+					for (ItemStack s : ei.matrix) {
+						if (!s.isEmpty()) {
+							isempty = false;
+							break;
+						}
+					}
+					if (isempty) {
+						for (int i = 0; i < 9; i++) {
+							boolean ore = false;
+							List<ItemStack> stacks = NBTHelper.getList(nbt, i + "l", ItemStack.class);
+							if (stacks.isEmpty()) {
+								stacks = OreDictionary.getOres(NBTHelper.get(nbt, i + "s", String.class));
+								ore = true;
+							}
+							ItemStack ingredient = ItemStack.EMPTY;
+							for (ItemStack s : stacks) {
+								ingredient = InvHelper.extractItem(new PlayerMainInvWrapper(player.inventory), new FilterItem(s, true, ore, true), 1, false);
+								if (!ingredient.isEmpty())
+									break;
+							}
+							if (ingredient.isEmpty())
+								for (ItemStack s : stacks) {
+									ingredient = ei.extractItem(new FilterItem(s, true, ore, true), 1, false);
+									if (!ingredient.isEmpty())
+										break;
+								}
+							if (!ingredient.isEmpty()) {
+								ei.matrix.set(i, ingredient);
+							}
+						}
+						con.inventorySlots.stream().filter(s -> s.inventory instanceof InventoryCrafting).forEach(s -> s.onSlotChanged());
+						//								con.inventorySlots.get(i + 1).putStack(ingredient);
+						player.openContainer.onCraftMatrixChanged(null);
+					}
+				}
 			default:
 				break;
 			}
 			if (ma.name().toLowerCase().startsWith("team")) {
-				EntityPlayer p1 = player.world.getPlayerEntityByName(NBTHelper.get(nbt, "player1", String.class));
-				EntityPlayer p2 = player.world.getPlayerEntityByName(NBTHelper.get(nbt, "player2", String.class));
+				EntityPlayer p1 = ExInventory.getPlayerByName(NBTHelper.get(nbt, "player1", String.class), player.world);
+				EntityPlayer p2 = ExInventory.getPlayerByName(NBTHelper.get(nbt, "player2", String.class), player.world);
 				if (p1 == null || p2 == null || p1 == p2)
 					return;
 				ExInventory ei1 = ExInventory.getInventory(p1), ei2 = ExInventory.getInventory(p2);
@@ -192,16 +239,6 @@ public class Message2Server extends AbstractMessage {
 					//		text.appendSibling(no);
 					p2.sendMessage(text);
 					break;
-				//				case TEAMACCEPT:
-				//					System.out.println("acc");
-				//					if (ei1.members.contains(p2.getName()))
-				//						break;
-				//					ei1.members.add(p2.getName());
-				//					ei2.members.add(p1.getName());
-				//					ei1.dirty = ei2.dirty = true;
-				//					p1.sendStatusMessage(new TextComponentString(p2.getName() + " accepted your invitation."), true);
-				//					p2.sendStatusMessage(new TextComponentString("You accepted " + p1.getName() + "'s invitation."), true);
-				//					break;
 				case TEAMUNINVITE:
 					if (!ei1.members.contains(p2.getName()))
 						break;
@@ -219,8 +256,8 @@ public class Message2Server extends AbstractMessage {
 		}
 		switch (ma) {
 		case TEAMACCEPT:
-			EntityPlayer p1 = player.world.getPlayerEntityByName(NBTHelper.get(nbt, "player1", String.class));
-			EntityPlayer p2 = player.world.getPlayerEntityByName(NBTHelper.get(nbt, "player2", String.class));
+			EntityPlayer p1 = ExInventory.getPlayerByName(NBTHelper.get(nbt, "player1", String.class), player.world);
+			EntityPlayer p2 = ExInventory.getPlayerByName(NBTHelper.get(nbt, "player2", String.class), player.world);
 			if (p1 == null || p2 == null || p1 == p2)
 				return;
 			ExInventory ei1 = ExInventory.getInventory(p1), ei2 = ExInventory.getInventory(p2);
@@ -232,8 +269,8 @@ public class Message2Server extends AbstractMessage {
 			ei2.members.add(p1.getName());
 			ei1.markForSync();
 			ei2.markForSync();
-			p1.sendStatusMessage(new TextComponentString("You accepted " + p1.getName() + "'s invitation."), true);
-			p2.sendStatusMessage(new TextComponentString(p2.getName() + " accepted your invitation."), true);
+			p1.sendStatusMessage(new TextComponentString("You accepted " + p2.getName() + "'s invitation."), true);
+			p2.sendStatusMessage(new TextComponentString(p1.getName() + " accepted your invitation."), true);
 			break;
 		default:
 			break;

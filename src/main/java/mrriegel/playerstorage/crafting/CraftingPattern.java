@@ -1,9 +1,9 @@
-package mrriegel.playerstorage;
+package mrriegel.playerstorage.crafting;
 
 import net.minecraft.item.crafting.IRecipe;
 
 public class CraftingPattern {
 
-	IRecipe recipe;
+	public IRecipe recipe;
 
 }
