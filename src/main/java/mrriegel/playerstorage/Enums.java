@@ -20,6 +20,19 @@ public class Enums {
 	}
 
 	public static enum MessageAction {
-		SORT, DIRECTION, CLEAR, JEI, GUIMODE, SLOT, INCGRID, DECGRID, KEYUPDATE, TEAMINVITE, TEAMACCEPT, TEAMUNINVITE, JEITRANSFER;
+		SORT, //
+		DIRECTION, //
+		CLEAR, //
+		JEI, //
+		GUIMODE, //
+		SLOT, //
+		INCGRID, //
+		DECGRID, //
+		KEYUPDATE, //
+		TEAMINVITE, //
+		TEAMACCEPT, //
+		TEAMUNINVITE, //
+		JEITRANSFER, //
+		DEFAULTGUI;
 	}
 }

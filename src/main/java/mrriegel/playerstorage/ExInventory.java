@@ -11,7 +11,9 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.Validate;
 
+import mrriegel.limelib.LimeLib;
 import mrriegel.limelib.helper.NBTHelper;
+import mrriegel.limelib.network.OpenGuiMessage;
 import mrriegel.limelib.network.PacketHandler;
 import mrriegel.limelib.util.GlobalBlockPos;
 import mrriegel.limelib.util.StackWrapper;
@@ -19,6 +21,8 @@ import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.Enums.Sort;
 import mrriegel.playerstorage.crafting.CraftingPattern;
 import mrriegel.playerstorage.crafting.CraftingTask;
+import mrriegel.playerstorage.gui.ContainerExI;
+import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -32,6 +36,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.Capability.IStorage;
 import net.minecraftforge.common.capabilities.CapabilityInject;
@@ -57,15 +62,17 @@ import net.minecraftforge.items.ItemHandlerHelper;
 @EventBusSubscriber(modid = PlayerStorage.MODID)
 public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
-	EntityPlayer player;
+	public EntityPlayer player;
 	List<StackWrapper> items = new ArrayList<>();
 	List<FluidStack> fluids = new ArrayList<>();
 	List<StackWrapper> itemsPlusTeam = new ArrayList<>();
 	List<FluidStack> fluidsPlusTeam = new ArrayList<>();
 	List<CraftingPattern> patterns = new ArrayList<>();
 	List<CraftingTask> tasks = new ArrayList<>();
-	int itemLimit = 2000, fluidLimit = 20000, gridHeight = 4;
-	boolean needSync = true;
+	public int itemLimit = 2000;
+	public int fluidLimit = 20000;
+	public int gridHeight = 4;
+	public boolean needSync = true, defaultGUI = true;
 	public NonNullList<ItemStack> matrix = NonNullList.withSize(9, ItemStack.EMPTY);
 	public Set<String> members = new HashSet<>();
 	public Set<GlobalBlockPos> tiles = new HashSet<>();
@@ -338,6 +345,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		NBTHelper.set(nbt, "mode", mode);
 		NBTHelper.set(nbt, "gridHeight", gridHeight);
 		NBTHelper.set(nbt, "dirty", needSync);
+		NBTHelper.set(nbt, "defaultGUI", defaultGUI);
 		NBTHelper.setList(nbt, "members", new ArrayList<>(members));
 		NBTHelper.setList(nbt, "tilesInt", tiles.stream().map(g -> g.getDimension()).collect(Collectors.toList()));
 		NBTHelper.setList(nbt, "tilesPos", tiles.stream().map(g -> g.getPos()).collect(Collectors.toList()));
@@ -365,6 +373,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		mode = NBTHelper.get(nbt, "mode", GuiMode.class);
 		gridHeight = NBTHelper.get(nbt, "gridHeight", Integer.class);
 		needSync = NBTHelper.get(nbt, "dirty", Boolean.class);
+		defaultGUI = NBTHelper.get(nbt, "defaultGUI", Boolean.class);
 		members = new HashSet<>(NBTHelper.getList(nbt, "members", String.class));
 		List<Integer> ints = NBTHelper.getList(nbt, "tilesInt", Integer.class);
 		List<BlockPos> poss = NBTHelper.getList(nbt, "tilesPos", BlockPos.class);
@@ -470,6 +479,14 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	public static void join(EntityJoinWorldEvent event) {
 		if (event.getEntity() instanceof EntityPlayerMP) {
 			sync((EntityPlayerMP) event.getEntity());
+		}
+	}
+
+	@SubscribeEvent
+	public static void gui(GuiOpenEvent event) {
+		if (event.getGui() instanceof GuiInventory && ExInventory.getInventory(LimeLib.proxy.getClientPlayer()).defaultGUI) {
+			event.setCanceled(true);
+			PacketHandler.sendToServer(new OpenGuiMessage(PlayerStorage.MODID, 0, null));
 		}
 	}
 

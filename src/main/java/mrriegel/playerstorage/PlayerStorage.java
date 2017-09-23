@@ -8,7 +8,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
-@Mod(modid = PlayerStorage.MODID, name = PlayerStorage.MODNAME, version = PlayerStorage.VERSION, dependencies = "required-after:limelib@[1.6.0,)")
+@Mod(modid = PlayerStorage.MODID, name = PlayerStorage.MODNAME, version = PlayerStorage.VERSION, dependencies = "required-after:limelib@[1.7.0,)")
 public class PlayerStorage {
 	public static final String MODID = "playerstorage";
 	public static final String VERSION = "1.0.0";
@@ -28,7 +28,6 @@ public class PlayerStorage {
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
 		proxy.init(event);
-
 	}
 
 	@EventHandler

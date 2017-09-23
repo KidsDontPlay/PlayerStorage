@@ -1,4 +1,4 @@
-package mrriegel.playerstorage;
+package mrriegel.playerstorage.gui;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -17,6 +17,8 @@ import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.PacketHandler;
 import mrriegel.limelib.util.Utils;
 import mrriegel.playerstorage.Enums.MessageAction;
+import mrriegel.playerstorage.ExInventory;
+import mrriegel.playerstorage.Message2Server;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.EntityPlayer;

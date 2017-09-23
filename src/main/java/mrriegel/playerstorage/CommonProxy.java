@@ -1,6 +1,8 @@
 package mrriegel.playerstorage;
 
 import mrriegel.limelib.network.PacketHandler;
+import mrriegel.playerstorage.gui.ContainerExI;
+import mrriegel.playerstorage.gui.GuiExI;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -36,7 +38,6 @@ public class CommonProxy implements IGuiHandler {
 
 	@Override
 	public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
-		getServerGuiElement(1, player, world, x, y, z);
 		if (ID == 0)
 			return new GuiExI(new ContainerExI(player.inventory));
 		return null;

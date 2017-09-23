@@ -25,10 +25,10 @@ public class ItemRemote extends CommonItem {
 		Optional.ofNullable(ExInventory.getInventory(playerIn)).ifPresent(ei -> playerIn.openGui(PlayerStorage.MODID, 0, worldIn, 0, 0, 0));
 		return super.onItemRightClick(worldIn, playerIn, handIn);
 	}
-	
+
 	@Override
 	public ICapabilityProvider initCapabilities(ItemStack stack, NBTTagCompound nbt) {
-		if(!ConfigHandler.remote)
+		if (!ConfigHandler.remote)
 			stack.setCount(0);
 		return super.initCapabilities(stack, nbt);
 	}

@@ -8,6 +8,7 @@ import mrriegel.limelib.network.AbstractMessage;
 import mrriegel.limelib.util.FilterItem;
 import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.Enums.MessageAction;
+import mrriegel.playerstorage.gui.ContainerExI;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.InventoryCrafting;
@@ -200,6 +201,9 @@ public class Message2Server extends AbstractMessage {
 						player.openContainer.onCraftMatrixChanged(null);
 					}
 				}
+			case DEFAULTGUI:
+				ei.defaultGUI ^= true;
+				break;
 			default:
 				break;
 			}

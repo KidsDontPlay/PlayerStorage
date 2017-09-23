@@ -1,4 +1,4 @@
-package mrriegel.playerstorage;
+package mrriegel.playerstorage.gui;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -28,6 +28,7 @@ import mrriegel.limelib.util.StackWrapper;
 import mrriegel.limelib.util.Utils;
 import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.Enums.MessageAction;
+import mrriegel.playerstorage.Message2Server;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.util.ITooltipFlag;
@@ -49,7 +50,7 @@ public class GuiExI extends CommonGuiContainer {
 	public List<FluidStack> fluids;
 	protected List<AbstractSlot<?>> slots;
 	protected long lastClick;
-	protected CommonGuiButton sort, direction, clear, jei, modeButton, inc, dec;
+	protected CommonGuiButton sort, direction, clear, jei, modeButton, inc, dec, defaultt;
 	protected GuiTextField searchBar;
 	protected int currentPos = 0, maxPos = 0;
 	protected AbstractSlot<?> over;
@@ -77,7 +78,7 @@ public class GuiExI extends CommonGuiContainer {
 		xSize = 248;
 		ySize = 112 + 18 * gridHeight;
 		super.initGui();
-		searchBar = new GuiTextField(0, fontRenderer, guiLeft + 154, guiTop + 13 + 18 * gridHeight, 85, fontRenderer.FONT_HEIGHT);
+		searchBar = new GuiTextField(0, fontRenderer, guiLeft + 8, guiTop + 13 + 18 * gridHeight, 85, fontRenderer.FONT_HEIGHT);
 		searchBar.setMaxStringLength(30);
 		searchBar.setEnableBackgroundDrawing(!false);
 		searchBar.setVisible(true);
@@ -86,13 +87,14 @@ public class GuiExI extends CommonGuiContainer {
 		if (mode == GuiMode.ITEM)
 			buttonList.add(clear = new CommonGuiButton(MessageAction.CLEAR.ordinal(), guiLeft + 62, guiTop + 29 + 18 * gridHeight, 7, 7, null).setTooltip("Clear grid").setDesign(Design.SIMPLE));
 		buttonList.add(modeButton = new CommonGuiButton(MessageAction.GUIMODE.ordinal(), guiLeft - 25, guiTop + ySize - 20, 23, 20, "").setTooltip("Toggle Mode").setDesign(Design.SIMPLE));
-		buttonList.add(new CommonGuiButton(1000, guiLeft - 25, guiTop + ySize - 43, 23, 20, "\u2261").setTooltip("More Options").setDesign(Design.SIMPLE));
+		buttonList.add(new CommonGuiButton(1000, guiLeft - 25, guiTop + ySize - 37, 23, 14, "\u2261").setTooltip("More Options").setDesign(Design.SIMPLE));
 		buttonList.add(inc = new CommonGuiButton(MessageAction.INCGRID.ordinal(), guiLeft - 25, guiTop + 1, 23, 10, "+").setTooltip("Increase Grid Height").setDesign(Design.SIMPLE).setButtonColor(Color.GRAY.getRGB()));
 		buttonList.add(dec = new CommonGuiButton(MessageAction.DECGRID.ordinal(), guiLeft - 25, guiTop + 14, 23, 10, "-").setTooltip("Decrease Grid Height").setDesign(Design.SIMPLE).setButtonColor(Color.GRAY.getRGB()));
-		buttonList.add(sort = new CommonGuiButton(MessageAction.SORT.ordinal(), guiLeft - 25, guiTop + 27, 23, 17, null).setDesign(Design.SIMPLE));
-		buttonList.add(direction = new CommonGuiButton(MessageAction.DIRECTION.ordinal(), guiLeft - 25, guiTop + 47, 23, 17, null).setDesign(Design.SIMPLE));
+		buttonList.add(sort = new CommonGuiButton(MessageAction.SORT.ordinal(), guiLeft - 25, guiTop + 27, 23, 14, null).setDesign(Design.SIMPLE));
+		buttonList.add(direction = new CommonGuiButton(MessageAction.DIRECTION.ordinal(), guiLeft - 25, guiTop + 44, 23, 14, null).setDesign(Design.SIMPLE));
 		if (LimeLib.jeiLoaded)
-			buttonList.add(jei = new CommonGuiButton(MessageAction.JEI.ordinal(), guiLeft - 25, guiTop + 67, 23, 17, null).setTooltip("Enable synchronized search with JEI").setDesign(Design.SIMPLE));
+			buttonList.add(jei = new CommonGuiButton(MessageAction.JEI.ordinal(), guiLeft - 25, guiTop + 61, 23, 14, null).setTooltip("Enable synchronized search with JEI").setDesign(Design.SIMPLE));
+		buttonList.add(defaultt = new CommonGuiButton(MessageAction.DEFAULTGUI.ordinal(), guiLeft - 25, guiTop + 78, 23, 14, null).setTooltip("Set this to default inventory GUI.").setDesign(Design.SIMPLE));
 		scrollBar = new ScrollBar(0, 227, 7, 14, 18 * gridHeight, drawer, Plane.VERTICAL);
 		slots = new ArrayList<>();
 		for (int i = 0; i < gridHeight; i++) {
@@ -112,6 +114,7 @@ public class GuiExI extends CommonGuiContainer {
 		//		drawer.drawBackgroundTexture(xSize - 35, -15, 35, 20);
 		drawer.drawBackgroundTexture();
 		drawer.drawPlayerSlots(79, 29 + 18 * gridHeight);
+		drawer.drawSlots(151, 9 + 18 * gridHeight, 5, 1);
 		drawer.drawSlots(7, 7, gridWidth, gridHeight);
 		searchBar.drawTextBox();
 		if (mode == GuiMode.ITEM) {
@@ -138,7 +141,6 @@ public class GuiExI extends CommonGuiContainer {
 			if (slot.isMouseOver(mouseX, mouseY))
 				slot.drawTooltip(mouseX - guiLeft, mouseY - guiTop);
 		}
-		//		fontRenderer.drawString(TextFormatting.BOLD + "A", sort.x - guiLeft + 3, sort.y - guiTop + 3, 0xff000000);
 	}
 
 	@Override
@@ -234,6 +236,7 @@ public class GuiExI extends CommonGuiContainer {
 		sort.displayString = TextFormatting.GRAY + con.ei.sort.shortt;
 		direction.setTooltip("Sort direction: " + (con.ei.topdown ? "top-down" : "bottom-up"));
 		direction.displayString = TextFormatting.GRAY + (con.ei.topdown ? "\u2B07" : "\u2B06");
+		defaultt.displayString = (con.ei.defaultGUI ? TextFormatting.GREEN : TextFormatting.RED) + "GUI";
 		modeButton.setStack(new ItemStack(mode != GuiMode.ITEM ? Items.WATER_BUCKET : Items.APPLE));
 		if (jei != null)
 			jei.displayString = (con.ei.jeiSearch ? TextFormatting.GREEN : TextFormatting.RED) + "JEI";
