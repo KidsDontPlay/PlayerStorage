@@ -3,11 +3,13 @@ package mrriegel.playerstorage;
 import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import mrriegel.limelib.gui.CommonGuiScreenSub;
+import mrriegel.limelib.gui.GuiDrawer;
 import mrriegel.limelib.gui.button.CommonGuiButton;
 import mrriegel.limelib.gui.button.CommonGuiButton.Design;
 import mrriegel.limelib.helper.ColorHelper;
@@ -52,6 +54,14 @@ public class GuiInfo extends CommonGuiScreenSub {
 			drawer.drawFrame(10, 55, w, h, 1, 0xFF000000);
 			fontRenderer.drawString((isShiftKeyDown() ? ei.getFluidCount() : Utils.formatNumber(ei.getFluidCount())) + "/" + (isShiftKeyDown() ? ei.fluidLimit : Utils.formatNumber(ei.fluidLimit)) + " mB", guiLeft + 11, guiTop + 70, 0x3e3e3e);
 
+			String inter = "Interfaces";
+			drawer.drawColoredRectangle(9, 88, fontRenderer.getStringWidth(inter) + 2, fontRenderer.FONT_HEIGHT + 2, 0xffe1e1e1);
+			drawer.drawFrame(9, 88, fontRenderer.getStringWidth(inter) + 2, fontRenderer.FONT_HEIGHT + 2, 1, 0xff1e1e1e);
+			fontRenderer.drawString(inter, guiLeft + 11, guiTop + 90, 0x2e3e3e);
+			if (isPointInRegion(11, 90, fontRenderer.getStringWidth(inter), fontRenderer.FONT_HEIGHT, GuiDrawer.getMouseX(), GuiDrawer.getMouseY())) {
+				List<String> l = ei.tiles.stream().map(gp -> "Dim:" + gp.getDimension() + ", x:" + gp.getPos().getX() + " y:" + gp.getPos().getY() + " z:" + gp.getPos().getZ()).collect(Collectors.toList());
+				drawHoveringText(l.isEmpty() ? Arrays.asList("No Interfaces") : l, GuiDrawer.getMouseX(), GuiDrawer.getMouseY());
+			}
 			//			fontRenderer.drawString("Team: " + ei.members, guiLeft + 11, guiTop + 90, 0x3e3e3e);
 
 		}));
@@ -115,7 +125,11 @@ public class GuiInfo extends CommonGuiScreenSub {
 		drawer.drawBackgroundTexture();
 		super.drawGuiContainerBackgroundLayer(partialTicks, mouseX, mouseY);
 		tabs.get(index).draw.run();
+	}
 
+	@Override
+	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+		super.drawScreen(mouseX, mouseY, partialTicks);
 	}
 
 	@Override

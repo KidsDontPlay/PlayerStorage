@@ -17,10 +17,7 @@ import net.minecraftforge.items.CapabilityItemHandler;
 public class TileInterface extends CommonTile implements IHUDProvider {
 
 	private EntityPlayer player;
-
-	private EntityPlayer getPlayer() {
-		return player;
-	}
+	private String playerName;
 
 	@Override
 	public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
@@ -37,26 +34,34 @@ public class TileInterface extends CommonTile implements IHUDProvider {
 		return super.getCapability(capability, facing);
 	}
 
+	public EntityPlayer getPlayer() {
+		if (player == null)
+			return player = ExInventory.getPlayerByName(playerName, world);
+		return player;
+	}
+
 	public void setPlayer(EntityPlayer player) {
 		this.player = player;
+		playerName = player.getName();
 		markDirty();
 	}
 
 	@Override
 	public void readFromNBT(NBTTagCompound compound) {
-		player = ExInventory.getPlayerByName(NBTHelper.get(compound, "player", String.class), world);
+		playerName = NBTHelper.get(compound, "player", String.class);
+		player = ExInventory.getPlayerByName(playerName, world);
 		super.readFromNBT(compound);
 	}
 
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound compound) {
-		NBTHelper.set(compound, "player", player.getName());
+		NBTHelper.set(compound, "player", playerName);
 		return super.writeToNBT(compound);
 	}
 
 	@Override
 	public List<String> getData(boolean sneak, EnumFacing facing) {
-		return Collections.singletonList(TextFormatting.GOLD + "Owner: " + player.getName());
+		return Collections.singletonList(TextFormatting.GOLD + "Owner: " + (player == null ? TextFormatting.RED : TextFormatting.GREEN) + playerName);
 	}
 
 	@Override

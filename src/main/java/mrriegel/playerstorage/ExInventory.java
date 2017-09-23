@@ -13,6 +13,7 @@ import org.apache.commons.lang3.Validate;
 
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.PacketHandler;
+import mrriegel.limelib.util.GlobalBlockPos;
 import mrriegel.limelib.util.StackWrapper;
 import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.Enums.Sort;
@@ -28,6 +29,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
@@ -66,6 +68,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	boolean needSync = true;
 	public NonNullList<ItemStack> matrix = NonNullList.withSize(9, ItemStack.EMPTY);
 	public Set<String> members = new HashSet<>();
+	public Set<GlobalBlockPos> tiles = new HashSet<>();
 
 	public boolean jeiSearch = false, topdown = true;
 	public Sort sort = Sort.NAME;
@@ -108,6 +111,12 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		//			t.step();
 		//			tasks.add(t);
 		//		}
+	}
+
+	private void init() {
+		if (!player.world.isRemote) {
+			tiles.removeIf(gb -> gb.getTile() == null);
+		}
 	}
 
 	public List<StackWrapper> getItems() {
@@ -158,7 +167,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		return insertItem(stack, false, simulate);
 	}
 
-	private ItemStack extractItem(Predicate<ItemStack> pred, int size, boolean simulate, Set<EntityPlayer> players) {
+	private ItemStack extractItem(Predicate<ItemStack> pred, int size, boolean useMembers, boolean simulate) {
 		if (size <= 0 || pred == null)
 			return ItemStack.EMPTY;
 		for (int i = 0; i < items.size(); i++) {
@@ -176,10 +185,9 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 					return ItemHandlerHelper.copyStackWithSize(s.getStack(), s.getSize());
 			}
 		}
-		players.add(player);
 		ItemStack ret = ItemStack.EMPTY;
 		for (ExInventory ei : getMembers()) {
-			if (!players.contains(ei.player) && !(ret = ei.extractItem(pred, size, simulate, players)).isEmpty()) {
+			if (useMembers && !(ret = ei.extractItem(pred, size, false, simulate)).isEmpty()) {
 				markForSync();
 				break;
 			}
@@ -188,7 +196,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	}
 
 	public ItemStack extractItem(Predicate<ItemStack> pred, int size, boolean simulate) {
-		return extractItem(pred, size, simulate, new HashSet<>());
+		return extractItem(pred, size, true, simulate);
 	}
 
 	public ItemStack extractItem(ItemStack stack, int size, boolean simulate) {
@@ -224,7 +232,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		return insertFluid(stack, false, simulate);
 	}
 
-	private FluidStack extractFluid(Predicate<FluidStack> pred, int size, boolean simulate, Set<EntityPlayer> players) {
+	private FluidStack extractFluid(Predicate<FluidStack> pred, int size, boolean useMembers, boolean simulate) {
 		if (size <= 0 || pred == null)
 			return null;
 		for (int i = 0; i < fluids.size(); i++) {
@@ -246,10 +254,9 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 				}
 			}
 		}
-		players.add(player);
 		FluidStack ret = null;
 		for (ExInventory ei : getMembers()) {
-			if (!players.contains(ei.player) && (ret = ei.extractFluid(pred, size, simulate, players)) != null) {
+			if (useMembers && (ret = ei.extractFluid(pred, size, false, simulate)) != null) {
 				markForSync();
 				break;
 			}
@@ -258,7 +265,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	}
 
 	public FluidStack extractFluid(Predicate<FluidStack> pred, int size, boolean simulate) {
-		return extractFluid(pred, size, simulate, new HashSet<>());
+		return extractFluid(pred, size, true, simulate);
 	}
 
 	public FluidStack extractFluid(FluidStack stack, int size, boolean simulate) {
@@ -289,7 +296,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 	boolean canCraft(ItemStack stack) {
 		for (CraftingPattern cp : patterns) {
-
+			cp.hashCode();
 		}
 		if (!patterns.stream().anyMatch(cp -> cp.recipe.getRecipeOutput().isItemEqual(stack)))
 			return false;
@@ -332,6 +339,8 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		NBTHelper.set(nbt, "gridHeight", gridHeight);
 		NBTHelper.set(nbt, "dirty", needSync);
 		NBTHelper.setList(nbt, "members", new ArrayList<>(members));
+		NBTHelper.setList(nbt, "tilesInt", tiles.stream().map(g -> g.getDimension()).collect(Collectors.toList()));
+		NBTHelper.setList(nbt, "tilesPos", tiles.stream().map(g -> g.getPos()).collect(Collectors.toList()));
 		return nbt;
 	}
 
@@ -357,6 +366,12 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		gridHeight = NBTHelper.get(nbt, "gridHeight", Integer.class);
 		needSync = NBTHelper.get(nbt, "dirty", Boolean.class);
 		members = new HashSet<>(NBTHelper.getList(nbt, "members", String.class));
+		List<Integer> ints = NBTHelper.getList(nbt, "tilesInt", Integer.class);
+		List<BlockPos> poss = NBTHelper.getList(nbt, "tilesPos", BlockPos.class);
+		tiles.clear();
+		for (int i = 0; i < ints.size(); i++)
+			tiles.add(new GlobalBlockPos(poss.get(i), ints.get(i)));
+
 	}
 
 	public void writeSyncOnlyNBT(NBTTagCompound nbt) {
@@ -394,8 +409,10 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 			@Override
 			public void readNBT(Capability<ExInventory> capability, ExInventory instance, EnumFacing side, NBTBase nbt) {
-				if (nbt instanceof NBTTagCompound)
+				if (nbt instanceof NBTTagCompound) {
 					instance.deserializeNBT((NBTTagCompound) nbt);
+					instance.init();
+				}
 			}
 
 		}, ExInventory::new);
@@ -410,7 +427,10 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	}
 
 	public static EntityPlayer getPlayerByName(String name, World world) {
-		if (world.isRemote)
+		if (name == null)
+			return null;
+		boolean remote = world != null ? world.isRemote : FMLCommonHandler.instance().getEffectiveSide().isClient();
+		if (remote)
 			return world.getPlayerEntityByName(name);
 		else
 			return Arrays.stream(FMLCommonHandler.instance().getMinecraftServerInstance().worlds).flatMap(w -> w.playerEntities.stream()).filter(p -> p.getName().equals(name)).findFirst().orElse(null);

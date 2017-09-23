@@ -2,8 +2,13 @@ package mrriegel.playerstorage;
 
 public class Enums {
 	public static enum Sort {
-		AMOUNT, NAME, MOD;
+		AMOUNT("\u03A3"), NAME("AZ"), MOD("M");
 		private static Sort[] vals = values();
+		public String shortt;
+
+		private Sort(String shortt) {
+			this.shortt = shortt;
+		}
 
 		public Sort next() {
 			return vals[(this.ordinal() + 1) % vals.length];

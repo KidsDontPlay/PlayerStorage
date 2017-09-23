@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.Validate;
 import org.lwjgl.input.Keyboard;
@@ -82,16 +83,16 @@ public class GuiExI extends CommonGuiContainer {
 		searchBar.setVisible(true);
 		searchBar.setTextColor(16777215);
 		searchBar.setFocused(true);
-		buttonList.add(sort = new CommonGuiButton(MessageAction.SORT.ordinal(), guiLeft + 7, guiTop + 11 + 18 * gridHeight, 42, 12, null).setDesign(Design.SIMPLE));
-		buttonList.add(direction = new CommonGuiButton(MessageAction.DIRECTION.ordinal(), guiLeft + 55, guiTop + 11 + 18 * gridHeight, 42, 12, null).setDesign(Design.SIMPLE));
 		if (mode == GuiMode.ITEM)
 			buttonList.add(clear = new CommonGuiButton(MessageAction.CLEAR.ordinal(), guiLeft + 62, guiTop + 29 + 18 * gridHeight, 7, 7, null).setTooltip("Clear grid").setDesign(Design.SIMPLE));
+		buttonList.add(modeButton = new CommonGuiButton(MessageAction.GUIMODE.ordinal(), guiLeft - 25, guiTop + ySize - 20, 23, 20, "").setTooltip("Toggle Mode").setDesign(Design.SIMPLE));
+		buttonList.add(new CommonGuiButton(1000, guiLeft - 25, guiTop + ySize - 43, 23, 20, "\u2261").setTooltip("More Options").setDesign(Design.SIMPLE));
+		buttonList.add(inc = new CommonGuiButton(MessageAction.INCGRID.ordinal(), guiLeft - 25, guiTop + 1, 23, 10, "+").setTooltip("Increase Grid Height").setDesign(Design.SIMPLE).setButtonColor(Color.GRAY.getRGB()));
+		buttonList.add(dec = new CommonGuiButton(MessageAction.DECGRID.ordinal(), guiLeft - 25, guiTop + 14, 23, 10, "-").setTooltip("Decrease Grid Height").setDesign(Design.SIMPLE).setButtonColor(Color.GRAY.getRGB()));
+		buttonList.add(sort = new CommonGuiButton(MessageAction.SORT.ordinal(), guiLeft - 25, guiTop + 27, 23, 17, null).setDesign(Design.SIMPLE));
+		buttonList.add(direction = new CommonGuiButton(MessageAction.DIRECTION.ordinal(), guiLeft - 25, guiTop + 47, 23, 17, null).setDesign(Design.SIMPLE));
 		if (LimeLib.jeiLoaded)
-			buttonList.add(jei = new CommonGuiButton(MessageAction.JEI.ordinal(), guiLeft + 103, guiTop + 11 + 18 * gridHeight, 42, 12, null).setTooltip("Enable synchronized search with JEI").setDesign(Design.SIMPLE));
-		buttonList.add(modeButton = new CommonGuiButton(MessageAction.GUIMODE.ordinal(), guiLeft - 23, guiTop + ySize - 20, 20, 20, "").setTooltip("Toggle Mode").setDesign(Design.SIMPLE));
-		buttonList.add(new CommonGuiButton(1000, guiLeft - 23, guiTop + ySize - 45, 20, 20, "\u2261").setTooltip("More Options").setDesign(Design.SIMPLE));
-		buttonList.add(inc = new CommonGuiButton(MessageAction.INCGRID.ordinal(), guiLeft - 23, guiTop + 1, 20, 10, "+").setTooltip("Increase Grid Height").setDesign(Design.SIMPLE).setButtonColor(Color.GRAY.getRGB()));
-		buttonList.add(dec = new CommonGuiButton(MessageAction.DECGRID.ordinal(), guiLeft - 23, guiTop + 14, 20, 10, "-").setTooltip("Decrease Grid Height").setDesign(Design.SIMPLE).setButtonColor(Color.GRAY.getRGB()));
+			buttonList.add(jei = new CommonGuiButton(MessageAction.JEI.ordinal(), guiLeft - 25, guiTop + 67, 23, 17, null).setTooltip("Enable synchronized search with JEI").setDesign(Design.SIMPLE));
 		scrollBar = new ScrollBar(0, 227, 7, 14, 18 * gridHeight, drawer, Plane.VERTICAL);
 		slots = new ArrayList<>();
 		for (int i = 0; i < gridHeight; i++) {
@@ -137,7 +138,7 @@ public class GuiExI extends CommonGuiContainer {
 			if (slot.isMouseOver(mouseX, mouseY))
 				slot.drawTooltip(mouseX - guiLeft, mouseY - guiTop);
 		}
-		fontRenderer.drawString(TextFormatting.BOLD + "A", sort.x - guiLeft + 3, sort.y - guiTop + 3, 0xff000000);
+		//		fontRenderer.drawString(TextFormatting.BOLD + "A", sort.x - guiLeft + 3, sort.y - guiTop + 3, 0xff000000);
 	}
 
 	@Override
@@ -230,10 +231,10 @@ public class GuiExI extends CommonGuiContainer {
 		inc.visible = guiTop > 5;
 
 		sort.setTooltip("Sort by " + con.ei.sort.name().toLowerCase());
-		sort.displayString = con.ei.sort.name();
+		sort.displayString = TextFormatting.GRAY + con.ei.sort.shortt;
 		direction.setTooltip("Sort direction: " + (con.ei.topdown ? "top-down" : "bottom-up"));
-		direction.displayString = con.ei.topdown ? "TD" : "BU";
-		modeButton.setStack(new ItemStack(mode == GuiMode.ITEM ? Items.WATER_BUCKET : Items.APPLE));
+		direction.displayString = TextFormatting.GRAY + (con.ei.topdown ? "\u2B07" : "\u2B06");
+		modeButton.setStack(new ItemStack(mode != GuiMode.ITEM ? Items.WATER_BUCKET : Items.APPLE));
 		if (jei != null)
 			jei.displayString = (con.ei.jeiSearch ? TextFormatting.GREEN : TextFormatting.RED) + "JEI";
 	}
@@ -347,13 +348,7 @@ public class GuiExI extends CommonGuiContainer {
 
 	private List<StackWrapper> getFilteredItems() {
 		String search = searchBar.getText().toLowerCase().trim();
-		List<StackWrapper> tmp = !search.isEmpty() ? new ArrayList<>() : new ArrayList<>(items);
-		if (!search.isEmpty())
-			for (StackWrapper w : items) {
-				if (match(w.getStack(), search))
-					tmp.add(w);
-
-			}
+		List<StackWrapper> tmp = search.isEmpty() ? new ArrayList<>(items) : items.stream().filter(w -> match(w.getStack(), search)).collect(Collectors.toList());
 		int mul = !con.ei.topdown ? -1 : 1;
 		tmp.sort((StackWrapper o2, StackWrapper o1) -> {
 			switch (con.ei.sort) {
@@ -371,13 +366,7 @@ public class GuiExI extends CommonGuiContainer {
 
 	private List<FluidStack> getFilteredFluids() {
 		String search = searchBar.getText().toLowerCase().trim();
-		List<FluidStack> tmp = !search.isEmpty() ? new ArrayList<>() : new ArrayList<>(fluids);
-		if (!search.isEmpty())
-			for (FluidStack w : fluids) {
-				if (match(w, search))
-					tmp.add(w);
-
-			}
+		List<FluidStack> tmp = search.isEmpty() ? new ArrayList<>(fluids) : fluids.stream().filter(w -> match(w, search)).collect(Collectors.toList());
 		int mul = !con.ei.topdown ? -1 : 1;
 		tmp.sort((FluidStack o2, FluidStack o1) -> {
 			switch (con.ei.sort) {
