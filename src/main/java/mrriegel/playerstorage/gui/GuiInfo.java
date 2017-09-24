@@ -12,6 +12,8 @@ import mrriegel.limelib.gui.CommonGuiScreenSub;
 import mrriegel.limelib.gui.GuiDrawer;
 import mrriegel.limelib.gui.button.CommonGuiButton;
 import mrriegel.limelib.gui.button.CommonGuiButton.Design;
+import mrriegel.limelib.gui.element.AbstractSlot;
+import mrriegel.limelib.gui.element.AbstractSlot.ItemSlot;
 import mrriegel.limelib.helper.ColorHelper;
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.PacketHandler;
@@ -22,6 +24,8 @@ import mrriegel.playerstorage.Message2Server;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
@@ -99,6 +103,22 @@ public class GuiInfo extends CommonGuiScreenSub {
 				buttonList.add(new CommonGuiButton(i + 100, guiLeft + 206, guiTop + 21 + 10 * i, 14, 8, TextFormatting.GREEN + "" + TextFormatting.BOLD + "+").setDesign(Design.NONE).setTooltip("Invite player"));
 			}
 		}));
+		if (false)
+			tabs.add(new Tab("Limits", () -> {
+				drawer.drawColoredRectangle(8, 8, 100, 142, 0xffa2a2a2);
+				drawer.drawFrame(8, 8, 100, 142, 1, 0xff080808);
+				fontRenderer.drawString(TextFormatting.DARK_GRAY + "" + TextFormatting.BOLD + "Items", 12 + guiLeft, 12 + guiTop, 0);
+				drawer.drawColoredRectangle(119, 8, 100, 142, 0xffa2a2a2);
+				drawer.drawFrame(119, 8, 100, 142, 1, 0xff080808);
+				fontRenderer.drawString(TextFormatting.DARK_GRAY + "" + TextFormatting.BOLD + "Fluids", 123 + guiLeft, 12 + guiTop, 0);
+			}, () -> {
+				for (int i = 0; i < 13; i++) {
+					;
+					ItemSlot is = new AbstractSlot.ItemSlot(new ItemStack(Blocks.ANVIL), i, guiLeft + 95, guiTop + 21 + 18 * i, 1, drawer, false, true, false, false);
+					elementList.add(new AbstractSlot.ItemSlot(new ItemStack(Blocks.ANVIL), i, guiLeft + 95, guiTop + 21 + 18 * i, 1, drawer, false, true, false, false));
+					//				elementList.add(new CommonGuiButton(i + 100, guiLeft + 206, guiTop + 21 + 10 * i, 14, 8, TextFormatting.GREEN + "" + TextFormatting.BOLD + "+").setDesign(Design.NONE).setTooltip("Invite player"));
+				}
+			}));
 	}
 
 	@Override
@@ -158,6 +178,7 @@ public class GuiInfo extends CommonGuiScreenSub {
 				if (active != null) {
 					index = active;
 					buttonList.clear();
+					elementList.clear();
 					tabs.get(index).init.run();
 					break;
 				}

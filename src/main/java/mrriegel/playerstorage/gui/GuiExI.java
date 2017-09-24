@@ -31,6 +31,8 @@ import mrriegel.playerstorage.Enums.MessageAction;
 import mrriegel.playerstorage.Message2Server;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.gui.inventory.GuiInventory;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Items;
@@ -116,6 +118,7 @@ public class GuiExI extends CommonGuiContainer {
 		drawer.drawPlayerSlots(79, 29 + 18 * gridHeight);
 		drawer.drawSlots(151, 9 + 18 * gridHeight, 5, 1);
 		drawer.drawSlots(7, 7, gridWidth, gridHeight);
+		new GuiTextField(0, fontRenderer, 134 + guiLeft, 10 + 18 * gridHeight + guiTop, 16, 16).drawTextBox();
 		searchBar.drawTextBox();
 		if (mode == GuiMode.ITEM) {
 			drawer.drawSlots(7, 29 + 18 * gridHeight, 3, 3);
@@ -129,6 +132,12 @@ public class GuiExI extends CommonGuiContainer {
 			slot.draw(mouseX, mouseY);
 		}
 		fontRenderer.setUnicodeFlag(uni);
+		boolean big = isPointInRegion(133, 9 + 18 * gridHeight, 18, 18, mouseX, mouseY);
+		int x = 133 + guiLeft + 9, y = 9 + 18 * gridHeight + guiTop + 17;
+		if (!big) {
+			GuiInventory.drawEntityOnScreen(x, y, 8, x - mouseX, y - mouseY, mc.player);
+		}
+
 	}
 
 	@Override
@@ -141,6 +150,21 @@ public class GuiExI extends CommonGuiContainer {
 			if (slot.isMouseOver(mouseX, mouseY))
 				slot.drawTooltip(mouseX - guiLeft, mouseY - guiTop);
 		}
+	}
+
+	@Override
+	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+		super.drawScreen(mouseX, mouseY, partialTicks);
+		boolean big = isPointInRegion(133, 9 + 18 * gridHeight, 18, 18, mouseX, mouseY);
+		int x = 133 + guiLeft + 9, y = 9 + 18 * gridHeight + guiTop + 17;
+		if (big) {
+			GlStateManager.translate(0, 0, 900);
+			drawDefaultBackground();
+			y += 50;
+			GuiInventory.drawEntityOnScreen(x, y, 48, x - mouseX, y - mouseY, mc.player);
+			GlStateManager.translate(0, 0, -900);
+		}
+
 	}
 
 	@Override

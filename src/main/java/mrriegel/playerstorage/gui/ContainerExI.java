@@ -72,7 +72,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 		Slot slot = inventorySlots.get(index);
 		if (!playerIn.world.isRemote && slot.getHasStack()) {
 			IInventory inv = slot.inventory;
-			if (inv instanceof InventoryPlayer && index < 36) {
+			if (inv instanceof InventoryPlayer && slot.getSlotIndex() < 36) {
 				if (!ctrl && !space) {
 					if (ei.mode == GuiMode.ITEM)
 						slot.putStack(ExInventory.getInventory(playerIn).insertItem(slot.getStack(), false));
@@ -100,7 +100,6 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 				onCraftMatrixChanged(null);
 			}
 			if (ei.mode == GuiMode.ITEM && clickTypeIn == ClickType.PICKUP && slotId >= 0 && slotId < inventorySlots.size() && getSlot(slotId) != null && getSlot(slotId).getHasStack() && getSlot(slotId).inventory instanceof InventoryPlayer) {
-				System.out.println(getSlot(slotId).getSlotIndex());
 				ItemStack stack = getSlot(slotId).getStack();
 				boolean apply = false;
 				for (Slot s : getSlotsFor(player.inventory)) {
