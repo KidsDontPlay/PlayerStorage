@@ -2,6 +2,8 @@ package mrriegel.playerstorage;
 
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Triple;
+
 import mrriegel.limelib.helper.InvHelper;
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.AbstractMessage;
@@ -203,6 +205,15 @@ public class Message2Server extends AbstractMessage {
 				}
 			case DEFAULTGUI:
 				ei.defaultGUI ^= true;
+				break;
+			case SETLIMIT:
+				if (ei.mode == GuiMode.ITEM) {
+					ItemStack stack = NBTHelper.get(nbt, "stack", ItemStack.class);
+					ei.itemLimits.put(stack, Triple.of(NBTHelper.get(nbt, "min", Integer.class), NBTHelper.get(nbt, "max", Integer.class), NBTHelper.get(nbt, "void", Boolean.class)));
+				} else {
+					FluidStack stack = NBTHelper.get(nbt, "stack", FluidStack.class);
+					ei.fluidLimits.put(stack, Triple.of(NBTHelper.get(nbt, "min", Integer.class), NBTHelper.get(nbt, "max", Integer.class), NBTHelper.get(nbt, "void", Boolean.class)));
+				}
 				break;
 			default:
 				break;

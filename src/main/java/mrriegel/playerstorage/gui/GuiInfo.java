@@ -160,7 +160,7 @@ public class GuiInfo extends CommonGuiScreenSub {
 		if (tabs.get(index).name.equals("Team")) {
 			if (button.id < 30) {
 				NBTTagCompound nbt = new NBTTagCompound();
-				NBTHelper.set(nbt, "action", MessageAction.TEAMUNINVITE);
+				MessageAction.TEAMUNINVITE.set(nbt);
 				NBTHelper.set(nbt, "player1", mc.player.getName());
 				NBTHelper.set(nbt, "player2", team.get(button.id));
 				PacketHandler.sendToServer(new Message2Server(nbt));
@@ -203,7 +203,7 @@ public class GuiInfo extends CommonGuiScreenSub {
 		if (player == null)
 			return;
 		NBTTagCompound nbt = new NBTTagCompound();
-		NBTHelper.set(nbt, "action", MessageAction.TEAMINVITE);
+		MessageAction.TEAMINVITE.set(nbt);
 		NBTHelper.set(nbt, "player1", mc.player.getName());
 		NBTHelper.set(nbt, "player2", p);
 		PacketHandler.sendToServer(new Message2Server(nbt));

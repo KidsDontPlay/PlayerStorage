@@ -7,26 +7,31 @@ import java.util.List;
 import org.lwjgl.input.Keyboard;
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import mrriegel.limelib.LimeLib;
 import mrriegel.limelib.helper.ColorHelper;
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.OpenGuiMessage;
 import mrriegel.limelib.network.PacketHandler;
 import mrriegel.playerstorage.Enums.MessageAction;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.client.event.ClientChatEvent;
-import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.oredict.OreDictionary;
 
+@EventBusSubscriber(modid = PlayerStorage.MODID, value = { Side.CLIENT })
 public class ClientProxy extends CommonProxy {
 
 	public static final KeyBinding GUI = new KeyBinding("Open GUI", Keyboard.KEY_I, PlayerStorage.MODID);
@@ -42,7 +47,6 @@ public class ClientProxy extends CommonProxy {
 	@Override
 	public void init(FMLInitializationEvent event) {
 		super.init(event);
-		MinecraftForge.EVENT_BUS.register(ClientProxy.class);
 		Minecraft.getMinecraft().getItemColors().registerItemColorHandler((stack, tint) -> {
 			/** @author mezz */
 			if (tint != 0)
@@ -102,13 +106,21 @@ public class ClientProxy extends CommonProxy {
 			String sender = event.getMessage().replace(TEAMCODE, "");
 			if (sender != null) {
 				NBTTagCompound nbt = new NBTTagCompound();
-				NBTHelper.set(nbt, "action", MessageAction.TEAMACCEPT);
+				MessageAction.TEAMACCEPT.set(nbt);
 				NBTHelper.set(nbt, "player1", Minecraft.getMinecraft().player.getName());
 				NBTHelper.set(nbt, "player2", sender);
 				PacketHandler.sendToServer(new Message2Server(nbt));
 			}
 			event.setMessage("");
 
+		}
+	}
+
+	@SubscribeEvent
+	public static void gui(GuiOpenEvent event) {
+		if (event.getGui() instanceof GuiInventory && ExInventory.getInventory(LimeLib.proxy.getClientPlayer()).defaultGUI) {
+			event.setCanceled(true);
+			PacketHandler.sendToServer(new OpenGuiMessage(PlayerStorage.MODID, 0, null));
 		}
 	}
 

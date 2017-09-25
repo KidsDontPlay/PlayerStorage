@@ -29,6 +29,7 @@ import mrriegel.limelib.util.Utils;
 import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.Enums.MessageAction;
 import mrriegel.playerstorage.Message2Server;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiInventory;
@@ -83,7 +84,6 @@ public class GuiExI extends CommonGuiContainer {
 		searchBar = new GuiTextField(0, fontRenderer, guiLeft + 8, guiTop + 13 + 18 * gridHeight, 85, fontRenderer.FONT_HEIGHT);
 		searchBar.setMaxStringLength(30);
 		searchBar.setEnableBackgroundDrawing(!false);
-		searchBar.setVisible(true);
 		searchBar.setTextColor(16777215);
 		searchBar.setFocused(true);
 		if (mode == GuiMode.ITEM)
@@ -107,6 +107,7 @@ public class GuiExI extends CommonGuiContainer {
 					slots.add(new FluidSlot(null, 0, guiLeft + 8 + j * 18, guiTop + 8 + i * 18, 0, drawer, true, true, false, true));
 			}
 		}
+		updateScreen();
 	}
 
 	@Override
@@ -118,6 +119,7 @@ public class GuiExI extends CommonGuiContainer {
 		drawer.drawPlayerSlots(79, 29 + 18 * gridHeight);
 		drawer.drawSlots(151, 9 + 18 * gridHeight, 5, 1);
 		drawer.drawSlots(7, 7, gridWidth, gridHeight);
+		drawer.drawColoredRectangle(7, 7, gridWidth * 18, gridHeight * 18, 0x33ffdead);
 		new GuiTextField(0, fontRenderer, 134 + guiLeft, 10 + 18 * gridHeight + guiTop, 16, 16).drawTextBox();
 		searchBar.drawTextBox();
 		if (mode == GuiMode.ITEM) {
@@ -152,12 +154,18 @@ public class GuiExI extends CommonGuiContainer {
 		}
 	}
 
+	private int hoverCounter;
+
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
 		super.drawScreen(mouseX, mouseY, partialTicks);
 		boolean big = isPointInRegion(133, 9 + 18 * gridHeight, 18, 18, mouseX, mouseY);
+		if (big)
+			hoverCounter++;
+		else
+			hoverCounter = 0;
 		int x = 133 + guiLeft + 9, y = 9 + 18 * gridHeight + guiTop + 17;
-		if (big) {
+		if (hoverCounter > Minecraft.getDebugFPS() / 5) {
 			GlStateManager.translate(0, 0, 900);
 			drawDefaultBackground();
 			y += 50;
@@ -280,10 +288,8 @@ public class GuiExI extends CommonGuiContainer {
 	}
 
 	protected void sendSlot(AbstractSlot<?> slot, int mouseButton) {
-		if (mouseButton != 0 && mouseButton != 1)
-			return;
 		NBTTagCompound nbt = new NBTTagCompound();
-		NBTHelper.set(nbt, "action", MessageAction.SLOT);
+		MessageAction.SLOT.set(nbt);
 		if (slot instanceof ItemSlot) {
 			if (!((ItemSlot) slot).stack.isEmpty())
 				NBTHelper.set(nbt, "slot", ((ItemSlot) slot).stack.writeToNBT(new NBTTagCompound()));
@@ -311,7 +317,10 @@ public class GuiExI extends CommonGuiContainer {
 		}
 		if (canClick()) {
 			if (over != null)
-				sendSlot(over, mouseButton);
+				if (mouseButton == 0 || mouseButton == 1)
+					sendSlot(over, mouseButton);
+				else if (mouseButton == 2)
+					GuiDrawer.openGui(new GuiLimit(over));
 			lastClick = System.currentTimeMillis();
 		}
 		if (scrollBar.isMouseOver(mouseX - guiLeft, mouseY - guiTop)) {
@@ -350,7 +359,7 @@ public class GuiExI extends CommonGuiContainer {
 	public void handleKeyboardInput() throws IOException {
 		super.handleKeyboardInput();
 		NBTTagCompound nbt = new NBTTagCompound();
-		NBTHelper.set(nbt, "action", MessageAction.KEYUPDATE);
+		MessageAction.KEYUPDATE.set(nbt);
 		NBTHelper.set(nbt, "space", Keyboard.isKeyDown(Keyboard.KEY_SPACE));
 		NBTHelper.set(nbt, "shift", isShiftKeyDown());
 		NBTHelper.set(nbt, "ctrl", isCtrlKeyDown());

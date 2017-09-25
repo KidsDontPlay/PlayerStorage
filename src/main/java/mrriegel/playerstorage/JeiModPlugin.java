@@ -43,7 +43,7 @@ public class JeiModPlugin implements IModPlugin {
 						else
 							NBTHelper.setList(nbt, i - 1 + "l", inputs.get(i).getAllIngredients());
 					}
-					NBTHelper.set(nbt, "action", MessageAction.JEITRANSFER);
+					MessageAction.JEITRANSFER.set(nbt);
 					PacketHandler.sendToServer(new Message2Server(nbt));
 				}
 				return null;

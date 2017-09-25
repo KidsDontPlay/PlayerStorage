@@ -1,5 +1,8 @@
 package mrriegel.playerstorage;
 
+import mrriegel.limelib.helper.NBTHelper;
+import net.minecraft.nbt.NBTTagCompound;
+
 public class Enums {
 	public static enum Sort {
 		AMOUNT("\u03A3"), NAME("AZ"), MOD("M");
@@ -33,6 +36,12 @@ public class Enums {
 		TEAMACCEPT, //
 		TEAMUNINVITE, //
 		JEITRANSFER, //
-		DEFAULTGUI;
+		DEFAULTGUI, //
+		SETLIMIT;
+
+		public void set(NBTTagCompound nbt) {
+			NBTHelper.set(nbt, "action", this);
+		}
+
 	}
 }
