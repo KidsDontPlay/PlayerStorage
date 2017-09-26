@@ -1,11 +1,14 @@
-package mrriegel.playerstorage;
+package mrriegel.playerstorage.registry;
 
 import java.util.List;
 
 import mrriegel.limelib.LimeLib;
 import mrriegel.limelib.helper.RegistryHelper;
 import mrriegel.limelib.particle.CommonParticle;
+import mrriegel.playerstorage.ClientProxy;
+import mrriegel.playerstorage.ConfigHandler;
 import mrriegel.playerstorage.ConfigHandler.Unit2;
+import mrriegel.playerstorage.ExInventory;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
@@ -81,7 +84,12 @@ public class ItemApple extends ItemFood {
 			if (u == null)
 				return;
 			ei.itemLimit += Math.abs(u.itemLimit);
+			if (ei.itemLimit < 0)
+				ei.itemLimit = Integer.MAX_VALUE;
 			ei.fluidLimit += Math.abs(u.fluidLimit);
+			if (ei.fluidLimit < 0)
+				ei.fluidLimit = Integer.MAX_VALUE;
+			ei.markForSync();
 			if (worldIn.isRemote) {
 				player.sendStatusMessage(new TextComponentString("Player Storage increased by " + u.itemLimit + "/" + u.fluidLimit + "."), true);
 				for (int i = 0; i < 70; i++)

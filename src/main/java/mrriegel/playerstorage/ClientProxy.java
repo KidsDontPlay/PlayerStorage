@@ -14,6 +14,7 @@ import mrriegel.limelib.network.OpenGuiMessage;
 import mrriegel.limelib.network.PacketHandler;
 import mrriegel.playerstorage.Enums.MessageAction;
 import mrriegel.playerstorage.gui.GuiExI;
+import mrriegel.playerstorage.registry.Registry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;

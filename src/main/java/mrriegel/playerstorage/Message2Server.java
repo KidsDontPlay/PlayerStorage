@@ -237,25 +237,13 @@ public class Message2Server extends AbstractMessage {
 					ITextComponent text = new TextComponentString(p1.getName() + " invites you to join their PlayerStorage team.");
 					ITextComponent yes = new TextComponentString("[Accept]");
 
-					//		ITextComponent no = new TextComponentString("[Decline]");
 					Style yesno = new Style();
 					yesno.setColor(TextFormatting.GREEN);
 					yesno.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString("Click here")));
 					yesno.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, ClientProxy.TEAMCODE + p1.getName()));
 					yes.setStyle(yesno);
-					//		yesno = yesno.createShallowCopy();
-					//		yesno.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "") {
-					//			@Override
-					//			public Action getAction() {
-					//				System.out.println("no");
-					//				return super.getAction();
-					//			}
-					//		});
-					//		no.setStyle(yesno);
 					text.appendText(" ");
 					text.appendSibling(yes);
-					//		text.appendText(" / ");
-					//		text.appendSibling(no);
 					p2.sendMessage(text);
 					break;
 				case TEAMUNINVITE:

@@ -22,6 +22,7 @@ import mrriegel.limelib.util.StackWrapper;
 import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.Enums.Sort;
 import mrriegel.playerstorage.gui.ContainerExI;
+import mrriegel.playerstorage.registry.TileInterface;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -161,7 +162,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 	private void init() {
 		if (!player.world.isRemote) {
-			tiles.removeIf(gb -> gb.getTile() == null);
+			tiles.removeIf(gb -> !(gb.getTile() instanceof TileInterface) || ((TileInterface) gb.getTile()).getPlayer() != player);
 		}
 	}
 

@@ -1,9 +1,11 @@
-package mrriegel.playerstorage;
+package mrriegel.playerstorage.registry;
 
 import mrriegel.limelib.block.CommonBlock;
 import mrriegel.limelib.helper.RecipeHelper;
 import mrriegel.limelib.helper.RegistryHelper;
 import mrriegel.limelib.item.CommonItem;
+import mrriegel.playerstorage.ConfigHandler;
+import mrriegel.playerstorage.PlayerStorage;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;

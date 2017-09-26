@@ -11,6 +11,7 @@ import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.recipe.VanillaRecipeCategoryUid;
 import mezz.jei.api.recipe.transfer.IRecipeTransferError;
 import mezz.jei.api.recipe.transfer.IRecipeTransferHandler;
+import mezz.jei.transfer.RecipeTransferErrorTooltip;
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.PacketHandler;
 import mrriegel.playerstorage.Enums.GuiMode;
@@ -34,7 +35,9 @@ public class JeiModPlugin implements IModPlugin {
 
 			@Override
 			public IRecipeTransferError transferRecipe(ContainerExI container, IRecipeLayout recipeLayout, EntityPlayer player, boolean maxTransfer, boolean doTransfer) {
-				if (doTransfer && container.ei.mode == GuiMode.ITEM) {
+				if (container.ei.mode != GuiMode.ITEM)
+					return new RecipeTransferErrorTooltip("You are in fluid mode.");
+				if (doTransfer) {
 					Map<Integer, ? extends IGuiIngredient<ItemStack>> inputs = recipeLayout.getItemStacks().getGuiIngredients();
 					NBTTagCompound nbt = new NBTTagCompound();
 					for (int i = 1; i < 10; i++) {

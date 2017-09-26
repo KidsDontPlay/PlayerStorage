@@ -1,4 +1,4 @@
-package mrriegel.playerstorage;
+package mrriegel.playerstorage.registry;
 
 import java.util.Collections;
 import java.util.List;
@@ -6,6 +6,7 @@ import java.util.List;
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.tile.CommonTile;
 import mrriegel.limelib.tile.IHUDProvider;
+import mrriegel.playerstorage.ExInventory;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;

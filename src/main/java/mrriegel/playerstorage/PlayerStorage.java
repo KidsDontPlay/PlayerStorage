@@ -8,7 +8,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
-@Mod(modid = PlayerStorage.MODID, name = PlayerStorage.MODNAME, version = PlayerStorage.VERSION, dependencies = "required-after:limelib@[1.7.0,)")
+@Mod(modid = PlayerStorage.MODID, name = PlayerStorage.MODNAME, version = PlayerStorage.VERSION, acceptedMinecraftVersions = "[1.12,1.13)", dependencies = "required-after:limelib@[1.7.7,)")
 public class PlayerStorage {
 	public static final String MODID = "playerstorage";
 	public static final String VERSION = "1.0.0";

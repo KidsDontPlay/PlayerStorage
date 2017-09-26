@@ -3,6 +3,7 @@ package mrriegel.playerstorage;
 import mrriegel.limelib.network.PacketHandler;
 import mrriegel.playerstorage.gui.ContainerExI;
 import mrriegel.playerstorage.gui.GuiExI;
+import mrriegel.playerstorage.registry.Registry;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;

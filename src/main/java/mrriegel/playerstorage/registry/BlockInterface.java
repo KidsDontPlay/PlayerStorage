@@ -1,7 +1,8 @@
-package mrriegel.playerstorage;
+package mrriegel.playerstorage.registry;
 
 import mrriegel.limelib.block.CommonBlockContainer;
 import mrriegel.limelib.util.GlobalBlockPos;
+import mrriegel.playerstorage.ExInventory;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;

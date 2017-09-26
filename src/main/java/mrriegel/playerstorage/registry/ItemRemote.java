@@ -1,8 +1,11 @@
-package mrriegel.playerstorage;
+package mrriegel.playerstorage.registry;
 
 import java.util.Optional;
 
 import mrriegel.limelib.item.CommonItem;
+import mrriegel.playerstorage.ConfigHandler;
+import mrriegel.playerstorage.ExInventory;
+import mrriegel.playerstorage.PlayerStorage;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;

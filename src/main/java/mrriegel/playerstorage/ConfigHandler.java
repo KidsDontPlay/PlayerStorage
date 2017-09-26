@@ -33,7 +33,7 @@ public class ConfigHandler {
 		config = new Configuration(file);
 		Gson gson = new Gson();
 		infiniteSpace = config.getBoolean("infiniteSpace", Configuration.CATEGORY_GENERAL, false, "Enable infinite inventory.");
-		remote = config.getBoolean("remote", Configuration.CATEGORY_GENERAL, false, "Enable remote item to access your inventory without pressing the key.");
+		remote = config.getBoolean("remote", Configuration.CATEGORY_GENERAL, false, "Enable remote item to access your inventory without pressing a key.");
 		Property prop = config.get(Configuration.CATEGORY_GENERAL, "appleTiers", Arrays.asList(//
 				new Unit1("blockIron", 3200, 32000), //
 				new Unit1("blockGold", 25600, 256000), //
@@ -56,6 +56,18 @@ public class ConfigHandler {
 		}
 	}
 
+	static class Tup {
+		public String oreName;
+		public int itemLimit, fluidLimit;
+
+		public Tup(String oreName, int itemLimit, int fluidLimit) {
+			this.oreName = oreName;
+			this.itemLimit = itemLimit;
+			this.fluidLimit = fluidLimit;
+		}
+
+	}
+
 	static class Unit1 {
 		public String oreName;
 		public Unit2 entry;
@@ -67,7 +79,7 @@ public class ConfigHandler {
 		}
 	}
 
-	static class Unit2 {
+	public static class Unit2 {
 		public int itemLimit, fluidLimit;
 
 		public Unit2(int itemLimit, int fluidLimit) {
