@@ -203,6 +203,7 @@ public class Message2Server extends AbstractMessage {
 						player.openContainer.onCraftMatrixChanged(null);
 					}
 				}
+				break;
 			case DEFAULTGUI:
 				ei.defaultGUI ^= true;
 				break;
@@ -214,6 +215,9 @@ public class Message2Server extends AbstractMessage {
 					FluidStack stack = NBTHelper.get(nbt, "stack", FluidStack.class);
 					ei.fluidLimits.put(stack, Triple.of(NBTHelper.get(nbt, "min", Integer.class), NBTHelper.get(nbt, "max", Integer.class), NBTHelper.get(nbt, "void", Boolean.class)));
 				}
+				break;
+			case PICKUP:
+				ei.autoPickup = NBTHelper.get(nbt, "pick", Boolean.class);
 				break;
 			default:
 				break;

@@ -21,9 +21,7 @@ public class TileInterface extends CommonTile implements IHUDProvider {
 
 	@Override
 	public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
-		if (getPlayer() != null)
-			return capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY || capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY;
-		return super.hasCapability(capability, facing);
+		return ((capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY || capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) && getPlayer() != null) || super.hasCapability(capability, facing);
 	}
 
 	@Override
@@ -42,7 +40,8 @@ public class TileInterface extends CommonTile implements IHUDProvider {
 
 	public void setPlayer(EntityPlayer player) {
 		this.player = player;
-		playerName = player.getName();
+		if (player != null)
+			playerName = player.getName();
 		markDirty();
 	}
 

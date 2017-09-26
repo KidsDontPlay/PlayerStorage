@@ -12,8 +12,6 @@ import mrriegel.limelib.gui.CommonGuiScreenSub;
 import mrriegel.limelib.gui.GuiDrawer;
 import mrriegel.limelib.gui.button.CommonGuiButton;
 import mrriegel.limelib.gui.button.CommonGuiButton.Design;
-import mrriegel.limelib.gui.element.AbstractSlot;
-import mrriegel.limelib.gui.element.AbstractSlot.ItemSlot;
 import mrriegel.limelib.helper.ColorHelper;
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.PacketHandler;
@@ -23,12 +21,13 @@ import mrriegel.playerstorage.ExInventory;
 import mrriegel.playerstorage.Message2Server;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraftforge.fml.client.config.GuiCheckBox;
+import net.minecraftforge.fml.relauncher.Side;
 
 public class GuiInfo extends CommonGuiScreenSub {
 
@@ -61,15 +60,19 @@ public class GuiInfo extends CommonGuiScreenSub {
 			fontRenderer.drawString((isShiftKeyDown() ? ei.getFluidCount() : Utils.formatNumber(ei.getFluidCount())) + "/" + (isShiftKeyDown() ? ei.fluidLimit : Utils.formatNumber(ei.fluidLimit)) + " mB", guiLeft + 11, guiTop + 70, 0x3e3e3e);
 
 			String inter = "Interfaces";
-			drawer.drawColoredRectangle(9, 88, fontRenderer.getStringWidth(inter) + 2, fontRenderer.FONT_HEIGHT + 2, 0xffe1e1e1);
-			drawer.drawFrame(9, 88, fontRenderer.getStringWidth(inter) + 2, fontRenderer.FONT_HEIGHT + 2, 1, 0xff1e1e1e);
+			drawer.drawColoredRectangle(9, 88, fontRenderer.getStringWidth(inter) + 2, fontRenderer.FONT_HEIGHT + 1, 0xffe1e1e1);
+			drawer.drawFrame(9, 88, fontRenderer.getStringWidth(inter) + 2, fontRenderer.FONT_HEIGHT + 1, 1, 0xff1e1e1e);
 			fontRenderer.drawString(inter, guiLeft + 11, guiTop + 90, 0x2e3e3e);
 			if (isPointInRegion(11, 90, fontRenderer.getStringWidth(inter), fontRenderer.FONT_HEIGHT, GuiDrawer.getMouseX(), GuiDrawer.getMouseY())) {
 				List<String> l = ei.tiles.stream().map(gp -> "Dim:" + gp.getDimension() + ", x:" + gp.getPos().getX() + " y:" + gp.getPos().getY() + " z:" + gp.getPos().getZ()).collect(Collectors.toList());
 				drawHoveringText(l.isEmpty() ? Arrays.asList("No Interfaces") : l, GuiDrawer.getMouseX(), GuiDrawer.getMouseY());
 			}
-			//			fontRenderer.drawString("Team: " + ei.members, guiLeft + 11, guiTop + 90, 0x3e3e3e);
-
+			//			fontRenderer.drawString("Auto Pickup", buttonList.get(0).x + 12, buttonList.get(0).y + 2, 0x2e3e3e);
+			if (buttonList.get(0).isMouseOver()) {
+				drawHoveringText("Insert picked up items into your storage.", GuiDrawer.getMouseX(), GuiDrawer.getMouseY());
+			}
+		}, () -> {
+			buttonList.add(new GuiCheckBox(MessageAction.PICKUP.ordinal(), guiLeft + 110, guiTop + 88, "Auto Pickup", ei.autoPickup));
 		}));
 		tabs.add(new Tab("Team", () -> {
 			List<String> lis = mc.world.playerEntities.stream().filter(p -> p != mc.player).map(EntityPlayer::getName).collect(Collectors.toList());
@@ -103,22 +106,6 @@ public class GuiInfo extends CommonGuiScreenSub {
 				buttonList.add(new CommonGuiButton(i + 100, guiLeft + 206, guiTop + 21 + 10 * i, 14, 8, TextFormatting.GREEN + "" + TextFormatting.BOLD + "+").setDesign(Design.NONE).setTooltip("Invite player"));
 			}
 		}));
-		if (false)
-			tabs.add(new Tab("Limits", () -> {
-				drawer.drawColoredRectangle(8, 8, 100, 142, 0xffa2a2a2);
-				drawer.drawFrame(8, 8, 100, 142, 1, 0xff080808);
-				fontRenderer.drawString(TextFormatting.DARK_GRAY + "" + TextFormatting.BOLD + "Items", 12 + guiLeft, 12 + guiTop, 0);
-				drawer.drawColoredRectangle(119, 8, 100, 142, 0xffa2a2a2);
-				drawer.drawFrame(119, 8, 100, 142, 1, 0xff080808);
-				fontRenderer.drawString(TextFormatting.DARK_GRAY + "" + TextFormatting.BOLD + "Fluids", 123 + guiLeft, 12 + guiTop, 0);
-			}, () -> {
-				for (int i = 0; i < 13; i++) {
-					;
-					ItemSlot is = new AbstractSlot.ItemSlot(new ItemStack(Blocks.ANVIL), i, guiLeft + 95, guiTop + 21 + 18 * i, 1, drawer, false, true, false, false);
-					elementList.add(new AbstractSlot.ItemSlot(new ItemStack(Blocks.ANVIL), i, guiLeft + 95, guiTop + 21 + 18 * i, 1, drawer, false, true, false, false));
-					//				elementList.add(new CommonGuiButton(i + 100, guiLeft + 206, guiTop + 21 + 10 * i, 14, 8, TextFormatting.GREEN + "" + TextFormatting.BOLD + "+").setDesign(Design.NONE).setTooltip("Invite player"));
-				}
-			}));
 	}
 
 	@Override
@@ -146,12 +133,14 @@ public class GuiInfo extends CommonGuiScreenSub {
 		}
 		drawer.drawBackgroundTexture();
 		super.drawGuiContainerBackgroundLayer(partialTicks, mouseX, mouseY);
-		tabs.get(index).draw.run();
 	}
 
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
 		super.drawScreen(mouseX, mouseY, partialTicks);
+		GlStateManager.disableLighting();
+		tabs.get(index).draw.run();
+		GlStateManager.enableLighting();
 	}
 
 	@Override
@@ -166,6 +155,15 @@ public class GuiInfo extends CommonGuiScreenSub {
 				PacketHandler.sendToServer(new Message2Server(nbt));
 			} else {
 				invite(other.get(button.id - 100));
+			}
+		}
+		if (tabs.get(index).name.equals("INFO")) {
+			if (button.id == MessageAction.PICKUP.ordinal()) {
+				NBTTagCompound nbt = new NBTTagCompound();
+				MessageAction.PICKUP.set(nbt);
+				NBTHelper.set(nbt, "pick", ((GuiCheckBox) button).isChecked());
+				PacketHandler.sendToServer(new Message2Server(nbt));
+				new Message2Server().handleMessage(mc.player, nbt, Side.CLIENT);
 			}
 		}
 	}
@@ -184,6 +182,12 @@ public class GuiInfo extends CommonGuiScreenSub {
 				}
 			}
 		}
+	}
+
+	@Override
+	protected void onClosed() {
+		super.onClosed();
+
 	}
 
 	@Override

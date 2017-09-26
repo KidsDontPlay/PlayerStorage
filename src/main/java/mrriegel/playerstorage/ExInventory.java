@@ -21,14 +21,11 @@ import mrriegel.limelib.util.GlobalBlockPos;
 import mrriegel.limelib.util.StackWrapper;
 import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.Enums.Sort;
-import mrriegel.playerstorage.crafting.CraftingPattern;
-import mrriegel.playerstorage.crafting.CraftingTask;
 import mrriegel.playerstorage.gui.ContainerExI;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
@@ -45,13 +42,16 @@ import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.Clone;
+import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.FluidTankProperties;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
@@ -67,12 +67,12 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	List<FluidStack> fluids = new ArrayList<>();
 	List<StackWrapper> itemsPlusTeam = new ArrayList<>();
 	List<FluidStack> fluidsPlusTeam = new ArrayList<>();
-	List<CraftingPattern> patterns = new ArrayList<>();
-	List<CraftingTask> tasks = new ArrayList<>();
+	//	List<CraftingPattern> patterns = new ArrayList<>();
+	//	List<CraftingTask> tasks = new ArrayList<>();
 	public int itemLimit = 2000;
 	public int fluidLimit = 20000;
 	public int gridHeight = 4;
-	public boolean needSync = true, defaultGUI = true;
+	public boolean needSync = true, defaultGUI = true, autoPickup;
 	public NonNullList<ItemStack> matrix = NonNullList.withSize(9, ItemStack.EMPTY);
 	public Set<String> members = new HashSet<>();
 	public Set<GlobalBlockPos> tiles = new HashSet<>();
@@ -108,8 +108,8 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	public GuiMode mode = GuiMode.ITEM;
 
 	public ExInventory() {
-		itemLimits.defaultReturnValue(Triple.of(0, 99999999, false));
-		fluidLimits.defaultReturnValue(Triple.of(0, 99999999, false));
+		itemLimits.defaultReturnValue(Triple.of(0, MAX, false));
+		fluidLimits.defaultReturnValue(Triple.of(0, MAX, false));
 	}
 
 	private void update() {
@@ -143,6 +143,14 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 			sync((EntityPlayerMP) player);
 			needSync = false;
 
+		}
+		//infinite water
+		if (player.ticksExisted % 40 == 0) {
+			int water = getAmountFluid(s -> s.getFluid() == FluidRegistry.WATER);
+			if (water >= 2000 && water < 4000) {
+				insertFluid(new FluidStack(FluidRegistry.WATER, 1000), true, false);
+				needSync = true;
+			}
 		}
 		//		if (!tasks.isEmpty()) {
 		//			CraftingTask t = tasks.remove(0);
@@ -340,32 +348,6 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 			getMembers().forEach(e -> e.needSync = true);
 	}
 
-	boolean canCraft(ItemStack stack) {
-		for (CraftingPattern cp : patterns) {
-			cp.hashCode();
-		}
-		if (!patterns.stream().anyMatch(cp -> cp.recipe.getRecipeOutput().isItemEqual(stack)))
-			return false;
-		return false;
-	}
-
-	String craft(ItemStack stack, int size) {
-		ExInventory copy = new ExInventory();
-		copy.deserializeNBT(serializeNBT());
-		StringBuilder builder = new StringBuilder();
-		patterns.stream().filter(cp -> cp.recipe.getRecipeOutput().isItemEqual(stack)).//
-				findAny().ifPresent(cp -> {
-					//		forEach(cp -> {
-					int crafts = Math.floorDiv(size, cp.recipe.getRecipeOutput().getCount());
-					for (Ingredient ing : cp.recipe.getIngredients()) {
-						int ex = copy.extractItem(ing, crafts, false).getCount();
-						if (ex < crafts) {
-						}
-					}
-				});
-		return builder.toString();
-	}
-
 	@Override
 	public NBTTagCompound serializeNBT() {
 		NBTTagCompound nbt = new NBTTagCompound();
@@ -385,6 +367,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		NBTHelper.set(nbt, "gridHeight", gridHeight);
 		NBTHelper.set(nbt, "dirty", needSync);
 		NBTHelper.set(nbt, "defaultGUI", defaultGUI);
+		NBTHelper.set(nbt, "autoPickup", autoPickup);
 		NBTHelper.setList(nbt, "members", new ArrayList<>(members));
 		NBTHelper.setList(nbt, "tilesInt", tiles.stream().map(g -> g.getDimension()).collect(Collectors.toList()));
 		NBTHelper.setList(nbt, "tilesPos", tiles.stream().map(g -> g.getPos()).collect(Collectors.toList()));
@@ -417,6 +400,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		gridHeight = NBTHelper.get(nbt, "gridHeight", Integer.class);
 		needSync = NBTHelper.get(nbt, "dirty", Boolean.class);
 		defaultGUI = NBTHelper.get(nbt, "defaultGUI", Boolean.class);
+		autoPickup = NBTHelper.get(nbt, "autoPickup", Boolean.class);
 		members = new HashSet<>(NBTHelper.getList(nbt, "members", String.class));
 		List<Integer> ints = NBTHelper.getList(nbt, "tilesInt", Integer.class);
 		List<BlockPos> poss = NBTHelper.getList(nbt, "tilesPos", BlockPos.class);
@@ -460,6 +444,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	@CapabilityInject(ExInventory.class)
 	public static Capability<ExInventory> EXINVENTORY = null;
 	public static final ResourceLocation LOCATION = new ResourceLocation(PlayerStorage.MODID, "inventory");
+	public static final int MAX = 99999999;
 
 	public static void register() {
 		CapabilityManager.INSTANCE.register(ExInventory.class, new IStorage<ExInventory>() {
@@ -526,12 +511,21 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	@SubscribeEvent
 	public static void logout(PlayerLoggedOutEvent event) {
 		ExInventory.getInventory(event.player).markForSync();
+		Arrays.stream(FMLCommonHandler.instance().getMinecraftServerInstance().worlds).forEach(w -> w.loadedTileEntityList.stream().filter(t -> t instanceof TileInterface).forEach(t -> ((TileInterface) t).setPlayer(null)));
 	}
 
 	@SubscribeEvent
 	public static void join(EntityJoinWorldEvent event) {
 		if (event.getEntity() instanceof EntityPlayerMP) {
 			sync((EntityPlayerMP) event.getEntity());
+		}
+	}
+
+	@SubscribeEvent(priority = EventPriority.LOW)
+	public static void pickup(EntityItemPickupEvent event) {
+		ExInventory ei = ExInventory.getInventory(event.getEntityPlayer());
+		if (ei.autoPickup) {
+			event.getItem().getItem().setCount(ei.insertItem(event.getItem().getItem(), false).getCount());
 		}
 	}
 

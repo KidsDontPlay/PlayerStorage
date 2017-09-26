@@ -99,7 +99,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 			if (slotId >= 0 && slotId < inventorySlots.size() && getSlot(slotId) != null && getSlot(slotId).inventory == invs.get("result")) {
 				onCraftMatrixChanged(null);
 			}
-			if (ei.mode == GuiMode.ITEM && clickTypeIn == ClickType.PICKUP && slotId >= 0 && slotId < inventorySlots.size() && getSlot(slotId) != null && getSlot(slotId).getHasStack() && getSlot(slotId).inventory instanceof InventoryPlayer) {
+			if (ei.mode == GuiMode.ITEM && slotId >= 0 && slotId < inventorySlots.size() && getSlot(slotId) != null && getSlot(slotId).getHasStack() && getSlot(slotId).inventory instanceof InventoryPlayer) {
 				ItemStack stack = getSlot(slotId).getStack();
 				boolean apply = false;
 				for (Slot s : getSlotsFor(player.inventory)) {

@@ -81,11 +81,11 @@ public class GuiExI extends CommonGuiContainer {
 		xSize = 248;
 		ySize = 112 + 18 * gridHeight;
 		super.initGui();
-		searchBar = new GuiTextField(0, fontRenderer, guiLeft + 8, guiTop + 13 + 18 * gridHeight, 85, fontRenderer.FONT_HEIGHT);
+		searchBar = new GuiTextField(0, fontRenderer, guiLeft + 9, guiTop + 14 + 18 * gridHeight, 85, fontRenderer.FONT_HEIGHT);
 		searchBar.setMaxStringLength(30);
-		searchBar.setEnableBackgroundDrawing(!false);
 		searchBar.setTextColor(16777215);
 		searchBar.setFocused(true);
+		searchBar.setEnableBackgroundDrawing(false);
 		if (mode == GuiMode.ITEM)
 			buttonList.add(clear = new CommonGuiButton(MessageAction.CLEAR.ordinal(), guiLeft + 62, guiTop + 29 + 18 * gridHeight, 7, 7, null).setTooltip("Clear grid").setDesign(Design.SIMPLE));
 		buttonList.add(modeButton = new CommonGuiButton(MessageAction.GUIMODE.ordinal(), guiLeft - 25, guiTop + ySize - 20, 23, 20, "").setTooltip("Toggle Mode").setDesign(Design.SIMPLE));
@@ -97,7 +97,7 @@ public class GuiExI extends CommonGuiContainer {
 		if (LimeLib.jeiLoaded)
 			buttonList.add(jei = new CommonGuiButton(MessageAction.JEI.ordinal(), guiLeft - 25, guiTop + 61, 23, 14, null).setTooltip("Enable synchronized search with JEI").setDesign(Design.SIMPLE));
 		buttonList.add(defaultt = new CommonGuiButton(MessageAction.DEFAULTGUI.ordinal(), guiLeft - 25, guiTop + 78, 23, 14, null).setTooltip("Set this to default inventory GUI.").setDesign(Design.SIMPLE));
-		scrollBar = new ScrollBar(0, 227, 7, 14, 18 * gridHeight, drawer, Plane.VERTICAL);
+		scrollBar = new ScrollBar(0, 227 + guiLeft, 7 + guiTop, 14, 18 * gridHeight, drawer, Plane.VERTICAL);
 		slots = new ArrayList<>();
 		for (int i = 0; i < gridHeight; i++) {
 			for (int j = 0; j < gridWidth; j++) {
@@ -121,6 +121,7 @@ public class GuiExI extends CommonGuiContainer {
 		drawer.drawSlots(7, 7, gridWidth, gridHeight);
 		drawer.drawColoredRectangle(7, 7, gridWidth * 18, gridHeight * 18, 0x33ffdead);
 		new GuiTextField(0, fontRenderer, 134 + guiLeft, 10 + 18 * gridHeight + guiTop, 16, 16).drawTextBox();
+		drawer.drawTextfield(searchBar);
 		searchBar.drawTextBox();
 		if (mode == GuiMode.ITEM) {
 			drawer.drawSlots(7, 29 + 18 * gridHeight, 3, 3);
@@ -256,7 +257,7 @@ public class GuiExI extends CommonGuiContainer {
 
 		scrollBar.status = currentPos / (double) maxPos;
 		if (scrollDrag) {
-			scrollBar.status = (GuiDrawer.getMouseY() - guiTop - scrollBar.y) / (double) scrollBar.height;
+			scrollBar.status = (GuiDrawer.getMouseY() - scrollBar.y) / (double) scrollBar.height;
 			scrollBar.status = MathHelper.clamp(scrollBar.status, 0, 1);
 			currentPos = MathHelper.clamp((int) Math.round(maxPos * scrollBar.status), 0, maxPos);
 		}
@@ -323,10 +324,13 @@ public class GuiExI extends CommonGuiContainer {
 					GuiDrawer.openGui(new GuiLimit(over));
 			lastClick = System.currentTimeMillis();
 		}
-		if (scrollBar.isMouseOver(mouseX - guiLeft, mouseY - guiTop)) {
-			scrollBar.status = (mouseY - guiTop - scrollBar.y) / (double) scrollBar.height;
+		if (scrollBar.isMouseOver(mouseX, mouseY)) {
+			scrollBar.status = (mouseY - scrollBar.y) / (double) scrollBar.height;
 			currentPos = MathHelper.clamp((int) Math.round(maxPos * scrollBar.status), 0, maxPos);
 			scrollDrag = true;
+		}
+		if (hoverCounter > Minecraft.getDebugFPS() / 5) {
+			mc.displayGuiScreen(new GuiInventory(mc.player));
 		}
 		//		if (isPointInRegion(xSize - 35, -15, 35, 17, mouseX, mouseY)) {
 		//			if (mouseButton == 0)

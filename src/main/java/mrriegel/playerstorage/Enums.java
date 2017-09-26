@@ -37,7 +37,8 @@ public class Enums {
 		TEAMUNINVITE, //
 		JEITRANSFER, //
 		DEFAULTGUI, //
-		SETLIMIT;
+		SETLIMIT, //
+		PICKUP;
 
 		public void set(NBTTagCompound nbt) {
 			NBTHelper.set(nbt, "action", this);

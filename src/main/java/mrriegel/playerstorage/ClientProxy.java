@@ -13,6 +13,7 @@ import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.OpenGuiMessage;
 import mrriegel.limelib.network.PacketHandler;
 import mrriegel.playerstorage.Enums.MessageAction;
+import mrriegel.playerstorage.gui.GuiExI;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -118,7 +119,7 @@ public class ClientProxy extends CommonProxy {
 
 	@SubscribeEvent
 	public static void gui(GuiOpenEvent event) {
-		if (event.getGui() instanceof GuiInventory && ExInventory.getInventory(LimeLib.proxy.getClientPlayer()).defaultGUI) {
+		if (event.getGui() instanceof GuiInventory && !(Minecraft.getMinecraft().currentScreen instanceof GuiExI) && ExInventory.getInventory(LimeLib.proxy.getClientPlayer()).defaultGUI) {
 			event.setCanceled(true);
 			PacketHandler.sendToServer(new OpenGuiMessage(PlayerStorage.MODID, 0, null));
 		}

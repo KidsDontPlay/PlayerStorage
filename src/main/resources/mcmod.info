@@ -1,11 +1,11 @@
 [
 {
-  "modid": "transprot",
-  "name": "Transprot",
-  "description": "Item transport over short distance without cables.",
+  "modid": "playerstorage",
+  "name": "playerstorage",
+  "description": "Mod",
   "version": "${version}",
   "mcversion": "${mcversion}",
-  "url": "http://minecraft.curseforge.com/projects/transprot",
+  "url": "",
   "updateUrl": "",
   "authorList": ["MrRiegel"],
   "credits": "The Forge and FML guys, for making this example",
