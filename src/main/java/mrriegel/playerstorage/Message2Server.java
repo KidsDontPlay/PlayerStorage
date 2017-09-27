@@ -2,8 +2,6 @@ package mrriegel.playerstorage;
 
 import java.util.List;
 
-import org.apache.commons.lang3.tuple.Triple;
-
 import mrriegel.limelib.helper.InvHelper;
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.AbstractMessage;
@@ -113,7 +111,7 @@ public class Message2Server extends AbstractMessage {
 						if (mouse == 0) {
 							if (slot == null)
 								break;
-							FluidStack resource = FluidStack.loadFluidStackFromNBT(slot).copy();
+							FluidStack resource = FluidStack.loadFluidStackFromNBT(slot);
 							resource.amount = size;
 							int filled = handler.fill(resource, false);
 							FluidStack newStack = ei.extractFluid(resource, filled, false);
@@ -128,7 +126,7 @@ public class Message2Server extends AbstractMessage {
 						player.inventory.setItemStack(hand);
 						((EntityPlayerMP) player).connection.sendPacket(new SPacketSetSlot(-1, 0, hand));
 					} else if (hand.isEmpty() && slot != null) {
-						FluidStack resource = FluidStack.loadFluidStackFromNBT(slot).copy();
+						FluidStack resource = FluidStack.loadFluidStackFromNBT(slot);
 						for (int i = 0; i < player.inventory.getSizeInventory(); i++) {
 							ItemStack s = player.inventory.getStackInSlot(i);
 							IFluidHandlerItem fh;
@@ -148,16 +146,14 @@ public class Message2Server extends AbstractMessage {
 				break;
 			case INCGRID:
 				ei.gridHeight++;
-				if (!player.world.isRemote) {
+				if (!player.world.isRemote)
 					player.openGui(PlayerStorage.instance, 0, player.world, 0, 0, 0);
-				}
 				break;
 			case DECGRID:
 				if (ei.gridHeight >= 2)
 					ei.gridHeight--;
-				if (!player.world.isRemote) {
+				if (!player.world.isRemote)
 					player.openGui(PlayerStorage.instance, 0, player.world, 0, 0, 0);
-				}
 				break;
 			case KEYUPDATE:
 				con.ctrl = ctrl;
@@ -167,13 +163,7 @@ public class Message2Server extends AbstractMessage {
 			case JEITRANSFER:
 				if (!player.world.isRemote) {
 					handleMessage(player, NBTHelper.set(new NBTTagCompound(), "action", MessageAction.CLEAR), side);
-					boolean isempty = true;
-					for (ItemStack s : ei.matrix) {
-						if (!s.isEmpty()) {
-							isempty = false;
-							break;
-						}
-					}
+					boolean isempty = ei.matrix.stream().allMatch(ItemStack::isEmpty);
 					if (isempty) {
 						for (int i = 0; i < 9; i++) {
 							boolean ore = false;
@@ -210,10 +200,10 @@ public class Message2Server extends AbstractMessage {
 			case SETLIMIT:
 				if (ei.mode == GuiMode.ITEM) {
 					ItemStack stack = NBTHelper.get(nbt, "stack", ItemStack.class);
-					ei.itemLimits.put(stack, Triple.of(NBTHelper.get(nbt, "min", Integer.class), NBTHelper.get(nbt, "max", Integer.class), NBTHelper.get(nbt, "void", Boolean.class)));
+					ei.itemLimits.put(stack, new Limit(NBTHelper.get(nbt, "min", Integer.class), NBTHelper.get(nbt, "max", Integer.class), NBTHelper.get(nbt, "void", Boolean.class)));
 				} else {
 					FluidStack stack = NBTHelper.get(nbt, "stack", FluidStack.class);
-					ei.fluidLimits.put(stack, Triple.of(NBTHelper.get(nbt, "min", Integer.class), NBTHelper.get(nbt, "max", Integer.class), NBTHelper.get(nbt, "void", Boolean.class)));
+					ei.fluidLimits.put(stack, new Limit(NBTHelper.get(nbt, "min", Integer.class), NBTHelper.get(nbt, "max", Integer.class), NBTHelper.get(nbt, "void", Boolean.class)));
 				}
 				break;
 			case PICKUP:

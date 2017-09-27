@@ -36,7 +36,9 @@ import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing.Plane;
@@ -94,9 +96,9 @@ public class GuiExI extends CommonGuiContainer {
 		buttonList.add(dec = new CommonGuiButton(MessageAction.DECGRID.ordinal(), guiLeft - 25, guiTop + 14, 23, 10, "-").setTooltip("Decrease Grid Height").setDesign(Design.SIMPLE).setButtonColor(Color.GRAY.getRGB()));
 		buttonList.add(sort = new CommonGuiButton(MessageAction.SORT.ordinal(), guiLeft - 25, guiTop + 27, 23, 14, null).setDesign(Design.SIMPLE));
 		buttonList.add(direction = new CommonGuiButton(MessageAction.DIRECTION.ordinal(), guiLeft - 25, guiTop + 44, 23, 14, null).setDesign(Design.SIMPLE));
+		buttonList.add(defaultt = new CommonGuiButton(MessageAction.DEFAULTGUI.ordinal(), guiLeft - 25, guiTop + 61, 23, 14, null).setTooltip("Set this to default inventory GUI.").setDesign(Design.SIMPLE));
 		if (LimeLib.jeiLoaded)
-			buttonList.add(jei = new CommonGuiButton(MessageAction.JEI.ordinal(), guiLeft - 25, guiTop + 61, 23, 14, null).setTooltip("Enable synchronized search with JEI").setDesign(Design.SIMPLE));
-		buttonList.add(defaultt = new CommonGuiButton(MessageAction.DEFAULTGUI.ordinal(), guiLeft - 25, guiTop + 78, 23, 14, null).setTooltip("Set this to default inventory GUI.").setDesign(Design.SIMPLE));
+			buttonList.add(jei = new CommonGuiButton(MessageAction.JEI.ordinal(), guiLeft - 25, guiTop + 78, 23, 14, null).setTooltip("Enable synchronized search with JEI").setDesign(Design.SIMPLE));
 		scrollBar = new ScrollBar(0, 227 + guiLeft, 7 + guiTop, 14, 18 * gridHeight, drawer, Plane.VERTICAL);
 		slots = new ArrayList<>();
 		for (int i = 0; i < gridHeight; i++) {
@@ -114,12 +116,11 @@ public class GuiExI extends CommonGuiContainer {
 	protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
 		drawDefaultBackground();
 		super.drawGuiContainerBackgroundLayer(partialTicks, mouseX, mouseY);
-		//		drawer.drawBackgroundTexture(xSize - 35, -15, 35, 20);
 		drawer.drawBackgroundTexture();
 		drawer.drawPlayerSlots(79, 29 + 18 * gridHeight);
 		drawer.drawSlots(151, 9 + 18 * gridHeight, 5, 1);
 		drawer.drawSlots(7, 7, gridWidth, gridHeight);
-		drawer.drawColoredRectangle(7, 7, gridWidth * 18, gridHeight * 18, 0x33ffdead);
+		drawer.drawColoredRectangle(7, 7, gridWidth * 18, gridHeight * 18, mode == GuiMode.ITEM ? 0x23ffc800 : 0x2300c5cd);
 		new GuiTextField(0, fontRenderer, 134 + guiLeft, 10 + 18 * gridHeight + guiTop, 16, 16).drawTextBox();
 		drawer.drawTextfield(searchBar);
 		searchBar.drawTextBox();
@@ -147,7 +148,6 @@ public class GuiExI extends CommonGuiContainer {
 	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
 		if (mode == GuiMode.ITEM)
 			fontRenderer.drawString("x", 63, 28 + 18 * gridHeight, 0xE0E0E0);
-		//		fontRenderer.drawString(TextFormatting.BOLD + "MORE", xSize - 31, -9, !isPointInRegion(xSize - 35, -15, 35, 17, mouseX, mouseY) ? 0x6e6e6e : 0x3e3e3e);
 		super.drawGuiContainerForegroundLayer(mouseX, mouseY);
 		for (AbstractSlot<?> slot : slots) {
 			if (slot.isMouseOver(mouseX, mouseY))
@@ -182,7 +182,6 @@ public class GuiExI extends CommonGuiContainer {
 		if (searchBar.isFocused() && LimeLib.jeiLoaded && JEI.hasKeyboardFocus())
 			searchBar.setFocused(false);
 
-		over = null;
 		if (mode == GuiMode.ITEM) {
 			if (con.ei.needSync) {
 				con.ei.needSync = false;
@@ -249,6 +248,7 @@ public class GuiExI extends CommonGuiContainer {
 			}
 		}
 
+		over = null;
 		for (AbstractSlot<?> slot : slots)
 			if (slot.isMouseOver(GuiDrawer.getMouseX(), GuiDrawer.getMouseY())) {
 				over = slot;
@@ -270,7 +270,7 @@ public class GuiExI extends CommonGuiContainer {
 		direction.setTooltip("Sort direction: " + (con.ei.topdown ? "top-down" : "bottom-up"));
 		direction.displayString = TextFormatting.GRAY + (con.ei.topdown ? "\u2B07" : "\u2B06");
 		defaultt.displayString = (con.ei.defaultGUI ? TextFormatting.GREEN : TextFormatting.RED) + "GUI";
-		modeButton.setStack(new ItemStack(mode != GuiMode.ITEM ? Items.WATER_BUCKET : Items.APPLE));
+		modeButton.setStack(new ItemStack(mode != GuiMode.ITEM ? Items.WATER_BUCKET : /*Items.APPLE*/Item.getItemFromBlock(Blocks.GRASS)));
 		if (jei != null)
 			jei.displayString = (con.ei.jeiSearch ? TextFormatting.GREEN : TextFormatting.RED) + "JEI";
 	}
@@ -332,10 +332,6 @@ public class GuiExI extends CommonGuiContainer {
 		if (hoverCounter > Minecraft.getDebugFPS() / 5) {
 			mc.displayGuiScreen(new GuiInventory(mc.player));
 		}
-		//		if (isPointInRegion(xSize - 35, -15, 35, 17, mouseX, mouseY)) {
-		//			if (mouseButton == 0)
-		//				GuiDrawer.openGui(new GuiInfo());
-		//		}
 	}
 
 	@Override

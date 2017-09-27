@@ -49,15 +49,15 @@ public class GuiLimit extends CommonGuiScreenSub {
 		else if (slot instanceof FluidSlot)
 			elementList.add(new FluidSlot((FluidStack) slot.stack, 0, 7 + guiLeft, 17 + guiTop, 1, drawer, false, false, false, !false));
 		buttonList.add(new CommonGuiButton(0, guiLeft + 45, guiTop + 77, 45, 18, "Apply"));
-		buttonList.add(new GuiCheckBox(1, guiLeft + 7, guiTop + 77, "Void", itemMode ? ei.itemLimits.get(slot.stack).getRight() : ei.fluidLimits.get(slot.stack).getRight()));
+		buttonList.add(new GuiCheckBox(1, guiLeft + 7, guiTop + 77, "Void", itemMode ? ei.itemLimits.get(slot.stack).voidd : ei.fluidLimits.get(slot.stack).voidd));
 		min = new GuiTextField(0, fontRenderer, guiLeft + 29, guiTop + 37, 60, fontRenderer.FONT_HEIGHT);
 		min.setMaxStringLength(8);
 		min.setValidator(s -> s.isEmpty() || StringUtils.isNumeric(s));
-		min.setText(itemMode ? ei.itemLimits.get(slot.stack).getLeft() + "" : ei.fluidLimits.get(slot.stack).getLeft() + "");
+		min.setText(itemMode ? ei.itemLimits.get(slot.stack).min + "" : ei.fluidLimits.get(slot.stack).min + "");
 		max = new GuiTextField(0, fontRenderer, guiLeft + 29, guiTop + 57, 60, fontRenderer.FONT_HEIGHT);
 		max.setMaxStringLength(8);
 		max.setValidator(s -> s.isEmpty() || StringUtils.isNumeric(s));
-		max.setText(itemMode ? ei.itemLimits.get(slot.stack).getMiddle() + "" : ei.fluidLimits.get(slot.stack).getMiddle() + "");
+		max.setText(itemMode ? ei.itemLimits.get(slot.stack).max + "" : ei.fluidLimits.get(slot.stack).max + "");
 	}
 
 	@Override

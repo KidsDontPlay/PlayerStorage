@@ -5,12 +5,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.commons.lang3.tuple.Triple;
 
 import it.unimi.dsi.fastutil.Hash.Strategy;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -64,20 +64,16 @@ import net.minecraftforge.items.ItemHandlerHelper;
 public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 	public EntityPlayer player;
-	List<StackWrapper> items = new ArrayList<>();
-	List<FluidStack> fluids = new ArrayList<>();
-	List<StackWrapper> itemsPlusTeam = new ArrayList<>();
-	List<FluidStack> fluidsPlusTeam = new ArrayList<>();
+	List<StackWrapper> items = new ArrayList<>(), itemsPlusTeam = new ArrayList<>();
+	List<FluidStack> fluids = new ArrayList<>(), fluidsPlusTeam = new ArrayList<>();
 	//	List<CraftingPattern> patterns = new ArrayList<>();
 	//	List<CraftingTask> tasks = new ArrayList<>();
-	public int itemLimit = 2000;
-	public int fluidLimit = 20000;
-	public int gridHeight = 4;
+	public int itemLimit = 2000, fluidLimit = 20000, gridHeight = 4;
 	public boolean needSync = true, defaultGUI = true, autoPickup;
 	public NonNullList<ItemStack> matrix = NonNullList.withSize(9, ItemStack.EMPTY);
 	public Set<String> members = new HashSet<>();
 	public Set<GlobalBlockPos> tiles = new HashSet<>();
-	public Object2ObjectMap<ItemStack, Triple<Integer, Integer, Boolean>> itemLimits = new Object2ObjectOpenCustomHashMap<>(new Strategy<ItemStack>() {
+	public Object2ObjectMap<ItemStack, Limit> itemLimits = new Object2ObjectOpenCustomHashMap<>(new Strategy<ItemStack>() {
 
 		@Override
 		public int hashCode(ItemStack o) {
@@ -90,7 +86,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		}
 
 	});
-	public Object2ObjectMap<FluidStack, Triple<Integer, Integer, Boolean>> fluidLimits = new Object2ObjectOpenCustomHashMap<>(new Strategy<FluidStack>() {
+	public Object2ObjectMap<FluidStack, Limit> fluidLimits = new Object2ObjectOpenCustomHashMap<>(new Strategy<FluidStack>() {
 
 		@Override
 		public int hashCode(FluidStack o) {
@@ -109,8 +105,8 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	public GuiMode mode = GuiMode.ITEM;
 
 	public ExInventory() {
-		itemLimits.defaultReturnValue(Triple.of(0, MAX, false));
-		fluidLimits.defaultReturnValue(Triple.of(0, MAX, false));
+		itemLimits.defaultReturnValue(Limit.defaultValue);
+		fluidLimits.defaultReturnValue(Limit.defaultValue);
 	}
 
 	private void update() {
@@ -178,21 +174,13 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 	private List<ExInventory> getMembers() {
 		Validate.isTrue(!player.world.isRemote);
-		List<ExInventory> ps = new ArrayList<>();
-		for (String s : members) {
-			EntityPlayer p = getPlayerByName(s, player.world);
-			ExInventory ei;
-			if (p == null || (ei = getInventory(p)) == null)
-				continue;
-			ps.add(ei);
-		}
-		return ps;
+		return members.stream().map(s -> getInventory(getPlayerByName(s, player.world))).filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
 	public ItemStack insertItem(ItemStack stack, boolean ignoreLimit, boolean simulate) {
 		int absLimit = (ConfigHandler.infiniteSpace || ignoreLimit ? Integer.MAX_VALUE : itemLimit);
-		int limit = itemLimits.get(stack).getMiddle();
-		boolean voidd = itemLimits.get(stack).getRight();
+		int limit = itemLimits.get(stack).max;
+		boolean voidd = itemLimits.get(stack).voidd;
 		ItemStack rest = ItemHandlerHelper.copyStackWithSize(stack, Math.max(0, Math.max((stack.getCount() + getAmountItem(s -> ItemHandlerHelper.canItemStacksStack(stack, s))) - limit, (stack.getCount() + getItemCount()) - absLimit)));
 		rest.setCount(Math.min(stack.getCount(), rest.getCount()));
 		if (rest.getCount() == stack.getCount())
@@ -222,7 +210,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		for (int i = 0; i < items.size(); i++) {
 			StackWrapper s = items.get(i);
 			if (pred.test(s.getStack())) {
-				size = MathHelper.clamp(s.getSize() - itemLimits.get(s.getStack()).getLeft(), 0, size);
+				size = MathHelper.clamp(s.getSize() - itemLimits.get(s.getStack()).min, 0, size);
 				if (!simulate) {
 					markForSync();
 					ItemStack res = s.extract(size);
@@ -256,10 +244,10 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	public int insertFluid(FluidStack stack, boolean ignoreLimit, boolean simulate) {
 		if (stack == null)
 			return 0;
-		boolean voidd = fluidLimits.get(stack).getRight();
+		boolean voidd = fluidLimits.get(stack).voidd;
 		int voidSize = stack.amount;
 		int absLimit = (ConfigHandler.infiniteSpace || ignoreLimit ? Integer.MAX_VALUE : fluidLimit);
-		int limit = fluidLimits.get(stack).getMiddle();
+		int limit = fluidLimits.get(stack).max;
 		FluidStack dummy = stack.copy();
 		int canFill = Math.max(0, Math.min(limit - (stack.amount + getAmountFluid(s -> s.isFluidEqual(dummy))), absLimit - (stack.amount + getFluidCount())));
 		if (canFill == 0)
@@ -292,7 +280,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		for (int i = 0; i < fluids.size(); i++) {
 			FluidStack s = fluids.get(i);
 			if (pred.test(s)) {
-				size = MathHelper.clamp(s.amount - fluidLimits.get(s).getLeft(), 0, size);
+				size = MathHelper.clamp(s.amount - fluidLimits.get(s).min, 0, size);
 				int drain = Math.min(s.amount, size);
 				if (!simulate) {
 					markForSync();
@@ -373,9 +361,9 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		NBTHelper.setList(nbt, "tilesInt", tiles.stream().map(g -> g.getDimension()).collect(Collectors.toList()));
 		NBTHelper.setList(nbt, "tilesPos", tiles.stream().map(g -> g.getPos()).collect(Collectors.toList()));
 		NBTHelper.setList(nbt, "itemLimitsKey", new ArrayList<>(itemLimits.keySet()));
-		NBTHelper.setList(nbt, "itemLimitsValue", itemLimits.values().stream().map(p -> new BlockPos(p.getLeft(), p.getRight() ? 1 : 0, p.getMiddle())).collect(Collectors.toList()));
+		NBTHelper.setList(nbt, "itemLimitsValue", itemLimits.values().stream().map(l -> l.toPos()).collect(Collectors.toList()));
 		NBTHelper.setList(nbt, "fluidLimitsKey", new ArrayList<>(fluidLimits.keySet()));
-		NBTHelper.setList(nbt, "fluidLimitsValue", fluidLimits.values().stream().map(p -> new BlockPos(p.getLeft(), p.getRight() ? 1 : 0, p.getMiddle())).collect(Collectors.toList()));
+		NBTHelper.setList(nbt, "fluidLimitsValue", fluidLimits.values().stream().map(l -> l.toPos()).collect(Collectors.toList()));
 		return nbt;
 	}
 
@@ -412,12 +400,12 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		List<ItemStack> lisIK = NBTHelper.getList(nbt, "itemLimitsKey", ItemStack.class);
 		List<BlockPos> lisIV = NBTHelper.getList(nbt, "itemLimitsValue", BlockPos.class);
 		for (int i = 0; i < lisIK.size(); i++)
-			itemLimits.put(lisIK.get(i), Triple.of(lisIV.get(i).getX(), lisIV.get(i).getZ(), lisIV.get(i).getY() != 0));
+			itemLimits.put(lisIK.get(i), new Limit(lisIV.get(i)));
 		fluidLimits.clear();
 		List<FluidStack> lisFK = NBTHelper.getList(nbt, "fluidLimitsKey", FluidStack.class);
 		List<BlockPos> lisFV = NBTHelper.getList(nbt, "fluidLimitsValue", BlockPos.class);
 		for (int i = 0; i < lisFK.size(); i++)
-			fluidLimits.put(lisFK.get(i), Triple.of(lisFV.get(i).getX(), lisFV.get(i).getZ(), lisFV.get(i).getY() != 0));
+			fluidLimits.put(lisFK.get(i), new Limit(lisFV.get(i)));
 
 	}
 
@@ -477,8 +465,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	public static EntityPlayer getPlayerByName(String name, World world) {
 		if (name == null)
 			return null;
-		boolean remote = world != null ? world.isRemote : FMLCommonHandler.instance().getEffectiveSide().isClient();
-		if (remote)
+		if (world != null ? world.isRemote : FMLCommonHandler.instance().getEffectiveSide().isClient())
 			return world.getPlayerEntityByName(name);
 		else
 			return Arrays.stream(FMLCommonHandler.instance().getMinecraftServerInstance().worlds).flatMap(w -> w.playerEntities.stream()).filter(p -> p.getName().equals(name)).findFirst().orElse(null);
@@ -506,6 +493,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	public static void attach(AttachCapabilitiesEvent<Entity> event) {
 		if (event.getObject() instanceof EntityPlayer) {
 			event.addCapability(LOCATION, new Provider((EntityPlayer) event.getObject()));
+			Arrays.stream(FMLCommonHandler.instance().getMinecraftServerInstance().worlds).forEach(w -> w.loadedTileEntityList.stream().filter(t -> t instanceof TileInterface).forEach(t -> ((TileInterface) t).setPlayer(null)));
 		}
 	}
 

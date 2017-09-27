@@ -13,8 +13,8 @@ Properties props = new Properties()
 props.load(new BufferedReader(new FileReader(file('../gradle.properties'))))
 
 version = "${props.get('mc_version')}-1.0.0"
-group = "mrriegel.a"
-archivesBaseName = "a"
+group = "mrriegel.playerstorage"
+archivesBaseName = "playerstorage"
 
 sourceCompatibility = targetCompatibility = '1.8'
 compileJava {

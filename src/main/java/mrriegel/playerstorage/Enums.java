@@ -40,8 +40,9 @@ public class Enums {
 		SETLIMIT, //
 		PICKUP;
 
-		public void set(NBTTagCompound nbt) {
+		public NBTTagCompound set(NBTTagCompound nbt) {
 			NBTHelper.set(nbt, "action", this);
+			return nbt;
 		}
 
 	}
