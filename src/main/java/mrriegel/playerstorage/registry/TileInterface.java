@@ -3,6 +3,8 @@ package mrriegel.playerstorage.registry;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.tile.CommonTile;
 import mrriegel.limelib.tile.IHUDProvider;
@@ -19,6 +21,7 @@ public class TileInterface extends CommonTile implements IHUDProvider {
 
 	private EntityPlayer player;
 	private String playerName;
+	public boolean refreshPlayer = true;
 
 	@Override
 	public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
@@ -34,15 +37,16 @@ public class TileInterface extends CommonTile implements IHUDProvider {
 	}
 
 	public EntityPlayer getPlayer() {
-		if (player == null)
+		if (player == null || refreshPlayer) {
+			refreshPlayer = false;
 			return player = ExInventory.getPlayerByName(playerName, world);
+		}
 		return player;
 	}
 
-	public void setPlayer(EntityPlayer player) {
+	public void setPlayer(@Nonnull EntityPlayer player) {
 		this.player = player;
-		if (player != null)
-			playerName = player.getName();
+		playerName = player.getName();
 		markDirty();
 	}
 

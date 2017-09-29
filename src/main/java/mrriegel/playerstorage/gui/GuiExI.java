@@ -374,9 +374,11 @@ public class GuiExI extends CommonGuiContainer {
 					JEI.showRecipes(over.stack);
 				else
 					JEI.showUsage(over.stack);
+				return;
 			} else if (this.searchBar.textboxKeyTyped(typedChar, keyCode)) {
 				if (con.ei.jeiSearch && LimeLib.jeiLoaded)
 					JEI.setFilterText(searchBar.getText());
+				return;
 			}
 		}
 		super.keyTyped(typedChar, keyCode);

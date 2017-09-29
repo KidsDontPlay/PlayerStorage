@@ -493,14 +493,16 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	public static void attach(AttachCapabilitiesEvent<Entity> event) {
 		if (event.getObject() instanceof EntityPlayer) {
 			event.addCapability(LOCATION, new Provider((EntityPlayer) event.getObject()));
-			Arrays.stream(FMLCommonHandler.instance().getMinecraftServerInstance().worlds).forEach(w -> w.loadedTileEntityList.stream().filter(t -> t instanceof TileInterface).forEach(t -> ((TileInterface) t).setPlayer(null)));
+			if (!event.getObject().world.isRemote)
+				Arrays.stream(FMLCommonHandler.instance().getMinecraftServerInstance().worlds).forEach(w -> w.loadedTileEntityList.stream().filter(t -> t instanceof TileInterface).forEach(t -> ((TileInterface) t).refreshPlayer = true));
 		}
 	}
 
 	@SubscribeEvent
 	public static void logout(PlayerLoggedOutEvent event) {
 		ExInventory.getInventory(event.player).markForSync();
-		Arrays.stream(FMLCommonHandler.instance().getMinecraftServerInstance().worlds).forEach(w -> w.loadedTileEntityList.stream().filter(t -> t instanceof TileInterface).forEach(t -> ((TileInterface) t).setPlayer(null)));
+		if (!event.player.world.isRemote)
+			Arrays.stream(FMLCommonHandler.instance().getMinecraftServerInstance().worlds).forEach(w -> w.loadedTileEntityList.stream().filter(t -> t instanceof TileInterface).forEach(t -> ((TileInterface) t).refreshPlayer = true));
 	}
 
 	@SubscribeEvent
