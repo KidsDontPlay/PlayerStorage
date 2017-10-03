@@ -10,15 +10,18 @@ import org.apache.commons.lang3.tuple.Pair;
 import com.google.common.collect.Lists;
 
 import mrriegel.limelib.gui.CommonContainer;
+import mrriegel.playerstorage.ClientProxy;
 import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.ExInventory;
 import mrriegel.playerstorage.ExInventory.Handler;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.inventory.InventoryCraftResult;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.inventory.Slot;
@@ -54,6 +57,18 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 		}
 		initPlayerSlots(80, 30 + 18 * ei.gridHeight);
 		initSlots(invPlayer, 152, 10 + 18 * ei.gridHeight, 5, 1, invPlayer.mainInventory.size(), SlotExtra.class, getPlayer());
+		addSlotToContainer(new Slot(new InventoryBasic("", false, 1), 0, 116, 10 + 18 * ei.gridHeight) {
+			@Override
+			public ItemStack getStack() {
+				return ItemStack.EMPTY;
+			}
+
+			@Override
+			public TextureAtlasSprite getBackgroundSprite() {
+				return ClientProxy.sprite;
+			}
+
+		});
 	}
 
 	@Override

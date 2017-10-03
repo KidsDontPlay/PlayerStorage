@@ -119,6 +119,7 @@ public class GuiExI extends CommonGuiContainer {
 		drawer.drawBackgroundTexture();
 		drawer.drawPlayerSlots(79, 29 + 18 * gridHeight);
 		drawer.drawSlots(151, 9 + 18 * gridHeight, 5, 1);
+		drawer.drawSlot(115, 9 + 18 * gridHeight);
 		drawer.drawSlots(7, 7, gridWidth, gridHeight);
 		drawer.drawColoredRectangle(7, 7, gridWidth * 18, gridHeight * 18, mode == GuiMode.ITEM ? 0x23ffc800 : 0x2300c5cd);
 		new GuiTextField(0, fontRenderer, 134 + guiLeft, 10 + 18 * gridHeight + guiTop, 16, 16).drawTextBox();

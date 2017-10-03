@@ -21,8 +21,10 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
+import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -124,6 +126,13 @@ public class ClientProxy extends CommonProxy {
 			event.setCanceled(true);
 			PacketHandler.sendToServer(new OpenGuiMessage(PlayerStorage.MODID, 0, null));
 		}
+	}
+
+	public static TextureAtlasSprite sprite;
+
+	@SubscribeEvent
+	public static void onTextureStitch(TextureStitchEvent event) {
+		sprite = event.getMap().registerSprite(new ResourceLocation(PlayerStorage.MODID, "items/bin"));
 	}
 
 }
