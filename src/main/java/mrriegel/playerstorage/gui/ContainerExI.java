@@ -53,7 +53,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 			invs.put("matrix", new InventoryCrafting(this, 3, 3));
 			ReflectionHelper.setPrivateValue(InventoryCrafting.class, getMatrix(), ei.matrix, 0);
 			addSlotToContainer(new SlotResult(invPlayer.player, getMatrix(), invs.get("result"), 0, 44, 88 + 18 * ei.gridHeight));
-			initSlots(getMatrix(), 8, 30 + 18 * ei.gridHeight, 3, 3, 0/*, SlotIng.class, ei*/);
+			initSlots(getMatrix(), 8, 30 + 18 * ei.gridHeight, 3, 3, 0);
 		}
 		initPlayerSlots(80, 30 + 18 * ei.gridHeight);
 		initSlots(invPlayer, 152, 10 + 18 * ei.gridHeight, 5, 1, invPlayer.mainInventory.size(), SlotExtra.class, getPlayer());

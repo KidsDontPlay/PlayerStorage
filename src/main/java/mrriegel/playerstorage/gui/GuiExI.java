@@ -51,9 +51,9 @@ import net.minecraftforge.oredict.OreDictionary;
 
 public class GuiExI extends CommonGuiContainer {
 
-	public List<StackWrapper> items;
-	public List<FluidStack> fluids;
-	protected List<AbstractSlot<?>> slots;
+	public List<StackWrapper> items = new ArrayList<>();
+	public List<FluidStack> fluids = new ArrayList<>();
+	protected List<AbstractSlot<?>> slots = new ArrayList<>();
 	protected long lastClick;
 	protected CommonGuiButton sort, direction, clear, jei, modeButton, inc, dec, defaultt;
 	protected GuiTextField searchBar;
@@ -134,7 +134,12 @@ public class GuiExI extends CommonGuiContainer {
 		boolean uni = fontRenderer.getUnicodeFlag();
 		fontRenderer.setUnicodeFlag(true);
 		for (AbstractSlot<?> slot : slots) {
+			NBTTagCompound nbt = null;
+			if (mode == GuiMode.ITEM && ((ItemSlot) slot).stack.hasTagCompound())
+				nbt = ((ItemSlot) slot).stack.getTagCompound().copy();
 			slot.draw(mouseX, mouseY);
+			if (mode == GuiMode.ITEM)
+				((ItemSlot) slot).stack.setTagCompound(nbt);
 		}
 		fontRenderer.setUnicodeFlag(uni);
 		boolean big = isPointInRegion(133, 9 + 18 * gridHeight, 18, 18, mouseX, mouseY);

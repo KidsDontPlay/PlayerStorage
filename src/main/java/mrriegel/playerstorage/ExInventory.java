@@ -149,11 +149,6 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 				needSync = true;
 			}
 		}
-		//		if (!tasks.isEmpty()) {
-		//			CraftingTask t = tasks.remove(0);
-		//			t.step();
-		//			tasks.add(t);
-		//		}
 	}
 
 	private void init() {
