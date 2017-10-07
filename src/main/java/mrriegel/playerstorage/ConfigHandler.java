@@ -18,6 +18,7 @@ public class ConfigHandler {
 	public static Configuration config;
 
 	public static boolean infiniteSpace, remote;
+	public static int itemCapacity, fluidCapacity;
 	public static Map<String, Unit2> apples = new HashMap<>();
 	@SuppressWarnings("serial")
 	public static List<String> appleList = new ArrayList<String>(6) {
@@ -34,6 +35,8 @@ public class ConfigHandler {
 		Gson gson = new Gson();
 		infiniteSpace = config.getBoolean("infiniteSpace", Configuration.CATEGORY_GENERAL, false, "Enable infinite inventory.");
 		remote = config.getBoolean("remote", Configuration.CATEGORY_GENERAL, false, "Enable remote item to access your inventory without pressing a key.");
+		itemCapacity = config.getInt("itemCapacity", Configuration.CATEGORY_GENERAL, 2000, 0, Integer.MAX_VALUE, "Item capacity at the beginning");
+		fluidCapacity = config.getInt("fluidCapacity", Configuration.CATEGORY_GENERAL, 20000, 0, Integer.MAX_VALUE, "Fluid capacity at the beginning");
 		Property prop = config.get(Configuration.CATEGORY_GENERAL, "appleTiers", Arrays.asList(//
 				new Unit1("blockIron", 3200, 32000), //
 				new Unit1("blockGold", 25600, 256000), //

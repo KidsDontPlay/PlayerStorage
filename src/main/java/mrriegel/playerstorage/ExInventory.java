@@ -68,7 +68,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	List<FluidStack> fluids = new ArrayList<>(), fluidsPlusTeam = new ArrayList<>();
 	//	List<CraftingPattern> patterns = new ArrayList<>();
 	//	List<CraftingTask> tasks = new ArrayList<>();
-	public int itemLimit = 2000, fluidLimit = 20000, gridHeight = 4;
+	public int itemLimit = ConfigHandler.itemCapacity, fluidLimit = ConfigHandler.fluidCapacity, gridHeight = 4;
 	public boolean needSync = true, defaultGUI = true, autoPickup;
 	public NonNullList<ItemStack> matrix = NonNullList.withSize(9, ItemStack.EMPTY);
 	public Set<String> members = new HashSet<>();
