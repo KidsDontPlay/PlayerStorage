@@ -134,12 +134,12 @@ public class GuiExI extends CommonGuiContainer {
 		boolean uni = fontRenderer.getUnicodeFlag();
 		fontRenderer.setUnicodeFlag(true);
 		for (AbstractSlot<?> slot : slots) {
-			NBTTagCompound nbt = null;
-			if (mode == GuiMode.ITEM && ((ItemSlot) slot).stack.hasTagCompound())
-				nbt = ((ItemSlot) slot).stack.getTagCompound().copy();
+			//			NBTTagCompound nbt = null;
+			//			if (mode == GuiMode.ITEM && ((ItemSlot) slot).stack.hasTagCompound())
+			//				nbt = ((ItemSlot) slot).stack.getTagCompound().copy();
 			slot.draw(mouseX, mouseY);
-			if (mode == GuiMode.ITEM)
-				((ItemSlot) slot).stack.setTagCompound(nbt);
+			//			if (mode == GuiMode.ITEM)
+			//				((ItemSlot) slot).stack.setTagCompound(nbt);
 		}
 		fontRenderer.setUnicodeFlag(uni);
 		boolean big = isPointInRegion(133, 9 + 18 * gridHeight, 18, 18, mouseX, mouseY);
