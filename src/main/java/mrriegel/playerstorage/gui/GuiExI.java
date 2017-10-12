@@ -375,7 +375,7 @@ public class GuiExI extends CommonGuiContainer {
 	@Override
 	protected void keyTyped(char typedChar, int keyCode) throws IOException {
 		if (!this.checkHotbarKeys(keyCode)) {
-			if (over != null && LimeLib.jeiLoaded && (keyCode == Keyboard.KEY_R || keyCode == Keyboard.KEY_U) && (!searchBar.isFocused() || searchBar.getText().isEmpty())) {
+			if (over != null && over.stack != null && (over instanceof FluidSlot || !((ItemStack) over.stack).isEmpty()) && LimeLib.jeiLoaded && (keyCode == Keyboard.KEY_R || keyCode == Keyboard.KEY_U) && (!searchBar.isFocused() || searchBar.getText().isEmpty())) {
 				if (keyCode == Keyboard.KEY_R)
 					JEI.showRecipes(over.stack);
 				else
