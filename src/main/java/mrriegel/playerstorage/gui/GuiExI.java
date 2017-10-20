@@ -350,7 +350,7 @@ public class GuiExI extends CommonGuiContainer {
 	@Override
 	public void handleMouseInput() throws IOException {
 		super.handleMouseInput();
-		if (scrollBar.isMouseOver(GuiDrawer.getMouseX() - guiLeft, GuiDrawer.getMouseY() - guiTop) || isPointInRegion(7, 7, 18 * gridWidth, 18 * gridHeight, GuiDrawer.getMouseX(), GuiDrawer.getMouseY())) {
+		if (scrollBar.isMouseOver(GuiDrawer.getMouseX(), GuiDrawer.getMouseY()) || isPointInRegion(7, 7, 18 * gridWidth, 18 * gridHeight, GuiDrawer.getMouseX(), GuiDrawer.getMouseY())) {
 			int mouse = Mouse.getEventDWheel();
 			if (mouse == 0)
 				return;

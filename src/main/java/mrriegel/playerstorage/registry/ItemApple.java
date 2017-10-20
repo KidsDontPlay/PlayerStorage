@@ -94,7 +94,7 @@ public class ItemApple extends ItemFood {
 				player.sendStatusMessage(new TextComponentString("Player Storage increased by " + u.itemLimit + "/" + u.fluidLimit + "."), true);
 				for (int i = 0; i < 70; i++)
 					LimeLib.proxy.renderParticle(new CommonParticle(player.posX, player.posY + .3, player.posZ).//
-							setFlouncing(.015).setScale(1f).setGravity(-.025f).setMaxAge2(80).setColor(ClientProxy.colorMap.get(stack.getItemDamage()), 255, 10));
+							setFlouncing(.015).setScale(1f).setGravity(-.02f).setMaxAge2(100).setColor(ClientProxy.colorMap.get(stack.getItemDamage()), 255, 10));
 			}
 		}
 	}

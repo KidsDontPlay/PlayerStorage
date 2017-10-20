@@ -1,6 +1,7 @@
 package mrriegel.playerstorage;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import mrriegel.limelib.helper.InvHelper;
 import mrriegel.limelib.helper.NBTHelper;
@@ -126,6 +127,7 @@ public class Message2Server extends AbstractMessage {
 						player.inventory.setItemStack(hand);
 						((EntityPlayerMP) player).connection.sendPacket(new SPacketSetSlot(-1, 0, hand));
 					} else if (hand.isEmpty() && slot != null) {
+						boolean fill = false;
 						FluidStack resource = FluidStack.loadFluidStackFromNBT(slot);
 						for (int i = 0; i < player.inventory.getSizeInventory(); i++) {
 							ItemStack s = player.inventory.getStackInSlot(i);
@@ -137,6 +139,29 @@ public class Message2Server extends AbstractMessage {
 								if (fh.fill(newStack, true) > 0) {
 									player.inventory.setInventorySlotContents(i, fh.getContainer());
 									con.detectAndSendChanges();
+									fill = true;
+									break;
+								}
+							}
+						}
+						if (!fill) {
+							Predicate<ItemStack> pred = s -> {
+								IFluidHandlerItem fh = FluidUtil.getFluidHandler(ItemHandlerHelper.copyStackWithSize(s, 1));
+								if (fh == null)
+									return false;
+								resource.amount = size;
+								return fh.fill(resource, false) > 0;
+							};
+							ItemStack stack = ei.extractItem(pred, 1, true);
+							if (!stack.isEmpty()) {
+								IFluidHandlerItem fh = FluidUtil.getFluidHandler(stack);
+								resource.amount = size;
+								int filled = fh.fill(resource, false);
+								FluidStack newStack = ei.extractFluid(resource, filled, false);
+								if (fh.fill(newStack, true) > 0) {
+									player.dropItem(ItemHandlerHelper.insertItemStacked(new PlayerMainInvWrapper(player.inventory), fh.getContainer(), false), false);
+									con.detectAndSendChanges();
+									ei.extractItem(pred, 1, false);
 									break;
 								}
 							}

@@ -206,6 +206,8 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 			StackWrapper s = items.get(i);
 			if (pred.test(s.getStack())) {
 				size = MathHelper.clamp(s.getSize() - itemLimits.get(s.getStack()).min, 0, size);
+				if (size <= 0)
+					return ItemStack.EMPTY;
 				if (!simulate) {
 					markForSync();
 					ItemStack res = s.extract(size);
@@ -277,6 +279,8 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 			if (pred.test(s)) {
 				size = MathHelper.clamp(s.amount - fluidLimits.get(s).min, 0, size);
 				int drain = Math.min(s.amount, size);
+				if (drain <= 0)
+					return null;
 				if (!simulate) {
 					markForSync();
 					s.amount -= drain;
@@ -366,12 +370,18 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	public void deserializeNBT(NBTTagCompound nbt) {
 		int size = NBTHelper.get(nbt, "itemsize", Integer.class);
 		items.clear();
-		for (int i = 0; i < size; i++)
-			items.add(StackWrapper.loadStackWrapperFromNBT(NBTHelper.get(nbt, "item" + i, NBTTagCompound.class)));
+		for (int i = 0; i < size; i++) {
+			StackWrapper sw = StackWrapper.loadStackWrapperFromNBT(NBTHelper.get(nbt, "item" + i, NBTTagCompound.class));
+			if (sw != null)
+				items.add(sw);
+		}
 		size = NBTHelper.get(nbt, "fluidsize", Integer.class);
 		fluids.clear();
-		for (int i = 0; i < size; i++)
-			fluids.add(FluidStack.loadFluidStackFromNBT(NBTHelper.get(nbt, "fluid" + i, NBTTagCompound.class)));
+		for (int i = 0; i < size; i++) {
+			FluidStack fs = FluidStack.loadFluidStackFromNBT(NBTHelper.get(nbt, "fluid" + i, NBTTagCompound.class));
+			if (fs != null)
+				fluids.add(fs);
+		}
 		itemLimit = NBTHelper.get(nbt, "itemLimit", Integer.class);
 		fluidLimit = NBTHelper.get(nbt, "fluidLimit", Integer.class);
 		List<ItemStack> tmp = NBTHelper.getList(nbt, "matrix", ItemStack.class);
