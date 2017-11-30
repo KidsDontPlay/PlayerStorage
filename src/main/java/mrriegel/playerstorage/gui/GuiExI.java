@@ -320,7 +320,7 @@ public class GuiExI extends CommonGuiContainer {
 		if (searchBar.isFocused() && mouseButton == 1) {
 			searchBar.setText("");
 			if (LimeLib.jeiLoaded && con.ei.jeiSearch)
-				JEI.setFilterText(searchBar.getText());
+				JEI.setFilterText("");
 		}
 		if (canClick()) {
 			if (over != null)
@@ -356,7 +356,7 @@ public class GuiExI extends CommonGuiContainer {
 				return;
 			if (mouse > 0 && currentPos > 0)
 				currentPos--;
-			if (mouse < 0 && currentPos < maxPos)
+			else if (mouse < 0 && currentPos < maxPos)
 				currentPos++;
 		}
 	}

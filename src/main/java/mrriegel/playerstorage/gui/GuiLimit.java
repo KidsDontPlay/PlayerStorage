@@ -5,8 +5,11 @@ import java.io.IOException;
 import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Keyboard;
 
+import com.google.common.base.Predicate;
+
 import mrriegel.limelib.gui.CommonGuiScreenSub;
 import mrriegel.limelib.gui.button.CommonGuiButton;
+import mrriegel.limelib.gui.button.CommonGuiButton.Design;
 import mrriegel.limelib.gui.element.AbstractSlot;
 import mrriegel.limelib.gui.element.AbstractSlot.FluidSlot;
 import mrriegel.limelib.gui.element.AbstractSlot.ItemSlot;
@@ -37,7 +40,8 @@ public class GuiLimit extends CommonGuiScreenSub {
 		super();
 		this.slot = slot;
 		this.ei = ExInventory.getInventory(Minecraft.getMinecraft().player);
-		xSize = ySize = 100;
+		ySize = 100;
+		xSize = 130;
 		itemMode = slot instanceof ItemSlot;
 	}
 
@@ -48,15 +52,16 @@ public class GuiLimit extends CommonGuiScreenSub {
 			elementList.add(new ItemSlot((ItemStack) slot.stack, 0, 7 + guiLeft, 17 + guiTop, 1, drawer, false, false, false, !false));
 		else if (slot instanceof FluidSlot)
 			elementList.add(new FluidSlot((FluidStack) slot.stack, 0, 7 + guiLeft, 17 + guiTop, 1, drawer, false, false, false, !false));
-		buttonList.add(new CommonGuiButton(0, guiLeft + 45, guiTop + 77, 45, 18, "Apply"));
-		buttonList.add(new GuiCheckBox(1, guiLeft + 7, guiTop + 77, "Void", itemMode ? ei.itemLimits.get(slot.stack).voidd : ei.fluidLimits.get(slot.stack).voidd));
-		min = new GuiTextField(0, fontRenderer, guiLeft + 29, guiTop + 37, 60, fontRenderer.FONT_HEIGHT);
-		min.setMaxStringLength(8);
-		min.setValidator(s -> s.isEmpty() || StringUtils.isNumeric(s));
+		buttonList.add(new CommonGuiButton(0, guiLeft + 78, guiTop + 75, 45, 18, "Apply").setDesign(Design.SIMPLE).setButtonColor(0xFF646464));
+		buttonList.add(new GuiCheckBox(1, guiLeft + 9, guiTop + 77, "Void", itemMode ? ei.itemLimits.get(slot.stack).voidd : ei.fluidLimits.get(slot.stack).voidd));
+		min = new GuiTextField(0, fontRenderer, guiLeft + 29, guiTop + 37, 80, fontRenderer.FONT_HEIGHT);
+		min.setMaxStringLength(11);
+		Predicate<String> pred = s -> s.isEmpty() || (StringUtils.isNumeric(s) && Integer.parseInt(s) >= 0 && Integer.parseInt(s) <= ExInventory.MAX);
+		min.setValidator(pred);
 		min.setText(itemMode ? ei.itemLimits.get(slot.stack).min + "" : ei.fluidLimits.get(slot.stack).min + "");
-		max = new GuiTextField(0, fontRenderer, guiLeft + 29, guiTop + 57, 60, fontRenderer.FONT_HEIGHT);
-		max.setMaxStringLength(8);
-		max.setValidator(s -> s.isEmpty() || StringUtils.isNumeric(s));
+		max = new GuiTextField(0, fontRenderer, guiLeft + 29, guiTop + 57, 80, fontRenderer.FONT_HEIGHT);
+		max.setMaxStringLength(11);
+		max.setValidator(pred);
 		max.setText(itemMode ? ei.itemLimits.get(slot.stack).max + "" : ei.fluidLimits.get(slot.stack).max + "");
 	}
 

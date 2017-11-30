@@ -77,7 +77,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 		@Override
 		public int hashCode(ItemStack o) {
-			return (o.getUnlocalizedName() + "" + o.getItemDamage()).hashCode();
+			return (o.getUnlocalizedName() + o.getItemDamage()).hashCode();
 		}
 
 		@Override
@@ -172,7 +172,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		return members.stream().map(s -> getInventory(getPlayerByName(s, player.world))).filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
-	public ItemStack insertItem(ItemStack stack, boolean ignoreLimit, boolean simulate) {
+	private ItemStack insertItem(ItemStack stack, boolean ignoreLimit, boolean simulate) {
 		int absLimit = (ConfigHandler.infiniteSpace || ignoreLimit ? Integer.MAX_VALUE : itemLimit);
 		int limit = itemLimits.get(stack).max;
 		boolean voidd = itemLimits.get(stack).voidd;
@@ -238,7 +238,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		return extractItem(s -> ItemHandlerHelper.canItemStacksStack(s, stack), size, simulate);
 	}
 
-	public int insertFluid(FluidStack stack, boolean ignoreLimit, boolean simulate) {
+	private int insertFluid(FluidStack stack, boolean ignoreLimit, boolean simulate) {
 		if (stack == null)
 			return 0;
 		boolean voidd = fluidLimits.get(stack).voidd;
@@ -438,7 +438,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	@CapabilityInject(ExInventory.class)
 	public static Capability<ExInventory> EXINVENTORY = null;
 	public static final ResourceLocation LOCATION = new ResourceLocation(PlayerStorage.MODID, "inventory");
-	public static final int MAX = 99999999;
+	public static final int MAX = 2000000000;
 
 	public static void register() {
 		CapabilityManager.INSTANCE.register(ExInventory.class, new IStorage<ExInventory>() {
@@ -499,7 +499,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		if (event.getObject() instanceof EntityPlayer) {
 			event.addCapability(LOCATION, new Provider((EntityPlayer) event.getObject()));
 			if (!event.getObject().world.isRemote)
-				Arrays.stream(FMLCommonHandler.instance().getMinecraftServerInstance().worlds).forEach(w -> w.loadedTileEntityList.stream().filter(t -> t instanceof TileInterface).forEach(t -> ((TileInterface) t).refreshPlayer = true));
+				TileInterface.refresh();
 		}
 	}
 
@@ -507,7 +507,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	public static void logout(PlayerLoggedOutEvent event) {
 		ExInventory.getInventory(event.player).markForSync();
 		if (!event.player.world.isRemote)
-			Arrays.stream(FMLCommonHandler.instance().getMinecraftServerInstance().worlds).forEach(w -> w.loadedTileEntityList.stream().filter(t -> t instanceof TileInterface).forEach(t -> ((TileInterface) t).refreshPlayer = true));
+			TileInterface.refresh();
 	}
 
 	@SubscribeEvent
@@ -630,7 +630,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		}
 
 		private boolean isPlayerOn() {
-			return getPlayerByName(ei.player.getName(), ei.player.world) != null;
+			return ei != null && ei.player != null && getPlayerByName(ei.player.getName(), ei.player.world) != null;
 		}
 
 	}

@@ -94,7 +94,12 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 					else {
 						FluidActionResult far = FluidUtil.tryEmptyContainer(slot.getStack(), new Handler(playerIn), 10 * Fluid.BUCKET_VOLUME, playerIn, true);
 						if (far.success)
-							slot.putStack(far.result);
+							if (slot.getStack().getCount() == 1)
+								slot.putStack(far.result);
+							else {
+								slot.getStack().shrink(1);
+								playerIn.dropItem(ItemHandlerHelper.insertItemStacked(new PlayerMainInvWrapper(invPlayer), far.result, false), false);
+							}
 					}
 				}
 				detectAndSendChanges();

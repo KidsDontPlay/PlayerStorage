@@ -1,5 +1,6 @@
 package mrriegel.playerstorage.registry;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -15,6 +16,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.items.CapabilityItemHandler;
 
 public class TileInterface extends CommonTile implements IHUDProvider {
@@ -76,6 +78,10 @@ public class TileInterface extends CommonTile implements IHUDProvider {
 	@Override
 	public boolean lineBreak(boolean sneak, EnumFacing facing) {
 		return false;
+	}
+
+	public static void refresh() {
+		Arrays.stream(FMLCommonHandler.instance().getMinecraftServerInstance().worlds).forEach(w -> w.loadedTileEntityList.stream().filter(t -> t instanceof TileInterface).forEach(t -> ((TileInterface) t).refreshPlayer = true));
 	}
 
 }

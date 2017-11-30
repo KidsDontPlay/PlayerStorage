@@ -132,12 +132,17 @@ public class Message2Server extends AbstractMessage {
 						for (int i = 0; i < player.inventory.getSizeInventory(); i++) {
 							ItemStack s = player.inventory.getStackInSlot(i);
 							IFluidHandlerItem fh;
-							if ((fh = FluidUtil.getFluidHandler(s)) != null) {
+							if ((fh = FluidUtil.getFluidHandler(ItemHandlerHelper.copyStackWithSize(s, 1))) != null) {
 								resource.amount = size;
 								int filled = fh.fill(resource, false);
 								FluidStack newStack = ei.extractFluid(resource, filled, false);
 								if (fh.fill(newStack, true) > 0) {
-									player.inventory.setInventorySlotContents(i, fh.getContainer());
+									if (s.getCount() == 1)
+										player.inventory.setInventorySlotContents(i, fh.getContainer());
+									else {
+										s.shrink(1);
+										player.dropItem(ItemHandlerHelper.insertItemStacked(new PlayerMainInvWrapper(player.inventory), fh.getContainer(), false), false);
+									}
 									con.detectAndSendChanges();
 									fill = true;
 									break;
