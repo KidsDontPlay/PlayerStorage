@@ -134,12 +134,7 @@ public class GuiExI extends CommonGuiContainer {
 		boolean uni = fontRenderer.getUnicodeFlag();
 		fontRenderer.setUnicodeFlag(true);
 		for (AbstractSlot<?> slot : slots) {
-			//			NBTTagCompound nbt = null;
-			//			if (mode == GuiMode.ITEM && ((ItemSlot) slot).stack.hasTagCompound())
-			//				nbt = ((ItemSlot) slot).stack.getTagCompound().copy();
 			slot.draw(mouseX, mouseY);
-			//			if (mode == GuiMode.ITEM)
-			//				((ItemSlot) slot).stack.setTagCompound(nbt);
 		}
 		fontRenderer.setUnicodeFlag(uni);
 		boolean big = isPointInRegion(133, 9 + 18 * gridHeight, 18, 18, mouseX, mouseY);
@@ -156,8 +151,15 @@ public class GuiExI extends CommonGuiContainer {
 			fontRenderer.drawString("x", 63, 28 + 18 * gridHeight, 0xE0E0E0);
 		super.drawGuiContainerForegroundLayer(mouseX, mouseY);
 		for (AbstractSlot<?> slot : slots) {
-			if (slot.isMouseOver(mouseX, mouseY))
+			if (slot.isMouseOver(mouseX, mouseY)) {
+				//TODO remove
+				NBTTagCompound n = null;
+				if (mode == GuiMode.ITEM)
+					n = ((ItemSlot) slot).stack.hasTagCompound() ? ((ItemSlot) slot).stack.getTagCompound().copy() : null;
 				slot.drawTooltip(mouseX - guiLeft, mouseY - guiTop);
+				if (mode == GuiMode.ITEM)
+					((ItemSlot) slot).stack.setTagCompound(n);
+			}
 		}
 	}
 
