@@ -3,7 +3,7 @@ package mrriegel.playerstorage;
 import net.minecraft.util.math.BlockPos;
 
 public class Limit {
-	public static final Limit defaultValue = new Limit(0, ExInventory.MAX, false);
+	public static final Limit defaultValue = new Limit(0, 33333333, false);
 
 	public final int min, max;
 	public final boolean voidd;

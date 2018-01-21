@@ -59,18 +59,6 @@ public class ConfigHandler {
 		}
 	}
 
-	static class Tup {
-		public String oreName;
-		public int itemLimit, fluidLimit;
-
-		public Tup(String oreName, int itemLimit, int fluidLimit) {
-			this.oreName = oreName;
-			this.itemLimit = itemLimit;
-			this.fluidLimit = fluidLimit;
-		}
-
-	}
-
 	static class Unit1 {
 		public String oreName;
 		public Unit2 entry;

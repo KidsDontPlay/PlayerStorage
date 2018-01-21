@@ -230,14 +230,23 @@ public class Message2Server extends AbstractMessage {
 			case SETLIMIT:
 				if (ei.mode == GuiMode.ITEM) {
 					ItemStack stack = NBTHelper.get(nbt, "stack", ItemStack.class);
-					ei.itemLimits.put(stack, new Limit(NBTHelper.get(nbt, "min", Integer.class), NBTHelper.get(nbt, "max", Integer.class), NBTHelper.get(nbt, "void", Boolean.class)));
+					if (NBTHelper.get(nbt, "remove", boolean.class))
+						ei.itemLimits.remove(stack);
+					else
+						ei.itemLimits.put(stack, new Limit(NBTHelper.get(nbt, "min", Integer.class), NBTHelper.get(nbt, "max", Integer.class), NBTHelper.get(nbt, "void", Boolean.class)));
 				} else {
 					FluidStack stack = NBTHelper.get(nbt, "stack", FluidStack.class);
-					ei.fluidLimits.put(stack, new Limit(NBTHelper.get(nbt, "min", Integer.class), NBTHelper.get(nbt, "max", Integer.class), NBTHelper.get(nbt, "void", Boolean.class)));
+					if (NBTHelper.get(nbt, "remove", boolean.class))
+						ei.fluidLimits.remove(stack);
+					else
+						ei.fluidLimits.put(stack, new Limit(NBTHelper.get(nbt, "min", Integer.class), NBTHelper.get(nbt, "max", Integer.class), NBTHelper.get(nbt, "void", Boolean.class)));
 				}
 				break;
 			case PICKUP:
 				ei.autoPickup = NBTHelper.get(nbt, "pick", Boolean.class);
+				break;
+			case AUTOFOCUS:
+				ei.autofocus ^= true;
 				break;
 			default:
 				break;

@@ -17,6 +17,7 @@ import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
@@ -91,7 +92,7 @@ public class ItemApple extends ItemFood {
 				ei.fluidLimit = Integer.MAX_VALUE;
 			ei.markForSync();
 			if (worldIn.isRemote) {
-				player.sendStatusMessage(new TextComponentString("Player Storage increased by " + u.itemLimit + "/" + u.fluidLimit + "."), true);
+				player.sendStatusMessage(new TextComponentString("Player Storage increased by " + u.itemLimit + "/" + u.fluidLimit + ".").setStyle(new Style().setUnderlined(true)), true);
 				for (int i = 0; i < 70; i++)
 					LimeLib.proxy.renderParticle(new CommonParticle(player.posX, player.posY + .3, player.posZ).//
 							setFlouncing(.015).setScale(1f).setGravity(-.02f).setMaxAge2(100).setColor(ClientProxy.colorMap.get(stack.getItemDamage()), 255, 10));

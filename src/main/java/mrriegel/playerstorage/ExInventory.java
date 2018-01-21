@@ -77,7 +77,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 		@Override
 		public int hashCode(ItemStack o) {
-			return (o.getUnlocalizedName() + o.getItemDamage()).hashCode();
+			return (o.getItem().getRegistryName().toString() + o.getItemDamage()).hashCode();
 		}
 
 		@Override
@@ -90,7 +90,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 		@Override
 		public int hashCode(FluidStack o) {
-			return o.getFluid().getUnlocalizedName().hashCode();
+			return o.getFluid().getName().hashCode();
 		}
 
 		@Override
@@ -100,7 +100,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 	});
 
-	public boolean jeiSearch = false, topdown = true;
+	public boolean jeiSearch = false, topdown = true, autofocus = true;
 	public Sort sort = Sort.NAME;
 	public GuiMode mode = GuiMode.ITEM;
 
@@ -350,6 +350,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		NBTHelper.setList(nbt, "matrix", matrix);
 		NBTHelper.set(nbt, "jei", jeiSearch);
 		NBTHelper.set(nbt, "top", topdown);
+		NBTHelper.set(nbt, "autofocus", autofocus);
 		NBTHelper.set(nbt, "sort", sort);
 		NBTHelper.set(nbt, "mode", mode);
 		NBTHelper.set(nbt, "gridHeight", gridHeight);
@@ -389,6 +390,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 			matrix.set(i, tmp.get(i));
 		jeiSearch = NBTHelper.get(nbt, "jei", Boolean.class);
 		topdown = NBTHelper.get(nbt, "top", Boolean.class);
+		autofocus = NBTHelper.getSafe(nbt, "autofocus", Boolean.class).orElse(true);
 		sort = NBTHelper.get(nbt, "sort", Sort.class);
 		mode = NBTHelper.get(nbt, "mode", GuiMode.class);
 		gridHeight = NBTHelper.get(nbt, "gridHeight", Integer.class);
@@ -438,7 +440,6 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	@CapabilityInject(ExInventory.class)
 	public static Capability<ExInventory> EXINVENTORY = null;
 	public static final ResourceLocation LOCATION = new ResourceLocation(PlayerStorage.MODID, "inventory");
-	public static final int MAX = 2000000000;
 
 	public static void register() {
 		CapabilityManager.INSTANCE.register(ExInventory.class, new IStorage<ExInventory>() {

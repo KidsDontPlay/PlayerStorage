@@ -41,8 +41,9 @@ public class JeiModPlugin implements IModPlugin {
 					Map<Integer, ? extends IGuiIngredient<ItemStack>> inputs = recipeLayout.getItemStacks().getGuiIngredients();
 					NBTTagCompound nbt = new NBTTagCompound();
 					for (int i = 1; i < 10; i++) {
-						if (Internal.getStackHelper().getOreDictEquivalent(inputs.get(i).getAllIngredients()) != null)
-							NBTHelper.set(nbt, i - 1 + "s", Internal.getStackHelper().getOreDictEquivalent(inputs.get(i).getAllIngredients()));
+						String ore = Internal.getStackHelper().getOreDictEquivalent(inputs.get(i).getAllIngredients());
+						if (ore != null)
+							NBTHelper.set(nbt, i - 1 + "s", ore);
 						else
 							NBTHelper.setList(nbt, i - 1 + "l", inputs.get(i).getAllIngredients());
 					}

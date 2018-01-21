@@ -15,8 +15,10 @@ import mrriegel.limelib.gui.element.AbstractSlot.FluidSlot;
 import mrriegel.limelib.gui.element.AbstractSlot.ItemSlot;
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.PacketHandler;
+import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.Enums.MessageAction;
 import mrriegel.playerstorage.ExInventory;
+import mrriegel.playerstorage.Limit;
 import mrriegel.playerstorage.Message2Server;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
@@ -53,10 +55,13 @@ public class GuiLimit extends CommonGuiScreenSub {
 		else if (slot instanceof FluidSlot)
 			elementList.add(new FluidSlot((FluidStack) slot.stack, 0, 7 + guiLeft, 17 + guiTop, 1, drawer, false, false, false, !false));
 		buttonList.add(new CommonGuiButton(0, guiLeft + 78, guiTop + 75, 45, 18, "Apply").setDesign(Design.SIMPLE).setButtonColor(0xFF646464));
-		buttonList.add(new GuiCheckBox(1, guiLeft + 9, guiTop + 77, "Void", itemMode ? ei.itemLimits.get(slot.stack).voidd : ei.fluidLimits.get(slot.stack).voidd));
+		GuiButton rem = new CommonGuiButton(1, guiLeft + 6, guiTop + 75, 45, 18, "Remove").setDesign(Design.SIMPLE).setButtonColor(0xFF646464);
+		rem.visible = ei.mode == GuiMode.ITEM ? ei.itemLimits.containsKey(slot.stack) : ei.fluidLimits.containsKey(slot.stack);
+		buttonList.add(rem);
+		buttonList.add(new GuiCheckBox(2, guiLeft + 75, guiTop + 19, "Void", itemMode ? ei.itemLimits.get(slot.stack).voidd : ei.fluidLimits.get(slot.stack).voidd));
 		min = new GuiTextField(0, fontRenderer, guiLeft + 29, guiTop + 37, 80, fontRenderer.FONT_HEIGHT);
 		min.setMaxStringLength(11);
-		Predicate<String> pred = s -> s.isEmpty() || (StringUtils.isNumeric(s) && Integer.parseInt(s) >= 0 && Integer.parseInt(s) <= ExInventory.MAX);
+		Predicate<String> pred = s -> s.isEmpty() || (StringUtils.isNumeric(s) && Integer.parseInt(s) >= 0 && Integer.parseInt(s) <= Limit.defaultValue.max);
 		min.setValidator(pred);
 		min.setText(itemMode ? ei.itemLimits.get(slot.stack).min + "" : ei.fluidLimits.get(slot.stack).min + "");
 		max = new GuiTextField(0, fontRenderer, guiLeft + 29, guiTop + 57, 80, fontRenderer.FONT_HEIGHT);
@@ -90,15 +95,19 @@ public class GuiLimit extends CommonGuiScreenSub {
 	@Override
 	protected void actionPerformed(GuiButton button) throws IOException {
 		super.actionPerformed(button);
-		if (button.id == 0) {
+		if (button.id == 0 || button.id == 1) {
 			NBTTagCompound nbt = new NBTTagCompound();
 			MessageAction.SETLIMIT.set(nbt);
 			NBTHelper.set(nbt, "stack", slot.stack);
-			NBTHelper.set(nbt, "min", min.getText().isEmpty() ? 0 : Integer.parseInt(min.getText()));
-			NBTHelper.set(nbt, "max", max.getText().isEmpty() ? 0 : Integer.parseInt(max.getText()));
-			GuiCheckBox box = (GuiCheckBox) buttonList.stream().filter(b -> b.id == 1).findAny().orElse(null);
-			if (box != null)
-				NBTHelper.set(nbt, "void", box.isChecked());
+			if (button.id == 0) {
+				NBTHelper.set(nbt, "min", min.getText().isEmpty() ? 0 : Integer.parseInt(min.getText()));
+				NBTHelper.set(nbt, "max", max.getText().isEmpty() ? 0 : Integer.parseInt(max.getText()));
+				GuiCheckBox box = (GuiCheckBox) buttonList.stream().filter(b -> b.id == 2).findAny().orElse(null);
+				if (box != null)
+					NBTHelper.set(nbt, "void", box.isChecked());
+			} else if (button.id == 1) {
+				NBTHelper.set(nbt, "remove", true);
+			}
 			PacketHandler.sendToServer(new Message2Server(nbt));
 			new Message2Server().handleMessage(mc.player, nbt, Side.CLIENT);
 			keyTyped(' ', Keyboard.KEY_ESCAPE);

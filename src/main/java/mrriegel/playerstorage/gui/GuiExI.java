@@ -86,10 +86,11 @@ public class GuiExI extends CommonGuiContainer {
 		searchBar = new GuiTextField(0, fontRenderer, guiLeft + 9, guiTop + 14 + 18 * gridHeight, 85, fontRenderer.FONT_HEIGHT);
 		searchBar.setMaxStringLength(30);
 		searchBar.setTextColor(16777215);
-		searchBar.setFocused(true);
+		searchBar.setFocused(con.ei.autofocus);
 		searchBar.setEnableBackgroundDrawing(false);
 		if (mode == GuiMode.ITEM)
 			buttonList.add(clear = new CommonGuiButton(MessageAction.CLEAR.ordinal(), guiLeft + 62, guiTop + 29 + 18 * gridHeight, 7, 7, null).setTooltip("Clear grid").setDesign(Design.SIMPLE));
+		buttonList.add(new CommonGuiButton(MessageAction.AUTOFOCUS.ordinal(), guiLeft + 102, guiTop + 15 + 18 * gridHeight, 7, 7, null).setTooltip("Toggle auto focus on search bar").setDesign(Design.SIMPLE));
 		buttonList.add(modeButton = new CommonGuiButton(MessageAction.GUIMODE.ordinal(), guiLeft - 25, guiTop + ySize - 20, 23, 20, "").setTooltip("Toggle Mode").setDesign(Design.SIMPLE));
 		buttonList.add(new CommonGuiButton(1000, guiLeft - 25, guiTop + ySize - 37, 23, 14, "\u2261").setTooltip("More Options").setDesign(Design.SIMPLE));
 		buttonList.add(inc = new CommonGuiButton(MessageAction.INCGRID.ordinal(), guiLeft - 25, guiTop + 1, 23, 10, "+").setTooltip("Increase Grid Height").setDesign(Design.SIMPLE).setButtonColor(Color.GRAY.getRGB()));
@@ -149,18 +150,8 @@ public class GuiExI extends CommonGuiContainer {
 	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
 		if (mode == GuiMode.ITEM)
 			fontRenderer.drawString("x", 63, 28 + 18 * gridHeight, 0xE0E0E0);
+		fontRenderer.drawString((con.ei.autofocus ? TextFormatting.GREEN : TextFormatting.RED) + "o", 103, 14 + 18 * gridHeight, 0xE0E0E0);
 		super.drawGuiContainerForegroundLayer(mouseX, mouseY);
-		for (AbstractSlot<?> slot : slots) {
-			if (slot.isMouseOver(mouseX, mouseY)) {
-				//TODO remove
-				NBTTagCompound n = null;
-				if (mode == GuiMode.ITEM)
-					n = ((ItemSlot) slot).stack.hasTagCompound() ? ((ItemSlot) slot).stack.getTagCompound().copy() : null;
-				slot.drawTooltip(mouseX - guiLeft, mouseY - guiTop);
-				if (mode == GuiMode.ITEM)
-					((ItemSlot) slot).stack.setTagCompound(n);
-			}
-		}
 	}
 
 	private int hoverCounter;
@@ -168,6 +159,18 @@ public class GuiExI extends CommonGuiContainer {
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
 		super.drawScreen(mouseX, mouseY, partialTicks);
+		for (AbstractSlot<?> slot : slots) {
+			if (slot.isMouseOver(mouseX, mouseY)) {
+				//TODO remove
+				NBTTagCompound n = null;
+				if (mode == GuiMode.ITEM)
+					n = ((ItemSlot) slot).stack.hasTagCompound() ? ((ItemSlot) slot).stack.getTagCompound().copy() : null;
+				slot.drawTooltip(mouseX, mouseY);
+				if (mode == GuiMode.ITEM)
+					((ItemSlot) slot).stack.setTagCompound(n);
+			}
+		}
+
 		boolean big = isPointInRegion(133, 9 + 18 * gridHeight, 18, 18, mouseX, mouseY);
 		if (big)
 			hoverCounter++;
@@ -178,7 +181,9 @@ public class GuiExI extends CommonGuiContainer {
 			GlStateManager.translate(0, 0, 900);
 			drawDefaultBackground();
 			y += 50;
-			GuiInventory.drawEntityOnScreen(x, y, 48, x - mouseX, y - mouseY, mc.player);
+			GuiInventory.drawEntityOnScreen(x, y, 48, x - mouseX, (y - mouseY) - guiTop, mc.player);
+			String s = "Click to open vanilla inventory.";
+			drawString(fontRenderer, s, x - (fontRenderer.getStringWidth(s) / 2) + (mouseX - 133 - guiLeft), y + 8 + (mouseY - (9 + 18 * gridHeight) - guiTop), 0xE0E0E0);
 			GlStateManager.translate(0, 0, -900);
 		}
 
@@ -272,6 +277,12 @@ public class GuiExI extends CommonGuiContainer {
 
 		dec.visible = gridHeight > 1;
 		inc.visible = guiTop > 5;
+		if (guiTop < 0) {
+			try {
+				actionPerformed(dec);
+			} catch (IOException e) {
+			}
+		}
 
 		sort.setTooltip("Sort by " + con.ei.sort.name().toLowerCase());
 		sort.displayString = TextFormatting.GRAY + con.ei.sort.shortt;
@@ -377,7 +388,7 @@ public class GuiExI extends CommonGuiContainer {
 	@Override
 	protected void keyTyped(char typedChar, int keyCode) throws IOException {
 		if (!this.checkHotbarKeys(keyCode)) {
-			if (over != null && over.stack != null && (over instanceof FluidSlot || !((ItemStack) over.stack).isEmpty()) && LimeLib.jeiLoaded && (keyCode == Keyboard.KEY_R || keyCode == Keyboard.KEY_U) && (!searchBar.isFocused() || searchBar.getText().isEmpty())) {
+			if (LimeLib.jeiLoaded && over != null && over.stack != null && (over instanceof FluidSlot || !((ItemStack) over.stack).isEmpty()) && (keyCode == Keyboard.KEY_R || keyCode == Keyboard.KEY_U) && (!searchBar.isFocused() || searchBar.getText().isEmpty())) {
 				if (keyCode == Keyboard.KEY_R)
 					JEI.showRecipes(over.stack);
 				else
