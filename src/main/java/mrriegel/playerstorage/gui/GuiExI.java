@@ -348,7 +348,8 @@ public class GuiExI extends CommonGuiContainer {
 			currentPos = MathHelper.clamp((int) Math.round(maxPos * scrollBar.status), 0, maxPos);
 			scrollDrag = true;
 		}
-		if (hoverCounter > Minecraft.getDebugFPS() / 5) {
+		if (hoverCounter > 1) {
+			PacketHandler.sendToServer(new Message2Server(MessageAction.INVENTORY.set(new NBTTagCompound())));
 			mc.displayGuiScreen(new GuiInventory(mc.player));
 		}
 	}
@@ -387,18 +388,16 @@ public class GuiExI extends CommonGuiContainer {
 
 	@Override
 	protected void keyTyped(char typedChar, int keyCode) throws IOException {
-		if (!this.checkHotbarKeys(keyCode)) {
-			if (LimeLib.jeiLoaded && over != null && over.stack != null && (over instanceof FluidSlot || !((ItemStack) over.stack).isEmpty()) && (keyCode == Keyboard.KEY_R || keyCode == Keyboard.KEY_U) && (!searchBar.isFocused() || searchBar.getText().isEmpty())) {
-				if (keyCode == Keyboard.KEY_R)
-					JEI.showRecipes(over.stack);
-				else
-					JEI.showUsage(over.stack);
-				return;
-			} else if (this.searchBar.textboxKeyTyped(typedChar, keyCode)) {
-				if (con.ei.jeiSearch && LimeLib.jeiLoaded)
-					JEI.setFilterText(searchBar.getText());
-				return;
-			}
+		if (LimeLib.jeiLoaded && over != null && over.stack != null && (over instanceof FluidSlot || !((ItemStack) over.stack).isEmpty()) && (keyCode == Keyboard.KEY_R || keyCode == Keyboard.KEY_U) && (!searchBar.isFocused() || searchBar.getText().isEmpty())) {
+			if (keyCode == Keyboard.KEY_R)
+				JEI.showRecipes(over.stack);
+			else
+				JEI.showUsage(over.stack);
+			return;
+		} else if (this.searchBar.textboxKeyTyped(typedChar, keyCode)) {
+			if (con.ei.jeiSearch && LimeLib.jeiLoaded)
+				JEI.setFilterText(searchBar.getText());
+			return;
 		}
 		super.keyTyped(typedChar, keyCode);
 	}

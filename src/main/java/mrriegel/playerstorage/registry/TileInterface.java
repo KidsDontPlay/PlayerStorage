@@ -41,6 +41,10 @@ public class TileInterface extends CommonTile implements IHUDProvider {
 	public EntityPlayer getPlayer() {
 		if (player == null || refreshPlayer) {
 			refreshPlayer = false;
+			//			EntityPlayer p = ExInventory.getPlayerByName(playerName, world);
+			//			if (p != null)
+			//				setPlayer(p);
+			//			return player;
 			return player = ExInventory.getPlayerByName(playerName, world);
 		}
 		return player;
@@ -55,7 +59,6 @@ public class TileInterface extends CommonTile implements IHUDProvider {
 	@Override
 	public void readFromNBT(NBTTagCompound compound) {
 		playerName = NBTHelper.get(compound, "player", String.class);
-		player = ExInventory.getPlayerByName(playerName, world);
 		super.readFromNBT(compound);
 	}
 

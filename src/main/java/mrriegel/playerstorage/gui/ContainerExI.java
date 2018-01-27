@@ -191,14 +191,16 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 
 	public static class SlotResult extends SlotCrafting {
 		ExInventory ei;
+		EntityPlayer p;
 
 		public SlotResult(EntityPlayer player, InventoryCrafting craftingInventory, IInventory inventoryIn, int slotIndex, int xPosition, int yPosition) {
 			super(player, craftingInventory, inventoryIn, slotIndex, xPosition, yPosition);
 			ei = ExInventory.getInventory(player);
+			p = player;
 		}
 
 		private ContainerExI con() {
-			return (ContainerExI) ei.player.openContainer;
+			return (ContainerExI) p.openContainer;
 		}
 
 		@Override

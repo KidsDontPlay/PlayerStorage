@@ -248,6 +248,10 @@ public class Message2Server extends AbstractMessage {
 			case AUTOFOCUS:
 				ei.autofocus ^= true;
 				break;
+			case INVENTORY:
+				if (!player.world.isRemote)
+					((EntityPlayerMP) player).closeContainer();
+				break;
 			default:
 				break;
 			}
