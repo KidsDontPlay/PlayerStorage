@@ -11,9 +11,9 @@ import com.google.common.collect.Lists;
 
 import mrriegel.limelib.gui.CommonContainer;
 import mrriegel.playerstorage.ClientProxy;
+import mrriegel.playerstorage.ConfigHandler;
 import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.ExInventory;
-import mrriegel.playerstorage.ExInventory.Handler;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.player.EntityPlayer;
@@ -33,7 +33,9 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidActionResult;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
@@ -79,6 +81,10 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 	protected List<Area> allowedSlots(ItemStack stack, IInventory inv, int index) {
 		if (inv == getMatrix() || (inv == invPlayer && index > 35))
 			return Collections.singletonList(getAreaForEntireInv(invPlayer));
+		if (ConfigHandler.noshift && inv == invPlayer && index >= 0 && index <= 8)
+			return Collections.singletonList(getAreaForInv(inv, 9, 27));
+		if (ConfigHandler.noshift && inv == invPlayer && index >= 9 && index <= 35)
+			return Collections.singletonList(getAreaForInv(inv, 0, 9));
 		return null;
 	}
 
@@ -86,64 +92,103 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 	public ItemStack transferStackInSlot(EntityPlayer playerIn, int index) {
 		Slot slot = inventorySlots.get(index);
 		if (!playerIn.world.isRemote && slot.getHasStack()) {
-			IInventory inv = slot.inventory;
-			if (inv instanceof InventoryPlayer && slot.getSlotIndex() < 36) {
-				if (!ctrl && !space) {
-					if (ei.mode == GuiMode.ITEM)
-						slot.putStack(ExInventory.getInventory(playerIn).insertItem(slot.getStack(), false));
-					else {
-						FluidActionResult far = FluidUtil.tryEmptyContainer(slot.getStack(), new Handler(playerIn), 10 * Fluid.BUCKET_VOLUME, playerIn, true);
-						if (far.success)
-							if (slot.getStack().getCount() == 1)
-								slot.putStack(far.result);
-							else {
-								slot.getStack().shrink(1);
-								playerIn.dropItem(ItemHandlerHelper.insertItemStacked(new PlayerMainInvWrapper(invPlayer), far.result, false), false);
-							}
-					}
-				}
-				detectAndSendChanges();
-				return ItemStack.EMPTY;
-			} else if (inv == invs.get("result")) {
+			if (slot.inventory == invs.get("result")) {
 				craftShift();
 				return ItemStack.EMPTY;
 			}
-
 		}
 		return super.transferStackInSlot(playerIn, index);
 	}
 
 	@Override
 	public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player) {
-		if (!player.world.isRemote) {
-			if (slotId >= 0 && slotId < inventorySlots.size() && getSlot(slotId) != null && getSlot(slotId).inventory == invs.get("result")) {
+		Slot slot = null;
+		if (!player.world.isRemote && slotId >= 0 && slotId < inventorySlots.size() && (slot = getSlot(slotId)) != null) {
+			if (slot.inventory == invs.get("result")) {
 				onCraftMatrixChanged(null);
 			}
-			if (ei.mode == GuiMode.ITEM && slotId >= 0 && slotId < inventorySlots.size() && getSlot(slotId) != null && getSlot(slotId).getHasStack() && getSlot(slotId).inventory instanceof InventoryPlayer) {
-				ItemStack stack = getSlot(slotId).getStack();
+			if (slot.getHasStack() && slot.inventory instanceof InventoryPlayer) {
+				ItemStack stack = slot.getStack();
+				FluidStack fluid = FluidUtil.getFluidHandler(stack) == null ? null : FluidUtil.getFluidHandler(stack).drain(Integer.MAX_VALUE, false);
 				boolean apply = false;
 				for (Slot s : getSlotsFor(player.inventory)) {
 					if (ctrl && shift) {
 						apply = true;
-						if (s.getHasStack() && s.getStack().isItemEqual(stack)) {
-							ItemStack rest = ei.insertItem(s.getStack(), false);
-							s.putStack(rest);
-							if (!rest.isEmpty())
-								break;
+						if (ei.mode == GuiMode.ITEM) {
+							if (s.getHasStack() && s.getStack().isItemEqual(stack)) {
+								ItemStack rest = ei.insertItem(s.getStack(), false);
+								s.putStack(rest);
+								if (!rest.isEmpty())
+									break;
+							}
+						} else if (fluid != null) {
+							IFluidHandlerItem fhi = FluidUtil.getFluidHandler(s.getStack());
+							FluidStack fs = null;
+							if (fhi != null && (fs = fhi.drain(Integer.MAX_VALUE, false)) != null && fs.getFluid() == fluid.getFluid()) {
+								FluidActionResult far = FluidUtil.tryEmptyContainer(s.getStack(), new ExInventory.Handler(player), Integer.MAX_VALUE, player, true);
+								if (far.success) {
+									if (s.getStack().getCount() == 1)
+										s.putStack(far.result);
+									else {
+										s.getStack().shrink(1);
+										player.dropItem(ItemHandlerHelper.insertItemStacked(new PlayerMainInvWrapper(invPlayer), far.result, false), false);
+									}
+								} else
+									break;
+							}
 						}
-					} else if (ctrl && space && getSlot(slotId).getSlotIndex() > 8) {
+					} else if (ctrl && space && slot.getSlotIndex() > 8) {
 						apply = true;
 						if (s.getSlotIndex() <= 8)
 							continue;
-						if (s.getHasStack()) {
-							ItemStack rest = ei.insertItem(s.getStack(), false);
-							s.putStack(rest);
+						if (ei.mode == GuiMode.ITEM) {
+							if (s.getHasStack()) {
+								ItemStack rest = ei.insertItem(s.getStack(), false);
+								s.putStack(rest);
+							}
+						} else if (fluid != null) {
+							FluidActionResult far = FluidUtil.tryEmptyContainer(s.getStack(), new ExInventory.Handler(player), Integer.MAX_VALUE, player, true);
+							if (far.success) {
+								if (s.getStack().getCount() == 1)
+									s.putStack(far.result);
+								else {
+									s.getStack().shrink(1);
+									player.dropItem(ItemHandlerHelper.insertItemStacked(new PlayerMainInvWrapper(invPlayer), far.result, false), false);
+								}
+							}
 						}
 					}
 				}
 				if (apply) {
 					detectAndSendChanges();
 					return ItemStack.EMPTY;
+				}
+				if ((shift && !ConfigHandler.noshift) || (ctrl && ConfigHandler.noshift)) {
+					IInventory inv = slot.inventory;
+					if (inv instanceof InventoryPlayer && slot.getSlotIndex() < 36) {
+						if (ei.mode == GuiMode.ITEM) {
+							boolean inserted = false;
+							for (int i : new int[] { 36, 37, 38, 39 })
+								if (stack.getCount() == 1 && inv.getStackInSlot(i).isEmpty() && getSlotFromInventory(inv, i).isItemValid(stack)) {
+									getSlotFromInventory(inv, i).putStack(stack.copy());
+									slot.putStack(ItemStack.EMPTY);
+									inserted = true;
+								}
+							if (!inserted)
+								slot.putStack(ei.insertItem(stack, false));
+						} else {
+							FluidActionResult far = FluidUtil.tryEmptyContainer(stack, new ExInventory.Handler(player), 10 * Fluid.BUCKET_VOLUME, player, true);
+							if (far.success)
+								if (stack.getCount() == 1)
+									slot.putStack(far.result);
+								else {
+									stack.shrink(1);
+									player.dropItem(ItemHandlerHelper.insertItemStacked(new PlayerMainInvWrapper(invPlayer), far.result, false), false);
+								}
+						}
+						detectAndSendChanges();
+						return ItemStack.EMPTY;
+					}
 				}
 			}
 		}

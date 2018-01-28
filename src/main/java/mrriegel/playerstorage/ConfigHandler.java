@@ -17,7 +17,7 @@ public class ConfigHandler {
 
 	public static Configuration config;
 
-	public static boolean infiniteSpace, remote;
+	public static boolean infiniteSpace, remote, /*TODO remove to exi*/noshift;
 	public static int itemCapacity, fluidCapacity;
 	public static Map<String, Unit2> apples = new HashMap<>();
 	@SuppressWarnings("serial")
@@ -53,6 +53,7 @@ public class ConfigHandler {
 				apples.put(unit.oreName, unit.entry);
 			appleList.add(unit.oreName);
 		}
+		noshift = config.getBoolean("noshift", Configuration.CATEGORY_GENERAL, false, "Usually you use shift-click to transfer items into the player storage" + Configuration.NEW_LINE + "When this is true you transfer items with ctrl, so you can use shift to transfer items between player inventory and hotbar.");
 
 		if (config.hasChanged()) {
 			config.save();
