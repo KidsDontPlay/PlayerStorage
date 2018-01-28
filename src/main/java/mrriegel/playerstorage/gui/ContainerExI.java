@@ -11,7 +11,6 @@ import com.google.common.collect.Lists;
 
 import mrriegel.limelib.gui.CommonContainer;
 import mrriegel.playerstorage.ClientProxy;
-import mrriegel.playerstorage.ConfigHandler;
 import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.ExInventory;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -81,9 +80,9 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 	protected List<Area> allowedSlots(ItemStack stack, IInventory inv, int index) {
 		if (inv == getMatrix() || (inv == invPlayer && index > 35))
 			return Collections.singletonList(getAreaForEntireInv(invPlayer));
-		if (ConfigHandler.noshift && inv == invPlayer && index >= 0 && index <= 8)
+		if (ei.noshift && inv == invPlayer && index >= 0 && index <= 8)
 			return Collections.singletonList(getAreaForInv(inv, 9, 27));
-		if (ConfigHandler.noshift && inv == invPlayer && index >= 9 && index <= 35)
+		if (ei.noshift && inv == invPlayer && index >= 9 && index <= 35)
 			return Collections.singletonList(getAreaForInv(inv, 0, 9));
 		return null;
 	}
@@ -163,7 +162,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 					detectAndSendChanges();
 					return ItemStack.EMPTY;
 				}
-				if ((shift && !ConfigHandler.noshift) || (ctrl && ConfigHandler.noshift)) {
+				if ((shift && !ei.noshift) || (ctrl && ei.noshift)) {
 					IInventory inv = slot.inventory;
 					if (inv instanceof InventoryPlayer && slot.getSlotIndex() < 36) {
 						if (ei.mode == GuiMode.ITEM) {

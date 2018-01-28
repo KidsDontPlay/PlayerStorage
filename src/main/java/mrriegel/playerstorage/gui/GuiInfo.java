@@ -68,6 +68,8 @@ public class GuiInfo extends CommonGuiScreenSub {
 			fontRenderer.drawString(inter, guiLeft + 12, guiTop + 90, 0x2e3e3e);
 		}, () -> {
 			buttonList.add(new GuiCheckBox(MessageAction.PICKUP.ordinal(), guiLeft + 110, guiTop + 88, "Auto Pickup", ei.autoPickup));
+			buttonList.add(new GuiCheckBox(MessageAction.WATER.ordinal(), guiLeft + 110, guiTop + 100, "Infinite Water", ei.infiniteWater));
+			buttonList.add(new GuiCheckBox(MessageAction.NOSHIFT.ordinal(), guiLeft + 110, guiTop + 112, "CTRL <-> SHIFT", ei.noshift));
 		}, () -> {
 			String inter = "Interfaces";
 			if (isPointInRegion(11, 90, fontRenderer.getStringWidth(inter), fontRenderer.FONT_HEIGHT, GuiDrawer.getMouseX(), GuiDrawer.getMouseY())) {
@@ -76,6 +78,12 @@ public class GuiInfo extends CommonGuiScreenSub {
 			}
 			if (buttonList.get(0).isMouseOver()) {
 				drawHoveringText(Lists.newArrayList("Insert picked up items into your storage.", "Hold " + Keyboard.getKeyName(ClientProxy.INVERTPICKUP.getKeyCode()) + " to invert temporarily."), GuiDrawer.getMouseX(), GuiDrawer.getMouseY());
+			}
+			if (buttonList.get(1).isMouseOver()) {
+				drawHoveringText("If enabled water will be generated when there are at least 2 buckets in your storage (to 10 buckets).", GuiDrawer.getMouseX(), GuiDrawer.getMouseY());
+			}
+			if (buttonList.get(2).isMouseOver()) {
+				drawHoveringText("Usually you use shift-click to transfer items into the player storage. When this is enabled you transfer items with CTRL, so you can use shift to transfer items between player inventory and hotbar.", GuiDrawer.getMouseX(), GuiDrawer.getMouseY());
 			}
 		}));
 		tabs.add(new Tab("Team", () -> {
@@ -168,6 +176,18 @@ public class GuiInfo extends CommonGuiScreenSub {
 				NBTTagCompound nbt = new NBTTagCompound();
 				MessageAction.PICKUP.set(nbt);
 				NBTHelper.set(nbt, "pick", ((GuiCheckBox) button).isChecked());
+				PacketHandler.sendToServer(new Message2Server(nbt));
+				new Message2Server().handleMessage(mc.player, nbt, Side.CLIENT);
+			} else if (button.id == MessageAction.WATER.ordinal()) {
+				NBTTagCompound nbt = new NBTTagCompound();
+				MessageAction.WATER.set(nbt);
+				NBTHelper.set(nbt, "water", ((GuiCheckBox) button).isChecked());
+				PacketHandler.sendToServer(new Message2Server(nbt));
+				new Message2Server().handleMessage(mc.player, nbt, Side.CLIENT);
+			} else if (button.id == MessageAction.NOSHIFT.ordinal()) {
+				NBTTagCompound nbt = new NBTTagCompound();
+				MessageAction.NOSHIFT.set(nbt);
+				NBTHelper.set(nbt, "shift", ((GuiCheckBox) button).isChecked());
 				PacketHandler.sendToServer(new Message2Server(nbt));
 				new Message2Server().handleMessage(mc.player, nbt, Side.CLIENT);
 			}

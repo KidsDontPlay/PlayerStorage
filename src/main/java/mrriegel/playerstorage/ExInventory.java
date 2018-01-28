@@ -72,7 +72,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	//	List<CraftingPattern> patterns = new ArrayList<>();
 	//	List<CraftingTask> tasks = new ArrayList<>();
 	public int itemLimit = ConfigHandler.itemCapacity, fluidLimit = ConfigHandler.fluidCapacity, gridHeight = 4;
-	public boolean needSync = true, defaultGUI = true, autoPickup;
+	public boolean needSync = true, defaultGUI = true, autoPickup, infiniteWater, noshift;
 	public NonNullList<ItemStack> matrix = NonNullList.withSize(9, ItemStack.EMPTY);
 	public Set<String> members = new HashSet<>();
 	public Set<GlobalBlockPos> tiles = new HashSet<>();
@@ -144,9 +144,9 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 		}
 		//infinite water
-		if (player.ticksExisted % 40 == 0) {
+		if (infiniteWater && player.ticksExisted % 20 == 0) {
 			int water = getAmountFluid(s -> s.getFluid() == FluidRegistry.WATER);
-			if (water >= 2000 && water < 4000) {
+			if (water >= 2000 && water < 10000) {
 				insertFluid(new FluidStack(FluidRegistry.WATER, 1000), true, false);
 				needSync = true;
 			}
@@ -359,6 +359,8 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		NBTHelper.set(nbt, "dirty", needSync);
 		NBTHelper.set(nbt, "defaultGUI", defaultGUI);
 		NBTHelper.set(nbt, "autoPickup", autoPickup);
+		NBTHelper.set(nbt, "infiniteWater", infiniteWater);
+		NBTHelper.set(nbt, "noshift", noshift);
 		NBTHelper.setList(nbt, "members", new ArrayList<>(members));
 		NBTHelper.setList(nbt, "tilesInt", tiles.stream().map(g -> g.getDimension()).collect(Collectors.toList()));
 		NBTHelper.setList(nbt, "tilesPos", tiles.stream().map(g -> g.getPos()).collect(Collectors.toList()));
@@ -399,6 +401,8 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		needSync = NBTHelper.get(nbt, "dirty", Boolean.class);
 		defaultGUI = NBTHelper.get(nbt, "defaultGUI", Boolean.class);
 		autoPickup = NBTHelper.get(nbt, "autoPickup", Boolean.class);
+		infiniteWater = NBTHelper.get(nbt, "infiniteWater", Boolean.class);
+		noshift = NBTHelper.get(nbt, "noshift", Boolean.class);
 		members = new HashSet<>(NBTHelper.getList(nbt, "members", String.class));
 		List<Integer> ints = NBTHelper.getList(nbt, "tilesInt", Integer.class);
 		List<BlockPos> poss = NBTHelper.getList(nbt, "tilesPos", BlockPos.class);

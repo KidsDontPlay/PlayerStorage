@@ -248,6 +248,12 @@ public class Message2Server extends AbstractMessage {
 			case AUTOFOCUS:
 				ei.autofocus ^= true;
 				break;
+			case WATER:
+				ei.infiniteWater = NBTHelper.get(nbt, "water", Boolean.class);
+				break;
+			case NOSHIFT:
+				ei.noshift = NBTHelper.get(nbt, "shift", Boolean.class);
+				break;
 			case INVENTORY:
 				if (!player.world.isRemote)
 					((EntityPlayerMP) player).closeContainer();
