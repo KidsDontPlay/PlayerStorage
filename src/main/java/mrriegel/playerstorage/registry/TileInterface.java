@@ -23,7 +23,7 @@ public class TileInterface extends CommonTile implements IHUDProvider {
 
 	private EntityPlayer player;
 	private String playerName;
-	public boolean refreshPlayer = true;
+	private boolean refreshPlayer = true, on;
 
 	@Override
 	public boolean hasCapability(Capability<?> capability, EnumFacing facing) {

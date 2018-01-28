@@ -40,7 +40,8 @@ public class Enums {
 		SETLIMIT, //
 		PICKUP, //
 		AUTOFOCUS, //
-		INVENTORY;
+		INVENTORY, //
+		INVERTPICKUP;
 
 		public NBTTagCompound set(NBTTagCompound nbt) {
 			NBTHelper.set(nbt, "action", this);

@@ -24,17 +24,20 @@ import mrriegel.playerstorage.Enums.Sort;
 import mrriegel.playerstorage.gui.ContainerExI;
 import mrriegel.playerstorage.registry.TileInterface;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.play.server.SPacketCollectItem;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.Capability.IStorage;
 import net.minecraftforge.common.capabilities.CapabilityInject;
@@ -99,8 +102,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		}
 
 	});
-
-	public boolean jeiSearch = false, topdown = true, autofocus = true;
+	public boolean jeiSearch = false, topdown = true, autofocus = true, autopickupInverted = false;
 	public Sort sort = Sort.NAME;
 	public GuiMode mode = GuiMode.ITEM;
 
@@ -521,8 +523,14 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	@SubscribeEvent(priority = EventPriority.LOW)
 	public static void pickup(EntityItemPickupEvent event) {
 		ExInventory ei = ExInventory.getInventory(event.getEntityPlayer());
-		if (ei.autoPickup) {
-			event.getItem().getItem().setCount(ei.insertItem(event.getItem().getItem(), false).getCount());
+		if (ei.autoPickup ^ ei.autopickupInverted) {
+			int count = event.getItem().getItem().getCount();
+			ItemStack rest = ei.insertItem(event.getItem().getItem(), false);
+			if (rest.getCount() != count) {
+				EntityTracker entitytracker = ((WorldServer) event.getEntityPlayer().world).getEntityTracker();
+				entitytracker.sendToTracking(event.getItem(), new SPacketCollectItem(event.getItem().getEntityId(), event.getEntityPlayer().getEntityId(), count - rest.getCount()));
+			}
+			event.getItem().getItem().setCount(rest.getCount());
 		}
 	}
 

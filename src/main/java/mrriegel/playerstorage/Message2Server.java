@@ -312,6 +312,10 @@ public class Message2Server extends AbstractMessage {
 			p1.sendStatusMessage(new TextComponentString("You accepted " + p2.getName() + "'s invitation."), true);
 			p2.sendStatusMessage(new TextComponentString(p1.getName() + " accepted your invitation."), true);
 			break;
+		case INVERTPICKUP:
+			ExInventory ei = ExInventory.getInventory(player);
+			ei.autopickupInverted = NBTHelper.get(nbt, "inverted", Boolean.class);
+			break;
 		default:
 			break;
 		}

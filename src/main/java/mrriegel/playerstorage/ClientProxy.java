@@ -17,13 +17,17 @@ import mrriegel.playerstorage.gui.GuiExI;
 import mrriegel.playerstorage.registry.Registry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiInventory;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -39,12 +43,14 @@ import net.minecraftforge.oredict.OreDictionary;
 public class ClientProxy extends CommonProxy {
 
 	public static final KeyBinding GUI = new KeyBinding("Open GUI", Keyboard.KEY_I, PlayerStorage.MODID);
+	public static final KeyBinding INVERTPICKUP = new KeyBinding("Invert Auto Pickup", Keyboard.KEY_LCONTROL, PlayerStorage.MODID);
 	public static Int2IntOpenHashMap colorMap = new Int2IntOpenHashMap(4);
 
 	@Override
 	public void preInit(FMLPreInitializationEvent event) {
 		super.preInit(event);
 		ClientRegistry.registerKeyBinding(GUI);
+		ClientRegistry.registerKeyBinding(INVERTPICKUP);
 		Registry.initClient();
 	}
 
@@ -92,13 +98,35 @@ public class ClientProxy extends CommonProxy {
 	@Override
 	public void postInit(FMLPostInitializationEvent event) {
 		super.postInit(event);
-
 	}
 
 	@SubscribeEvent
 	public static void key(InputEvent.KeyInputEvent event) {
-		if (Minecraft.getMinecraft().inGameHasFocus && GUI.isPressed() && Minecraft.getMinecraft().player.hasCapability(ExInventory.EXINVENTORY, null)) {
+		if (!Minecraft.getMinecraft().inGameHasFocus)
+			return;
+		if (GUI.isPressed() && Minecraft.getMinecraft().player.hasCapability(ExInventory.EXINVENTORY, null)) {
 			PacketHandler.sendToServer(new OpenGuiMessage(PlayerStorage.MODID, 0, null));
+		}
+		if (Keyboard.getEventKey() == INVERTPICKUP.getKeyCode()) {
+			NBTTagCompound nbt = new NBTTagCompound();
+			MessageAction.INVERTPICKUP.set(nbt);
+			NBTHelper.set(nbt, "inverted", Keyboard.getEventKeyState());
+			PacketHandler.sendToServer(new Message2Server(nbt));
+		}
+	}
+
+	@SubscribeEvent
+	public static void renderText(RenderGameOverlayEvent event) {
+		if (event.getType() == ElementType.TEXT && INVERTPICKUP.isKeyDown()) {
+			String text = "Auto Pickup is inverted.";
+			int color = Color.HSBtoRGB(0f, 0f, (float) ((Math.sin((Minecraft.getMinecraft().player.ticksExisted + event.getPartialTicks()) / 10) / 2) + .5f));
+			GlStateManager.pushMatrix();
+			GlStateManager.translate(event.getResolution().getScaledWidth() / 2, event.getResolution().getScaledHeight() - 68 - (2 + Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT), 0.0F);
+			GlStateManager.enableBlend();
+			GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+			Minecraft.getMinecraft().fontRenderer.drawString(TextFormatting.UNDERLINE + text, -Minecraft.getMinecraft().fontRenderer.getStringWidth(text) / 2, -4, color);
+			GlStateManager.disableBlend();
+			GlStateManager.popMatrix();
 		}
 	}
 

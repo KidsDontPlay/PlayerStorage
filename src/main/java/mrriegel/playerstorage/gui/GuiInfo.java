@@ -7,6 +7,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.lwjgl.input.Keyboard;
+
+import com.google.common.collect.Lists;
+
 import mrriegel.limelib.gui.CommonGuiScreenSub;
 import mrriegel.limelib.gui.GuiDrawer;
 import mrriegel.limelib.gui.button.CommonGuiButton;
@@ -15,6 +19,7 @@ import mrriegel.limelib.helper.ColorHelper;
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.PacketHandler;
 import mrriegel.limelib.util.Utils;
+import mrriegel.playerstorage.ClientProxy;
 import mrriegel.playerstorage.Enums.MessageAction;
 import mrriegel.playerstorage.ExInventory;
 import mrriegel.playerstorage.Message2Server;
@@ -70,7 +75,7 @@ public class GuiInfo extends CommonGuiScreenSub {
 				drawHoveringText(l.isEmpty() ? Arrays.asList("No Interfaces") : l, GuiDrawer.getMouseX(), GuiDrawer.getMouseY());
 			}
 			if (buttonList.get(0).isMouseOver()) {
-				drawHoveringText("Insert picked up items into your storage.", GuiDrawer.getMouseX(), GuiDrawer.getMouseY());
+				drawHoveringText(Lists.newArrayList("Insert picked up items into your storage.", "Hold " + Keyboard.getKeyName(ClientProxy.INVERTPICKUP.getKeyCode()) + " to invert temporarily."), GuiDrawer.getMouseX(), GuiDrawer.getMouseY());
 			}
 		}));
 		tabs.add(new Tab("Team", () -> {
