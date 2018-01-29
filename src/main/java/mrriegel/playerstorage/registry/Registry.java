@@ -15,6 +15,7 @@ public class Registry {
 
 	//blocks
 	public static final CommonBlock interfac = new BlockInterface();
+	public static final CommonBlock keeper = new BlockKeeper();
 
 	//items
 	public static final ItemApple apple = new ItemApple();
@@ -22,6 +23,8 @@ public class Registry {
 
 	public static void init() {
 		interfac.registerBlock();
+		if (false)
+			keeper.registerBlock();
 		apple.registerItem();
 		remote.registerItem();
 

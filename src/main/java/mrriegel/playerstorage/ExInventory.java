@@ -24,7 +24,9 @@ import mrriegel.limelib.util.StackWrapper;
 import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.Enums.Sort;
 import mrriegel.playerstorage.gui.ContainerExI;
+import mrriegel.playerstorage.registry.Registry;
 import mrriegel.playerstorage.registry.TileInterface;
+import mrriegel.playerstorage.registry.TileKeeper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.player.EntityPlayer;
@@ -48,6 +50,7 @@ import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.Clone;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -69,8 +72,8 @@ import net.minecraftforge.items.ItemHandlerHelper;
 public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 	public EntityPlayer player;
-	List<StackWrapper> items = new ArrayList<>(), itemsPlusTeam = new ArrayList<>();
-	List<FluidStack> fluids = new ArrayList<>(), fluidsPlusTeam = new ArrayList<>();
+	public List<StackWrapper> items = new ArrayList<>(), itemsPlusTeam = new ArrayList<>();
+	public List<FluidStack> fluids = new ArrayList<>(), fluidsPlusTeam = new ArrayList<>();
 	//	List<CraftingPattern> patterns = new ArrayList<>();
 	//	List<CraftingTask> tasks = new ArrayList<>();
 	public int itemLimit = ConfigHandler.itemCapacity, fluidLimit = ConfigHandler.fluidCapacity, gridHeight = 4;
@@ -542,6 +545,23 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 				entitytracker.sendToTracking(event.getItem(), new SPacketCollectItem(event.getItem().getEntityId(), event.getEntityPlayer().getEntityId(), count - rest.getCount()));
 			}
 			event.getItem().getItem().setCount(rest.getCount());
+		}
+	}
+
+	@SubscribeEvent
+	public static void death(LivingDeathEvent event) {
+		if (event.getEntityLiving() instanceof EntityPlayerMP && false) {
+			ExInventory exi = ExInventory.getInventory((EntityPlayer) event.getEntityLiving());
+			BlockPos p = new BlockPos(event.getEntityLiving()).down();
+			World world = event.getEntityLiving().world;
+			while (p.getY() < world.getActualHeight()) {
+				if (world.isValid(p) && world.isAirBlock(p)) {
+					world.setBlockState(p, Registry.keeper.getDefaultState());
+					((TileKeeper) world.getTileEntity(p)).create(exi);
+					break;
+				}
+				p = p.add(0, 1, 0);
+			}
 		}
 	}
 

@@ -92,7 +92,7 @@ public class ItemApple extends ItemFood {
 				ei.fluidLimit = Integer.MAX_VALUE;
 			ei.markForSync();
 			if (worldIn.isRemote) {
-				player.sendStatusMessage(new TextComponentString("Player Storage increased by " + u.itemLimit + "/" + u.fluidLimit + ".").setStyle(new Style().setUnderlined(true)), true);
+				player.sendStatusMessage(new TextComponentString("Player Storage increased by " + u.itemLimit + " items / " + u.fluidLimit + " mB fluids.").setStyle(new Style().setUnderlined(true)), true);
 				for (int i = 0; i < 70; i++)
 					LimeLib.proxy.renderParticle(new CommonParticle(player.posX, player.posY + .3, player.posZ).//
 							setFlouncing(.015).setScale(1f).setGravity(-.02f).setMaxAge2(100).setColor(ClientProxy.colorMap.get(stack.getItemDamage()), 255, 10));
@@ -105,7 +105,7 @@ public class ItemApple extends ItemFood {
 		tooltip.add("Increase your storage with apples.");
 		Unit2 u = ConfigHandler.apples.get(ConfigHandler.appleList.get(stack.getItemDamage()));
 		if (u != null)
-			tooltip.add(u.itemLimit + "/" + u.fluidLimit);
+			tooltip.add(u.itemLimit + " items / " + u.fluidLimit + " mB fluids");
 	}
 
 	@Override

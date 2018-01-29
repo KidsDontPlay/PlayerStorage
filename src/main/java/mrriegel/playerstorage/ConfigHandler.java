@@ -6,9 +6,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
 
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
@@ -46,12 +48,19 @@ public class ConfigHandler {
 		prop.setLanguageKey("appleTiers");
 		prop.setComment("Tiers for apples");
 		for (String s : prop.getStringList()) {
-			@SuppressWarnings("serial")
-			Unit1 unit = gson.fromJson(s, new TypeToken<Unit1>() {
-			}.getType());
-			if (!apples.containsKey(unit.oreName))
-				apples.put(unit.oreName, unit.entry);
-			appleList.add(unit.oreName);
+			try {
+				@SuppressWarnings("serial")
+				Unit1 unit = gson.fromJson(s, new TypeToken<Unit1>() {
+				}.getType());
+				if (unit != null) {
+					if (!apples.containsKey(unit.oreName))
+						apples.put(unit.oreName, unit.entry);
+					appleList.add(unit.oreName);
+				}
+			} catch (JsonParseException e) {
+				Logger.getLogger(PlayerStorage.MODNAME).warning("Your config file is not correct. " + s);
+				e.printStackTrace();
+			}
 		}
 
 		if (config.hasChanged()) {
