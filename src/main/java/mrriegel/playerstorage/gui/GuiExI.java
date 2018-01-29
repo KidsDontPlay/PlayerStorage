@@ -46,6 +46,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.oredict.OreDictionary;
 
@@ -443,7 +444,8 @@ public class GuiExI extends CommonGuiContainer {
 		for (String w : list) {
 			final String word = w.trim();
 			if (word.startsWith("@")) {
-				if (Utils.getModID(stack.getItem()).toLowerCase().contains(word.substring(1)))
+				String modID = Utils.getModID(stack.getItem());
+				if (modID.toLowerCase().contains(word.substring(1)) || Loader.instance().getIndexedModList().get(modID).getName().toLowerCase().contains(word.substring(1)))
 					return true;
 			} else if (word.startsWith("#")) {
 				List<String> tooltip = stack.getTooltip(mc.player, mc.gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
@@ -471,7 +473,8 @@ public class GuiExI extends CommonGuiContainer {
 		for (String w : list) {
 			final String word = w.trim();
 			if (word.startsWith("@")) {
-				if (FluidRegistry.getDefaultFluidName(stack.getFluid()).split(":")[0].toLowerCase().contains(word.substring(1)))
+				String modID = FluidRegistry.getDefaultFluidName(stack.getFluid()).split(":")[0];
+				if (modID.toLowerCase().contains(word.substring(1)) || Loader.instance().getIndexedModList().get(modID).getName().toLowerCase().contains(word.substring(1)))
 					return true;
 			} else {
 				if (TextFormatting.getTextWithoutFormattingCodes(stack.getLocalizedName()).toLowerCase().contains(word) || //

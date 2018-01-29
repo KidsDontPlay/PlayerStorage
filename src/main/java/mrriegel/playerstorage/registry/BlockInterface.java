@@ -36,13 +36,4 @@ public class BlockInterface extends CommonBlockContainer<TileInterface> {
 		}
 	}
 
-	@Override
-	public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
-		TileEntity t;
-		if ((t = worldIn.getTileEntity(pos)) instanceof TileInterface && ((TileInterface) t).getPlayer() != null) {
-			ExInventory.getInventory(((TileInterface) t).getPlayer()).tiles.remove(GlobalBlockPos.fromTile(t));
-		}
-		super.breakBlock(worldIn, pos, state);
-	}
-
 }

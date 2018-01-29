@@ -10,6 +10,8 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
 import org.apache.commons.lang3.Validate;
 
 import it.unimi.dsi.fastutil.Hash.Strategy;
@@ -486,16 +488,18 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	@SubscribeEvent
 	public static void tick(PlayerTickEvent event) {
 		if (event.phase == Phase.END && !event.player.world.isRemote) {
-			if (event.player.hasCapability(EXINVENTORY, null))
-				event.player.getCapability(EXINVENTORY, null).update();
+			ExInventory exi;
+			if ((exi = getInventory(event.player)) != null)
+				exi.update();
 		}
 	}
 
 	@SubscribeEvent
 	public static void clone(Clone event) {
 		if (!event.getEntityPlayer().world.isRemote) {
-			if (event.getOriginal().hasCapability(EXINVENTORY, null) && event.getEntityPlayer().hasCapability(EXINVENTORY, null)) {
-				event.getEntityPlayer().getCapability(EXINVENTORY, null).deserializeNBT(event.getOriginal().getCapability(EXINVENTORY, null).serializeNBT());
+			ExInventory old, neww;
+			if ((old = getInventory(event.getOriginal())) != null && (neww = getInventory(event.getEntityPlayer())) != null) {
+				neww.deserializeNBT(old.serializeNBT());
 				sync((EntityPlayerMP) event.getEntityPlayer());
 			}
 		}
@@ -513,21 +517,24 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	@SubscribeEvent
 	public static void logout(PlayerLoggedOutEvent event) {
 		ExInventory.getInventory(event.player).markForSync();
-		if (!event.player.world.isRemote)
+		if (!event.player.world.isRemote) {
 			TileInterface.refresh();
+			TileInterface.updateState(event.player, false);
+		}
 	}
 
 	@SubscribeEvent
 	public static void join(EntityJoinWorldEvent event) {
 		if (event.getEntity() instanceof EntityPlayerMP) {
 			sync((EntityPlayerMP) event.getEntity());
+			TileInterface.updateState((EntityPlayer) event.getEntity(), true);
 		}
 	}
 
 	@SubscribeEvent(priority = EventPriority.LOW)
 	public static void pickup(EntityItemPickupEvent event) {
 		ExInventory ei = ExInventory.getInventory(event.getEntityPlayer());
-		if (ei.autoPickup ^ ei.autopickupInverted) {
+		if (ei.autoPickup != ei.autopickupInverted) {
 			int count = event.getItem().getItem().getCount();
 			ItemStack rest = ei.insertItem(event.getItem().getItem(), false);
 			if (rest.getCount() != count) {
@@ -571,9 +578,11 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	public static class Handler implements IItemHandler, IFluidHandler {
 
 		ExInventory ei;
+		TileInterface tile;
 
-		public Handler(EntityPlayer player) {
+		public Handler(EntityPlayer player, @Nullable TileInterface tile) {
 			ei = getInventory(player);
+			this.tile = tile;
 		}
 
 		@Override
@@ -643,7 +652,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		}
 
 		private boolean isPlayerOn() {
-			return ei != null && ei.player != null && getPlayerByName(ei.player.getName(), ei.player.world) != null;
+			return tile == null || tile.isOn();
 		}
 
 	}

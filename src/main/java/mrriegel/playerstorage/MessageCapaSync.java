@@ -11,14 +11,14 @@ public class MessageCapaSync extends AbstractMessage {
 	}
 
 	public MessageCapaSync(EntityPlayer player) {
-		ExInventory ei = player.getCapability(ExInventory.EXINVENTORY, null);
+		ExInventory ei = ExInventory.getInventory(player);
 		nbt = ei.serializeNBT();
 		ei.writeSyncOnlyNBT(nbt);
 	}
 
 	@Override
 	public void handleMessage(EntityPlayer player, NBTTagCompound nbt, Side side) {
-		ExInventory ei = player.getCapability(ExInventory.EXINVENTORY, null);
+		ExInventory ei = ExInventory.getInventory(player);
 		ei.deserializeNBT(nbt);
 		ei.readSyncOnlyNBT(nbt);
 	}

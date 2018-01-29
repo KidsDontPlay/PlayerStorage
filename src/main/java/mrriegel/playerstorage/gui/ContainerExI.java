@@ -124,7 +124,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 							IFluidHandlerItem fhi = FluidUtil.getFluidHandler(s.getStack());
 							FluidStack fs = null;
 							if (fhi != null && (fs = fhi.drain(Integer.MAX_VALUE, false)) != null && fs.getFluid() == fluid.getFluid()) {
-								FluidActionResult far = FluidUtil.tryEmptyContainer(s.getStack(), new ExInventory.Handler(player), Integer.MAX_VALUE, player, true);
+								FluidActionResult far = FluidUtil.tryEmptyContainer(s.getStack(), new ExInventory.Handler(player, null), Integer.MAX_VALUE, player, true);
 								if (far.success) {
 									if (s.getStack().getCount() == 1)
 										s.putStack(far.result);
@@ -146,7 +146,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 								s.putStack(rest);
 							}
 						} else if (fluid != null) {
-							FluidActionResult far = FluidUtil.tryEmptyContainer(s.getStack(), new ExInventory.Handler(player), Integer.MAX_VALUE, player, true);
+							FluidActionResult far = FluidUtil.tryEmptyContainer(s.getStack(), new ExInventory.Handler(player, null), Integer.MAX_VALUE, player, true);
 							if (far.success) {
 								if (s.getStack().getCount() == 1)
 									s.putStack(far.result);
@@ -176,7 +176,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 							if (!inserted)
 								slot.putStack(ei.insertItem(stack, false));
 						} else {
-							FluidActionResult far = FluidUtil.tryEmptyContainer(stack, new ExInventory.Handler(player), 10 * Fluid.BUCKET_VOLUME, player, true);
+							FluidActionResult far = FluidUtil.tryEmptyContainer(stack, new ExInventory.Handler(player, null), 10 * Fluid.BUCKET_VOLUME, player, true);
 							if (far.success)
 								if (stack.getCount() == 1)
 									slot.putStack(far.result);
