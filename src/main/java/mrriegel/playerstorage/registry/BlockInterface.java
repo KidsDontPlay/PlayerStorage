@@ -32,6 +32,7 @@ public class BlockInterface extends CommonBlockContainer<TileInterface> {
 		TileEntity t;
 		if ((t = worldIn.getTileEntity(pos)) instanceof TileInterface && placer instanceof EntityPlayer) {
 			((TileInterface) t).setPlayer((EntityPlayer) placer);
+			((TileInterface) t).setOn(true);
 			ExInventory.getInventory((EntityPlayer) placer).tiles.add(GlobalBlockPos.fromTile(t));
 		}
 	}

@@ -54,10 +54,15 @@ public class TileInterface extends CommonTile implements IHUDProvider {
 		markForSync();
 	}
 
+	public String getPlayerName() {
+		return playerName;
+	}
+
 	public void setOn(boolean on) {
 		if (!on || this.on != on)
 			world.notifyNeighborsOfStateChange(pos, blockType, false);
 		this.on = on;
+		markForSync();
 	}
 
 	public boolean isOn() {
@@ -67,12 +72,16 @@ public class TileInterface extends CommonTile implements IHUDProvider {
 	@Override
 	public void readFromNBT(NBTTagCompound compound) {
 		playerName = NBTHelper.get(compound, "player", String.class);
+		if (FMLCommonHandler.instance().getEffectiveSide().isClient()) {
+			on = NBTHelper.get(compound, "on", Boolean.class);
+		}
 		super.readFromNBT(compound);
 	}
 
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound compound) {
 		NBTHelper.set(compound, "player", playerName);
+		NBTHelper.set(compound, "on", on);
 		return super.writeToNBT(compound);
 	}
 
@@ -109,7 +118,9 @@ public class TileInterface extends CommonTile implements IHUDProvider {
 	@Override
 	public void invalidate() {
 		super.invalidate();
-		ExInventory.getInventory(getPlayer()).tiles.remove(GlobalBlockPos.fromTile(this));
+		if (getPlayer() != null) {
+			ExInventory.getInventory(getPlayer()).tiles.remove(GlobalBlockPos.fromTile(this));
+		}
 	}
 
 }

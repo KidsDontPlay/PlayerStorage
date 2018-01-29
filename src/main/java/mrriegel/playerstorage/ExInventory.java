@@ -157,7 +157,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 	private void init() {
 		if (!player.world.isRemote) {
-			tiles.removeIf(gb -> !(gb.getTile() instanceof TileInterface) || ((TileInterface) gb.getTile()).getPlayer() != player);
+			tiles.removeIf(gb -> !(gb.getTile() instanceof TileInterface) || (((TileInterface) gb.getTile()).getPlayerName() != null && !(((TileInterface) gb.getTile()).getPlayerName().equals(player.getName()))));
 		}
 	}
 
