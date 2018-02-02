@@ -19,7 +19,7 @@ public class ConfigHandler {
 
 	public static Configuration config;
 
-	public static boolean infiniteSpace, remote;
+	public static boolean infiniteSpace, remote, keeper;
 	public static int itemCapacity, fluidCapacity;
 	public static Map<String, Unit2> apples = new HashMap<>();
 	@SuppressWarnings("serial")
@@ -39,6 +39,7 @@ public class ConfigHandler {
 		remote = config.getBoolean("remote", Configuration.CATEGORY_GENERAL, false, "Enable remote item to access your inventory without pressing a key.");
 		itemCapacity = config.getInt("itemCapacity", Configuration.CATEGORY_GENERAL, 2000, 0, Integer.MAX_VALUE, "Item capacity at the beginning");
 		fluidCapacity = config.getInt("fluidCapacity", Configuration.CATEGORY_GENERAL, 20000, 0, Integer.MAX_VALUE, "Fluid capacity at the beginning");
+		keeper = config.getBoolean("keeper", Configuration.CATEGORY_GENERAL, true, "If enabled, a keeper block containing your items and fluids will be placed when you die.");
 		Property prop = config.get(Configuration.CATEGORY_GENERAL, "appleTiers", Arrays.asList(//
 				new Unit1("blockIron", 3200, 32000), //
 				new Unit1("blockGold", 25600, 256000), //

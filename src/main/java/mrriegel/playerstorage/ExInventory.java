@@ -17,6 +17,7 @@ import org.apache.commons.lang3.Validate;
 import it.unimi.dsi.fastutil.Hash.Strategy;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
+import mrriegel.limelib.gui.ContainerNull;
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.PacketHandler;
 import mrriegel.limelib.util.GlobalBlockPos;
@@ -31,9 +32,14 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
+import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.play.server.SPacketCollectItem;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.NonNullList;
@@ -110,13 +116,42 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	public boolean jeiSearch = false, topdown = true, autofocus = true, autopickupInverted = false;
 	public Sort sort = Sort.NAME;
 	public GuiMode mode = GuiMode.ITEM;
+	public List<CraftingRecipe> recipes = new ArrayList<>();
 
 	public ExInventory() {
 		itemLimits.defaultReturnValue(Limit.defaultValue);
 		fluidLimits.defaultReturnValue(Limit.defaultValue);
+		recipes.add(CraftingRecipe.from(new ItemStack(Blocks.LOG)));
+		recipes.add(CraftingRecipe.from(new ItemStack(Items.GOLD_INGOT), new ItemStack(Items.GOLD_INGOT), ItemStack.EMPTY, ItemStack.EMPTY, new ItemStack(Items.STICK), ItemStack.EMPTY, ItemStack.EMPTY, new ItemStack(Items.STICK)));
+		//		recipes.add(new CraftingRecipe(new ItemStack(Items.GOLD_INGOT), new ItemStack(Items.GOLD_INGOT)));
+		//		recipes.add(new CraftingRecipe(IntStream.range(0, 9).boxed().map(i -> new ItemStack(Items.IRON_INGOT)).collect(Collectors.toList())));
 	}
 
 	private void update() {
+		if (player.ticksExisted % 20 == 0) {
+			for (CraftingRecipe r : recipes) {
+				List<ItemStack> lis = new ArrayList<>();
+				List<Ingredient> ings = r.exact ? r.stacks.stream().map(Ingredient::fromStacks).collect(Collectors.toList()) : r.ings;
+				for (Ingredient i : ings) {
+					ItemStack s = extractItem(i, 1, false);
+					if (!i.apply(s))
+						break;
+					lis.add(s);
+				}
+				ItemStack result = ItemStack.EMPTY;
+				InventoryCrafting inv = new InventoryCrafting(new ContainerNull(), 3, 3);
+				for (int i = 0; i < lis.size(); i++)
+					inv.setInventorySlotContents(i, lis.get(i));
+				if (lis.size() != ings.size() || !insertItem(result = r.recipe.getCraftingResult(inv), true).isEmpty()) {
+					for (ItemStack s : lis)
+						player.dropItem(insertItem(s, false), false);
+				} else {
+					player.dropItem(insertItem(result, false), false);
+					for (ItemStack s : r.recipe.getRemainingItems(inv))
+						player.dropItem(insertItem(s, false), false);
+				}
+			}
+		}
 		if (needSync && player.ticksExisted % 3 == 0 && player.openContainer instanceof ContainerExI) {
 			itemsPlusTeam = items.stream().map(StackWrapper::copy).collect(Collectors.toList());
 			fluidsPlusTeam = fluids.stream().map(FluidStack::copy).collect(Collectors.toList());
@@ -148,7 +183,6 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 			needSync = false;
 
 		}
-		//infinite water
 		if (infiniteWater && player.ticksExisted % 20 == 0) {
 			int water = getAmountFluid(s -> s.getFluid() == FluidRegistry.WATER);
 			if (water >= 2000 && water < 10000) {
@@ -207,7 +241,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	}
 
 	private ItemStack extractItem(Predicate<ItemStack> pred, int size, boolean useMembers, boolean simulate) {
-		if (size <= 0 || pred == null)
+		if (size <= 0 || pred == null || pred.test(ItemStack.EMPTY))
 			return ItemStack.EMPTY;
 		for (int i = 0; i < items.size(); i++) {
 			StackWrapper s = items.get(i);
@@ -279,7 +313,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	}
 
 	private FluidStack extractFluid(Predicate<FluidStack> pred, int size, boolean useMembers, boolean simulate) {
-		if (size <= 0 || pred == null)
+		if (size <= 0 || pred == null || pred.test(null))
 			return null;
 		for (int i = 0; i < fluids.size(); i++) {
 			FluidStack s = fluids.get(i);
@@ -339,6 +373,13 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 	public void markForSync() {
 		needSync = true;
+		if (!player.world.isRemote && false) {
+			if (player.getHeldItemMainhand().hasTagCompound()) {
+				System.out.println(player.getHeldItemMainhand().getTagCompound());
+				NBTTagList tags = (NBTTagList) player.getHeldItemMainhand().getTagCompound().getTag("pages");
+				System.out.println(tags.iterator().next().getClass());
+			}
+		}
 		if (!player.world.isRemote)
 			getMembers().forEach(e -> e.needSync = true);
 	}
@@ -550,7 +591,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 	@SubscribeEvent
 	public static void death(LivingDeathEvent event) {
-		if (event.getEntityLiving() instanceof EntityPlayerMP && false) {
+		if (ConfigHandler.keeper && event.getEntityLiving() instanceof EntityPlayerMP) {
 			ExInventory exi = ExInventory.getInventory((EntityPlayer) event.getEntityLiving());
 			BlockPos p = new BlockPos(event.getEntityLiving()).down();
 			World world = event.getEntityLiving().world;

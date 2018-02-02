@@ -23,8 +23,7 @@ public class Registry {
 
 	public static void init() {
 		interfac.registerBlock();
-		if (false)
-			keeper.registerBlock();
+		keeper.registerBlock();
 		apple.registerItem();
 		remote.registerItem();
 
