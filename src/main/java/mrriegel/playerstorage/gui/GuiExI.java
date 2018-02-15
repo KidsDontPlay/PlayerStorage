@@ -11,6 +11,8 @@ import org.apache.commons.lang3.Validate;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import mrriegel.limelib.LimeLib;
 import mrriegel.limelib.gui.CommonGuiContainer;
 import mrriegel.limelib.gui.GuiDrawer;
@@ -62,6 +64,8 @@ public class GuiExI extends CommonGuiContainer {
 	protected AbstractSlot<?> over;
 	protected final GuiMode mode;
 	protected ScrollBar scrollBar;
+	private Reference2ReferenceMap<ItemStack, ItemStack> itemMap = new Reference2ReferenceOpenHashMap<>();
+	private Reference2ReferenceMap<FluidStack, FluidStack> fluidMap = new Reference2ReferenceOpenHashMap<>();
 
 	private int gridWidth = 12, gridHeight;
 	private ContainerExI con;
@@ -76,7 +80,6 @@ public class GuiExI extends CommonGuiContainer {
 		con = inventorySlotsIn;
 		mode = Validate.notNull(con.ei.mode);
 		gridHeight = con.ei.gridHeight;
-		con.ei.needSync = true;
 	}
 
 	@Override
@@ -163,12 +166,12 @@ public class GuiExI extends CommonGuiContainer {
 		for (AbstractSlot<?> slot : slots) {
 			if (slot.isMouseOver(mouseX, mouseY)) {
 				//TODO remove
-				NBTTagCompound n = null;
-				if (mode == GuiMode.ITEM)
-					n = ((ItemSlot) slot).stack.hasTagCompound() ? ((ItemSlot) slot).stack.getTagCompound().copy() : null;
+				//				NBTTagCompound n = null;
+				//				if (mode == GuiMode.ITEM)
+				//					n = ((ItemSlot) slot).stack.hasTagCompound() ? ((ItemSlot) slot).stack.getTagCompound().copy() : null;
 				slot.drawTooltip(mouseX, mouseY);
-				if (mode == GuiMode.ITEM)
-					((ItemSlot) slot).stack.setTagCompound(n);
+				//				if (mode == GuiMode.ITEM)
+				//					((ItemSlot) slot).stack.setTagCompound(n);
 			}
 		}
 
@@ -195,11 +198,13 @@ public class GuiExI extends CommonGuiContainer {
 		super.updateScreen();
 		if (searchBar.isFocused() && LimeLib.jeiLoaded && JEI.hasKeyboardFocus())
 			searchBar.setFocused(false);
-
 		if (mode == GuiMode.ITEM) {
 			if (con.ei.needSync) {
 				con.ei.needSync = false;
 				items = con.ei.getItems();
+				itemMap.clear();
+				for (StackWrapper sw : items)
+					itemMap.put(sw.getStack(), sw.getStack().copy());
 			}
 			List<StackWrapper> tmp = getFilteredItems();
 			int invisible = tmp.size() - gridWidth * gridHeight;
@@ -232,6 +237,9 @@ public class GuiExI extends CommonGuiContainer {
 			if (con.ei.needSync) {
 				con.ei.needSync = false;
 				fluids = con.ei.getFluids();
+				fluidMap.clear();
+				for (FluidStack fs : fluids)
+					fluidMap.put(fs, fs.copy());
 			}
 			List<FluidStack> tmp = getFilteredFluids();
 			int invisible = tmp.size() - gridWidth * gridHeight;
@@ -313,10 +321,10 @@ public class GuiExI extends CommonGuiContainer {
 		MessageAction.SLOT.set(nbt);
 		if (slot instanceof ItemSlot) {
 			if (!((ItemSlot) slot).stack.isEmpty())
-				NBTHelper.set(nbt, "slot", ((ItemSlot) slot).stack.writeToNBT(new NBTTagCompound()));
+				NBTHelper.set(nbt, "slot", itemMap.get(((ItemSlot) slot).stack).writeToNBT(new NBTTagCompound()));
 		} else if (slot instanceof FluidSlot) {
 			if (((FluidSlot) slot).stack != null)
-				NBTHelper.set(nbt, "slot", ((FluidSlot) slot).stack.writeToNBT(new NBTTagCompound()));
+				NBTHelper.set(nbt, "slot", fluidMap.get(((FluidSlot) slot).stack).writeToNBT(new NBTTagCompound()));
 		} else
 			throw new RuntimeException();
 		NBTHelper.set(nbt, "mouse", mouseButton);

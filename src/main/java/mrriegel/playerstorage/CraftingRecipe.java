@@ -15,20 +15,23 @@ import it.unimi.dsi.fastutil.objects.Reference2ReferenceArrayMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import mrriegel.limelib.gui.ContainerNull;
+import mrriegel.limelib.helper.NBTHelper;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
 public class CraftingRecipe {
 
-	NonNullList<ItemStack> stacks;
-	NonNullList<Ingredient> ings;
-	IRecipe recipe;
-	boolean exact;
+	public NonNullList<ItemStack> stacks;
+	public NonNullList<Ingredient> ings;
+	public IRecipe recipe;
+	public boolean exact = false, active = false;
+	public ItemStack output;
 
 	@Nullable
 	public static CraftingRecipe from(ItemStack... stacks) {
@@ -51,7 +54,7 @@ public class CraftingRecipe {
 		if (cr.recipe == null)
 			return null;
 		cr.ings = map(cr.stacks, cr.recipe);
-
+		cr.output = cr.recipe.getRecipeOutput();
 		return cr;
 	}
 
@@ -121,6 +124,7 @@ public class CraftingRecipe {
 					} else {
 						res.add(i);
 						stacks.remove(s);
+						break;
 					}
 				}
 			}
@@ -130,4 +134,22 @@ public class CraftingRecipe {
 		return res;
 	}
 
+	public static NBTTagCompound serialize(CraftingRecipe cr) {
+		NBTTagCompound n = new NBTTagCompound();
+		if (cr == null)
+			return n;
+		NBTHelper.setList(n, "stacks", cr.stacks);
+		NBTHelper.set(n, "exact", cr.exact);
+		NBTHelper.set(n, "active", cr.active);
+		return n;
+	}
+
+	public static CraftingRecipe deserialize(NBTTagCompound nbt) {
+		CraftingRecipe cr = CraftingRecipe.from(NBTHelper.getList(nbt, "stacks", ItemStack.class));
+		if (cr == null)
+			return null;
+		cr.exact = NBTHelper.get(nbt, "exact", boolean.class);
+		cr.active = NBTHelper.get(nbt, "active", boolean.class);
+		return cr;
+	}
 }

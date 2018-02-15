@@ -32,14 +32,11 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.play.server.SPacketCollectItem;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.NonNullList;
@@ -121,15 +118,13 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	public ExInventory() {
 		itemLimits.defaultReturnValue(Limit.defaultValue);
 		fluidLimits.defaultReturnValue(Limit.defaultValue);
-		recipes.add(CraftingRecipe.from(new ItemStack(Blocks.LOG)));
-		recipes.add(CraftingRecipe.from(new ItemStack(Items.GOLD_INGOT), new ItemStack(Items.GOLD_INGOT), ItemStack.EMPTY, ItemStack.EMPTY, new ItemStack(Items.STICK), ItemStack.EMPTY, ItemStack.EMPTY, new ItemStack(Items.STICK)));
-		//		recipes.add(new CraftingRecipe(new ItemStack(Items.GOLD_INGOT), new ItemStack(Items.GOLD_INGOT)));
-		//		recipes.add(new CraftingRecipe(IntStream.range(0, 9).boxed().map(i -> new ItemStack(Items.IRON_INGOT)).collect(Collectors.toList())));
 	}
 
 	private void update() {
 		if (player.ticksExisted % 20 == 0) {
 			for (CraftingRecipe r : recipes) {
+				if (!insertItem(r.recipe.getRecipeOutput(), true).isEmpty())
+					continue;
 				List<ItemStack> lis = new ArrayList<>();
 				List<Ingredient> ings = r.exact ? r.stacks.stream().map(Ingredient::fromStacks).collect(Collectors.toList()) : r.ings;
 				for (Ingredient i : ings) {
@@ -194,6 +189,17 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 	private void init() {
 		if (!player.world.isRemote) {
+			//			recipes.add(CraftingRecipe.from(new ItemStack(Blocks.LOG)));
+			//			recipes.add(CraftingRecipe.from(new ItemStack(Items.GOLD_INGOT), new ItemStack(Items.GOLD_INGOT), ItemStack.EMPTY, ItemStack.EMPTY, new ItemStack(Items.STICK), ItemStack.EMPTY, ItemStack.EMPTY, new ItemStack(Items.STICK)));
+			//			recipes.add(CraftingRecipe.from(new ItemStack(Blocks.LOG, 1, 1)));
+			//			recipes.add(CraftingRecipe.from(new ItemStack(Blocks.LOG, 1, 2)));
+			//			recipes.add(CraftingRecipe.from(new ItemStack(Blocks.LOG, 1, 3)));
+			//			recipes.add(CraftingRecipe.from(new ItemStack(Blocks.GOLD_BLOCK)));
+			//			recipes.add(CraftingRecipe.from(new ItemStack(Blocks.IRON_BLOCK)));
+			//			recipes.add(CraftingRecipe.from(new ItemStack(Blocks.DIAMOND_BLOCK)));
+			//			recipes.add(CraftingRecipe.from(new ItemStack(Blocks.EMERALD_BLOCK)));
+			//			recipes.add(CraftingRecipe.from(new ItemStack(Blocks.STONE), new ItemStack(Blocks.STONE), new ItemStack(Blocks.STONE)));
+
 			tiles.removeIf(gb -> !(gb.getTile() instanceof TileInterface) || (((TileInterface) gb.getTile()).getPlayerName() != null && !(((TileInterface) gb.getTile()).getPlayerName().equals(player.getName()))));
 		}
 	}
@@ -373,13 +379,6 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 	public void markForSync() {
 		needSync = true;
-		if (!player.world.isRemote && false) {
-			if (player.getHeldItemMainhand().hasTagCompound()) {
-				System.out.println(player.getHeldItemMainhand().getTagCompound());
-				NBTTagList tags = (NBTTagList) player.getHeldItemMainhand().getTagCompound().getTag("pages");
-				System.out.println(tags.iterator().next().getClass());
-			}
-		}
 		if (!player.world.isRemote)
 			getMembers().forEach(e -> e.needSync = true);
 	}
@@ -414,6 +413,9 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		NBTHelper.setList(nbt, "itemLimitsValue", itemLimits.values().stream().map(l -> l.toPos()).collect(Collectors.toList()));
 		NBTHelper.setList(nbt, "fluidLimitsKey", new ArrayList<>(fluidLimits.keySet()));
 		NBTHelper.setList(nbt, "fluidLimitsValue", fluidLimits.values().stream().map(l -> l.toPos()).collect(Collectors.toList()));
+		NBTHelper.set(nbt, "recipesize", recipes.size());
+		for (int i = 0; i < recipes.size(); i++)
+			NBTHelper.set(nbt, "recipe" + i, CraftingRecipe.serialize(recipes.get(i)));
 		return nbt;
 	}
 
@@ -465,6 +467,14 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		List<BlockPos> lisFV = NBTHelper.getList(nbt, "fluidLimitsValue", BlockPos.class);
 		for (int i = 0; i < lisFK.size(); i++)
 			fluidLimits.put(lisFK.get(i), new Limit(lisFV.get(i)));
+		size = NBTHelper.get(nbt, "recipesize", Integer.class);
+		recipes.clear();
+		for (int i = 0; i < size; i++) {
+			NBTTagCompound n = NBTHelper.get(nbt, "recipe" + i, NBTTagCompound.class);
+			CraftingRecipe cr = CraftingRecipe.deserialize(n);
+			if (cr != null)
+				recipes.add(cr);
+		}
 
 	}
 

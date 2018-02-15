@@ -172,6 +172,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 									getSlotFromInventory(inv, i).putStack(stack.copy());
 									slot.putStack(ItemStack.EMPTY);
 									inserted = true;
+									break;
 								}
 							if (!inserted)
 								slot.putStack(ei.insertItem(stack, false));

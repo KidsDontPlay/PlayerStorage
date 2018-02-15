@@ -26,6 +26,7 @@ import mrriegel.playerstorage.Message2Server;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
@@ -39,7 +40,6 @@ public class GuiInfo extends CommonGuiScreenSub {
 	List<Tab> tabs = new ArrayList<>();
 	Integer active = null;
 	long lastInvite = 0L;
-	List<String> team, other;
 
 	public GuiInfo() {
 		super();
@@ -120,6 +120,7 @@ public class GuiInfo extends CommonGuiScreenSub {
 			}
 		});
 		tabs.add(new Tab("Team") {
+			List<String> team, other;
 
 			@Override
 			void tooltip() {
@@ -175,25 +176,58 @@ public class GuiInfo extends CommonGuiScreenSub {
 				}
 			}
 		});
-		tabs.add(new Tab("Crafting") {
+		if (false)
+			tabs.add(new Tab("Crafting") {
+				int pos, maxpos;
 
-			@Override
-			void tooltip() {
-				//				drawHoveringText(Arrays.asList("micha"), drawer.getMouseX(), drawer.getMouseY());
-			}
+				@Override
+				void tooltip() {
+					//				drawHoveringText(Arrays.asList("micha"), drawer.getMouseX(), drawer.getMouseY());
+				}
 
-			@Override
-			void init() {
-			}
+				@Override
+				void init() {
+					for (int i = 0; i < Math.min(6, ei.recipes.size()); i++) {
+						buttonList.add(new CommonGuiButton(i, guiLeft + 15, guiTop + 23 + 20 * i, 18, 18, "").setDesign(Design.SIMPLE));
+						//					buttonList.add(new CommonGuiButton(i + 100, guiLeft + 206, guiTop + 21 + 10 * i, 14, 8, TextFormatting.GREEN + "" + TextFormatting.BOLD + "+").setTooltip("Invite player"));
+					}
+				}
 
-			@Override
-			void draw() {
-			}
+				@Override
+				void draw() {
+					maxpos = Math.max(ei.recipes.size() - 6, 0);
+					for (GuiButton but : buttonList) {
+						but.visible = true;
+					}
 
-			@Override
-			void click(GuiButton button) {
-			}
-		});
+					for (int i = 0; i < Math.min(buttonList.size(), ei.recipes.size()); i++) {
+						CommonGuiButton but = (CommonGuiButton) buttonList.get(i);
+						ItemStack s = ei.recipes.get(i + pos).output;
+						but.setStack(s);
+						but.setTooltip(s.getDisplayName());
+
+					}
+					int x = 12 + guiLeft, y = 12 + guiTop;
+					drawer.drawColoredRectangle(8, 8, 100, 142, 0xffa2a2a2);
+					drawer.drawFrame(8, 8, 100, 142, 1, 0xff080808);
+					for (String s : Stream.concat(Stream.of(TextFormatting.DARK_GRAY + "" + TextFormatting.BOLD + "Recipes"), new ArrayList<String>().stream()).collect(Collectors.toList())) {
+						fontRenderer.drawString(s, x, y, 0x2a2a2a);
+						y += 10;
+					}
+					//				drawer.drawColoredRectangle(119, 8, 100, 142, 0xffa2a2a2);
+					//				drawer.drawFrame(119, 8, 100, 142, 1, 0xff080808);
+					//				x = 123 + guiLeft;
+					//				y = 12 + guiTop;
+					//				for (String s : Stream.concat(Stream.of(TextFormatting.DARK_GRAY + "" + TextFormatting.BOLD + "Players"), other.stream()).collect(Collectors.toList())) {
+					//					fontRenderer.drawString(s, x, y, 0x2a2a2a);
+					//					y += 10;
+					//				}
+				}
+
+				@Override
+				void click(GuiButton button) {
+				}
+			});
 	}
 
 	@Override
@@ -247,7 +281,8 @@ public class GuiInfo extends CommonGuiScreenSub {
 				//				buttonList.clear();
 				//				elementList.clear();
 				//				tabs.get(index).init.run();
-				initGui();
+				//				initGui();
+				setWorldAndResolution(mc, width, height);
 			}
 
 		}
