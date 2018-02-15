@@ -125,7 +125,10 @@ public class GuiExI extends CommonGuiContainer {
 		drawer.drawPlayerSlots(79, 29 + 18 * gridHeight);
 		drawer.drawSlots(151, 9 + 18 * gridHeight, 5, 1);
 		drawer.drawSlot(115, 9 + 18 * gridHeight);
-		drawer.drawSlots(7, 7, gridWidth, gridHeight);
+		if (inc.isMouseOver() || dec.isMouseOver())
+			drawer.drawSlots(7, 7, gridWidth, gridHeight);
+		else
+			drawer.drawFramedRectangle(7, 7, gridWidth * 18, gridHeight * 18);
 		drawer.drawColoredRectangle(7, 7, gridWidth * 18, gridHeight * 18, mode == GuiMode.ITEM ? 0x23ffc800 : 0x2300c5cd);
 		new GuiTextField(0, fontRenderer, 134 + guiLeft, 10 + 18 * gridHeight + guiTop, 16, 16).drawTextBox();
 		drawer.drawTextfield(searchBar);
@@ -165,13 +168,7 @@ public class GuiExI extends CommonGuiContainer {
 		super.drawScreen(mouseX, mouseY, partialTicks);
 		for (AbstractSlot<?> slot : slots) {
 			if (slot.isMouseOver(mouseX, mouseY)) {
-				//TODO remove
-				//				NBTTagCompound n = null;
-				//				if (mode == GuiMode.ITEM)
-				//					n = ((ItemSlot) slot).stack.hasTagCompound() ? ((ItemSlot) slot).stack.getTagCompound().copy() : null;
 				slot.drawTooltip(mouseX, mouseY);
-				//				if (mode == GuiMode.ITEM)
-				//					((ItemSlot) slot).stack.setTagCompound(n);
 			}
 		}
 
@@ -230,6 +227,7 @@ public class GuiExI extends CommonGuiContainer {
 						slot.amount = w.getSize();
 						index++;
 					}
+					slot.square = !slot.stack.isEmpty();
 					s++;
 				}
 			}
@@ -265,6 +263,7 @@ public class GuiExI extends CommonGuiContainer {
 						slot.amount = w.amount;
 						index++;
 					}
+					slot.square = slot.stack != null;
 					s++;
 				}
 			}

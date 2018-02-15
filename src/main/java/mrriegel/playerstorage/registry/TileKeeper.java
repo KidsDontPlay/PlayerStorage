@@ -51,7 +51,7 @@ public class TileKeeper extends CommonTile implements IHUDProvider {
 			NBTTagList l = new NBTTagList();
 			for (String s : new String[] { name, //
 					TextFormatting.GOLD + "Dimension: " + TextFormatting.GRAY + DimensionManager.getProviderType(world.provider.getDimension()).getName() + " (" + world.provider.getDimension() + ")", //
-					TextFormatting.GOLD + "Position:" + " x:" + TextFormatting.AQUA + getX() + TextFormatting.GRAY + " y:" + TextFormatting.AQUA + getY() + TextFormatting.GRAY + " z:" + TextFormatting.AQUA + getZ(), //
+					TextFormatting.GOLD + "Position:" + TextFormatting.GRAY + " x:" + TextFormatting.AQUA + getX() + TextFormatting.GRAY + " y:" + TextFormatting.AQUA + getY() + TextFormatting.GRAY + " z:" + TextFormatting.AQUA + getZ(), //
 					TextFormatting.ITALIC + "You should retrieve your items and fluids there." })
 				l.appendTag(new NBTTagString(TextFormatting.RESET + "" + TextFormatting.GRAY + s));
 			dis.setTag("Lore", l);

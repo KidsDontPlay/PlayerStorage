@@ -51,10 +51,48 @@ public class GuiInfo extends CommonGuiScreenSub {
 			@Override
 			void tooltip() {
 				String inter = "Interfaces";
-				if (isPointInRegion(11, 90, fontRenderer.getStringWidth(inter), fontRenderer.FONT_HEIGHT, GuiDrawer.getMouseX(), GuiDrawer.getMouseY())) {
+				if (isPointInRegion(11, 80, fontRenderer.getStringWidth(inter), fontRenderer.FONT_HEIGHT, GuiDrawer.getMouseX(), GuiDrawer.getMouseY())) {
 					List<String> l = ei.tiles.stream().map(gp -> "Dim:" + gp.getDimension() + ", x:" + gp.getPos().getX() + " y:" + gp.getPos().getY() + " z:" + gp.getPos().getZ()).collect(Collectors.toList());
 					drawHoveringText(l.isEmpty() ? Arrays.asList("No Interfaces") : l, GuiDrawer.getMouseX(), GuiDrawer.getMouseY());
 				}
+			}
+
+			@Override
+			void init() {
+			}
+
+			@Override
+			void draw() {
+				drawer.drawColoredRectangle(7, 7, 216, 65, 0x44000000);
+				int w = 208, h = 11;
+				int c = 0xffffc800;
+				drawer.drawColoredRectangle(10, 13, w, 11, ColorHelper.darker(c, .5));
+				double foo = ei.getItemCount() / (double) ei.itemLimit;
+				drawer.drawColoredRectangle(10, 13, (int) (w * foo), h, c);
+				drawer.drawFrame(10, 13, w, h, 1, 0xFF000000);
+				fontRenderer.drawString((isShiftKeyDown() ? ei.getItemCount() : Utils.formatNumber(ei.getItemCount())) + "/" + (isShiftKeyDown() ? ei.itemLimit : Utils.formatNumber(ei.itemLimit)) + " Items", guiLeft + 11, guiTop + 28, 0x3e3e3e);
+
+				c = 0xff485ec9;
+				drawer.drawColoredRectangle(10, 45, w, h, ColorHelper.darker(c, .5));
+				foo = ei.getFluidCount() / (double) ei.fluidLimit;
+				drawer.drawColoredRectangle(10, 45, (int) (w * foo), h, c);
+				drawer.drawFrame(10, 45, w, h, 1, 0xFF000000);
+				fontRenderer.drawString((isShiftKeyDown() ? ei.getFluidCount() : Utils.formatNumber(ei.getFluidCount())) + "/" + (isShiftKeyDown() ? ei.fluidLimit : Utils.formatNumber(ei.fluidLimit)) + " mB", guiLeft + 11, guiTop + 60, 0x3e3e3e);
+
+				String inter = "Interfaces";
+				drawer.drawColoredRectangle(10, 78, fontRenderer.getStringWidth(inter) + 2, fontRenderer.FONT_HEIGHT + 1, 0xffe1e1e1);
+				drawer.drawFrame(10, 78, fontRenderer.getStringWidth(inter) + 2, fontRenderer.FONT_HEIGHT + 1, 1, 0xff1e1e1e);
+				fontRenderer.drawString(inter, guiLeft + 12, guiTop + 80, 0x2e3e3e);
+			}
+
+			@Override
+			void click(GuiButton button) {
+			}
+		});
+		tabs.add(new Tab("Settings") {
+
+			@Override
+			void tooltip() {
 				if (buttonList.get(0).isMouseOver()) {
 					drawHoveringText(Lists.newArrayList("Insert picked up items into your storage.", "Hold " + Keyboard.getKeyName(ClientProxy.INVERTPICKUP.getKeyCode()) + " to invert temporarily."), GuiDrawer.getMouseX(), GuiDrawer.getMouseY());
 				}
@@ -68,32 +106,14 @@ public class GuiInfo extends CommonGuiScreenSub {
 
 			@Override
 			void init() {
-				buttonList.add(new GuiCheckBox(MessageAction.PICKUP.ordinal(), guiLeft + 110, guiTop + 88, "Auto Pickup", ei.autoPickup));
-				buttonList.add(new GuiCheckBox(MessageAction.WATER.ordinal(), guiLeft + 110, guiTop + 100, "Infinite Water", ei.infiniteWater));
-				buttonList.add(new GuiCheckBox(MessageAction.NOSHIFT.ordinal(), guiLeft + 110, guiTop + 112, "CTRL <-> SHIFT", ei.noshift));
+				buttonList.add(new GuiCheckBox(MessageAction.PICKUP.ordinal(), guiLeft + 10, guiTop + 10, "Auto Pickup", ei.autoPickup));
+				buttonList.add(new GuiCheckBox(MessageAction.WATER.ordinal(), guiLeft + 10, guiTop + 24, "Infinite Water", ei.infiniteWater));
+				buttonList.add(new GuiCheckBox(MessageAction.NOSHIFT.ordinal(), guiLeft + 10, guiTop + 38, "CTRL <-> SHIFT", ei.noshift));
 			}
 
 			@Override
 			void draw() {
-				int w = 208, h = 11;
-				int c = 0xffffc800;
-				drawer.drawColoredRectangle(10, 13, w, 11, ColorHelper.darker(c, .6));
-				double foo = ei.getItemCount() / (double) ei.itemLimit;
-				drawer.drawColoredRectangle(10, 13, (int) (w * foo), h, c);
-				drawer.drawFrame(10, 13, w, h, 1, 0xFF000000);
-				fontRenderer.drawString((isShiftKeyDown() ? ei.getItemCount() : Utils.formatNumber(ei.getItemCount())) + "/" + (isShiftKeyDown() ? ei.itemLimit : Utils.formatNumber(ei.itemLimit)) + " Items", guiLeft + 11, guiTop + 28, 0x3e3e3e);
-
-				c = 0xff00c5cd;
-				drawer.drawColoredRectangle(10, 55, w, h, ColorHelper.darker(c, .6));
-				foo = ei.getFluidCount() / (double) ei.fluidLimit;
-				drawer.drawColoredRectangle(10, 55, (int) (w * foo), h, c);
-				drawer.drawFrame(10, 55, w, h, 1, 0xFF000000);
-				fontRenderer.drawString((isShiftKeyDown() ? ei.getFluidCount() : Utils.formatNumber(ei.getFluidCount())) + "/" + (isShiftKeyDown() ? ei.fluidLimit : Utils.formatNumber(ei.fluidLimit)) + " mB", guiLeft + 11, guiTop + 70, 0x3e3e3e);
-
-				String inter = "Interfaces";
-				drawer.drawColoredRectangle(10, 88, fontRenderer.getStringWidth(inter) + 2, fontRenderer.FONT_HEIGHT + 1, 0xffe1e1e1);
-				drawer.drawFrame(10, 88, fontRenderer.getStringWidth(inter) + 2, fontRenderer.FONT_HEIGHT + 1, 1, 0xff1e1e1e);
-				fontRenderer.drawString(inter, guiLeft + 12, guiTop + 90, 0x2e3e3e);
+				drawer.drawColoredRectangle(7, 7, 216, 45, 0x44000000);
 			}
 
 			@Override

@@ -43,6 +43,8 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.capabilities.Capability;
@@ -609,6 +611,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 				if (world.isValid(p) && world.isAirBlock(p)) {
 					world.setBlockState(p, Registry.keeper.getDefaultState());
 					((TileKeeper) world.getTileEntity(p)).create(exi);
+					event.getEntityLiving().sendMessage(new TextComponentString(TextFormatting.GOLD + "You lost your entire player storage."));
 					break;
 				}
 				p = p.add(0, 1, 0);
