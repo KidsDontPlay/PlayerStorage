@@ -11,7 +11,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 @Mod(modid = PlayerStorage.MODID, name = PlayerStorage.MODNAME, version = PlayerStorage.VERSION, acceptedMinecraftVersions = "[1.12,1.13)", dependencies = "required-after:limelib@[1.7.8,)")
 public class PlayerStorage {
 	public static final String MODID = "playerstorage";
-	public static final String VERSION = "1.2.0";
+	public static final String VERSION = "1.2.1";
 	public static final String MODNAME = "PlayerStorage";
 
 	@Instance(PlayerStorage.MODID)

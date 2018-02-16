@@ -1,5 +1,6 @@
 package mrriegel.playerstorage.registry;
 
+import java.util.List;
 import java.util.Random;
 
 import mrriegel.limelib.block.CommonBlockContainer;
@@ -14,6 +15,8 @@ import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.registries.IForgeRegistryEntry;
 
 public class BlockKeeper extends CommonBlockContainer<TileKeeper> {
 
@@ -27,7 +30,9 @@ public class BlockKeeper extends CommonBlockContainer<TileKeeper> {
 	@Override
 	public void registerBlock() {
 		super.registerBlock();
-		RegistryHelper.unregister(getItemBlock());
+		//TODO unregister
+		//		RegistryHelper.unregister(getItemBlock());
+		((List<IForgeRegistryEntry<?>>) ReflectionHelper.getPrivateValue(RegistryHelper.class, null, "entries")).remove(getItemBlock());
 	}
 
 	@Override
