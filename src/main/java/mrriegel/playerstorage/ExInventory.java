@@ -79,8 +79,6 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	public EntityPlayer player;
 	public List<StackWrapper> items = new ArrayList<>(), itemsPlusTeam = new ArrayList<>();
 	public List<FluidStack> fluids = new ArrayList<>(), fluidsPlusTeam = new ArrayList<>();
-	//	List<CraftingPattern> patterns = new ArrayList<>();
-	//	List<CraftingTask> tasks = new ArrayList<>();
 	public int itemLimit = ConfigHandler.itemCapacity, fluidLimit = ConfigHandler.fluidCapacity, gridHeight = 4;
 	public boolean needSync = true, defaultGUI = true, autoPickup, infiniteWater, noshift;
 	public NonNullList<ItemStack> matrix = NonNullList.withSize(9, ItemStack.EMPTY);
