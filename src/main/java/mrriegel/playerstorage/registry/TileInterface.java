@@ -59,10 +59,8 @@ public class TileInterface extends CommonTile implements IHUDProvider {
 	}
 
 	public void setOn(boolean on) {
-		boolean update = (!on || this.on != on);
 		this.on = on;
-		if (update)
-			world.notifyNeighborsOfStateChange(pos, blockType, false);
+		world.notifyNeighborsOfStateChange(pos, getBlockType(), false);
 		markForSync();
 	}
 

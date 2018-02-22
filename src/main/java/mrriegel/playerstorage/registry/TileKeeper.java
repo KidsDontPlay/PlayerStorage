@@ -33,11 +33,9 @@ public class TileKeeper extends CommonTile implements IHUDProvider {
 	private String name;
 
 	public void create(ExInventory exi) {
-		for (StackWrapper sw : exi.items)
-			items.add(sw);
+		items = new ArrayList<>(exi.items);
 		exi.items.clear();
-		for (FluidStack fs : exi.fluids)
-			fluids.add(fs);
+		fluids = new ArrayList<>(exi.fluids);
 		exi.fluids.clear();
 		exi.markForSync();
 		name = exi.player.getName();
@@ -51,7 +49,7 @@ public class TileKeeper extends CommonTile implements IHUDProvider {
 			NBTTagList l = new NBTTagList();
 			for (String s : new String[] { name, //
 					TextFormatting.GOLD + "Dimension: " + TextFormatting.GRAY + DimensionManager.getProviderType(world.provider.getDimension()).getName() + " (" + world.provider.getDimension() + ")", //
-					TextFormatting.GOLD + "Position:" + TextFormatting.GRAY + " x:" + TextFormatting.AQUA + getX() + TextFormatting.GRAY + " y:" + TextFormatting.AQUA + getY() + TextFormatting.GRAY + " z:" + TextFormatting.AQUA + getZ(), //
+					TextFormatting.GOLD + "Position:" + TextFormatting.GRAY + " x: " + TextFormatting.AQUA + getX() + TextFormatting.GRAY + ", y: " + TextFormatting.AQUA + getY() + TextFormatting.GRAY + ", z: " + TextFormatting.AQUA + getZ(), //
 					TextFormatting.ITALIC + "You should retrieve your items and fluids there." })
 				l.appendTag(new NBTTagString(TextFormatting.RESET + "" + TextFormatting.GRAY + s));
 			dis.setTag("Lore", l);
