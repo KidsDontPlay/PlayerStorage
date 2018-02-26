@@ -358,7 +358,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	}
 
 	public FluidStack extractFluid(FluidStack stack, int size, boolean simulate) {
-		return extractFluid(s -> s.isFluidEqual(stack), size, simulate);
+		return extractFluid(s -> s != null ? s.isFluidEqual(stack) : stack == null, size, simulate);
 	}
 
 	public int getItemCount() {
