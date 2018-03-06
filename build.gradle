@@ -12,7 +12,7 @@ apply plugin: 'net.minecraftforge.gradle.forge'
 Properties props = new Properties()
 props.load(new BufferedReader(new FileReader(file('../gradle.properties'))))
 
-version = "${props.get('mc_version')}-1.2.3"
+version = "${props.get('mc_version')}-1.2.4"
 group = "mrriegel.playerstorage"
 archivesBaseName = "playerstorage"
 
@@ -29,6 +29,7 @@ minecraft {
 
 dependencies {
     compile project(":LimeLib")
+    deobfCompile "org.cyclops.commoncapabilities:CommonCapabilities:1.12.2-1.4.0-190"
 }
 
 processResources {
@@ -45,3 +46,9 @@ processResources {
     }
 }
 
+repositories {
+  maven {
+    name "Cyclops Repo"
+    url "https://oss.jfrog.org/artifactory/simple/libs-release/"
+  }
+}

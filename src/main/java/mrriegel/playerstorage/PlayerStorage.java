@@ -1,5 +1,6 @@
 package mrriegel.playerstorage;
 
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
@@ -11,11 +12,13 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 @Mod(modid = PlayerStorage.MODID, name = PlayerStorage.MODNAME, version = PlayerStorage.VERSION, acceptedMinecraftVersions = "[1.12,1.13)", dependencies = "required-after:limelib@[1.7.8,)")
 public class PlayerStorage {
 	public static final String MODID = "playerstorage";
-	public static final String VERSION = "1.2.3";
+	public static final String VERSION = "1.2.4";
 	public static final String MODNAME = "PlayerStorage";
 
 	@Instance(PlayerStorage.MODID)
 	public static PlayerStorage instance;
+
+	public static boolean commonCaps = false;
 
 	@SidedProxy(clientSide = "mrriegel.playerstorage.ClientProxy", serverSide = "mrriegel.playerstorage.CommonProxy")
 	public static CommonProxy proxy;
@@ -23,6 +26,7 @@ public class PlayerStorage {
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
 		proxy.preInit(event);
+		commonCaps = Loader.isModLoaded("commoncapabilities");
 	}
 
 	@EventHandler

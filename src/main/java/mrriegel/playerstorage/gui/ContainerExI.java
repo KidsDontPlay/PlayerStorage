@@ -68,7 +68,6 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 			public TextureAtlasSprite getBackgroundSprite() {
 				return ClientProxy.sprite;
 			}
-
 		});
 	}
 

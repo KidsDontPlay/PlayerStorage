@@ -7,12 +7,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.Validate;
+import org.cyclops.commoncapabilities.api.capability.itemhandler.DefaultSlotlessItemHandlerWrapper;
+import org.cyclops.commoncapabilities.api.capability.itemhandler.ISlotlessItemHandler;
 
 import it.unimi.dsi.fastutil.Hash.Strategy;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -65,6 +69,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.Optional.Interface;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
@@ -82,6 +87,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	public int itemLimit = ConfigHandler.itemCapacity, fluidLimit = ConfigHandler.fluidCapacity, gridHeight = 4;
 	public boolean needSync = true, defaultGUI = true, autoPickup, infiniteWater, noshift;
 	public NonNullList<ItemStack> matrix = NonNullList.withSize(9, ItemStack.EMPTY);
+	private List<ItemStack> itemlist = null;
 	public Set<String> members = new HashSet<>();
 	public Set<GlobalBlockPos> tiles = new HashSet<>();
 	public Object2ObjectMap<ItemStack, Limit> itemLimits = new Object2ObjectOpenCustomHashMap<>(new Strategy<ItemStack>() {
@@ -379,6 +385,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 	public void markForSync() {
 		needSync = true;
+		itemlist = null;
 		if (!player.world.isRemote)
 			getMembers().forEach(e -> e.needSync = true);
 	}
@@ -530,7 +537,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		PacketHandler.sendTo(new MessageCapaSync(player), player);
 	}
 
-	public static EntityPlayer getPlayerByName(String name, World world) {
+	public static EntityPlayer getPlayerByName(String name, @Nullable World world) {
 		if (name == null)
 			return null;
 		if (world != null ? world.isRemote : FMLCommonHandler.instance().getEffectiveSide().isClient())
@@ -602,13 +609,12 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	@SubscribeEvent
 	public static void death(LivingDeathEvent event) {
 		if (ConfigHandler.keeper && event.getEntityLiving() instanceof EntityPlayerMP) {
-			ExInventory exi = ExInventory.getInventory((EntityPlayer) event.getEntityLiving());
 			BlockPos p = new BlockPos(event.getEntityLiving()).down();
 			World world = event.getEntityLiving().world;
 			while (p.getY() < world.getActualHeight()) {
 				if (world.isValid(p) && world.isAirBlock(p)) {
 					world.setBlockState(p, Registry.keeper.getDefaultState());
-					((TileKeeper) world.getTileEntity(p)).create(exi);
+					((TileKeeper) world.getTileEntity(p)).create(ExInventory.getInventory((EntityPlayer) event.getEntityLiving()));
 					event.getEntityLiving().sendMessage(new TextComponentString(TextFormatting.GOLD + "You lost your entire player storage."));
 					break;
 				}
@@ -644,10 +650,23 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		public void deserializeNBT(NBTTagCompound nbt) {
 			EXINVENTORY.getStorage().readNBT(EXINVENTORY, ei, null, nbt);
 		}
-
 	}
 
-	public static class Handler implements IItemHandler, IFluidHandler {
+	@Interface(iface = "org.cyclops.commoncapabilities.api.capability.itemhandler.ISlotlessItemHandler", modid = "commoncapabilities")
+	public static class Handler implements IItemHandler, IFluidHandler, ISlotlessItemHandler {
+
+		private final static Function<StackWrapper, Stream<ItemStack>> func = s -> {
+			final int max = s.getStack().getMaxStackSize(), size = (int) Math.ceil(s.getSize() / (double) max);
+			List<ItemStack> lis = new ArrayList<>(size);
+			for (int i = 0; i < size; i++) {
+				if (i == size - 1) {
+					lis.add(ItemHandlerHelper.copyStackWithSize(s.getStack(), s.getSize() - (max * (size - 1))));
+				} else {
+					lis.add(ItemHandlerHelper.copyStackWithSize(s.getStack(), max));
+				}
+			}
+			return lis.stream();
+		};
 
 		ExInventory ei;
 		TileInterface tile;
@@ -657,20 +676,42 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 			this.tile = tile;
 		}
 
+		private boolean isPlayerOn() {
+			return tile == null || tile.isOn();
+		}
+
+		private void refresh() {
+			if (ei.itemlist == null) {
+				ei.itemlist = ei.items.stream().flatMap(func).filter(st -> !st.isEmpty()).collect(Collectors.toList());
+			}
+		}
+
 		@Override
 		public int getSlots() {
 			if (!isPlayerOn())
 				return 0;
-			return ei.items.size() + 1;
+			if (ConfigHandler.betterInterface) {
+				refresh();
+				return ei.itemlist.size() + 2;
+			} else
+				return ei.items.size() + 2;
 		}
 
 		@Override
 		public ItemStack getStackInSlot(int slot) {
 			if (!isPlayerOn())
 				return ItemStack.EMPTY;
-			if (ei.items.size() <= slot)
-				return ItemStack.EMPTY;
-			return ei.items.get(slot).getStack();
+			if (ConfigHandler.betterInterface) {
+				refresh();
+				if (ei.itemlist.size() < slot || slot == 0)
+					return ItemStack.EMPTY;
+				return ei.itemlist.get(slot - 1);
+			} else {
+				if (ei.items.size() < slot || slot == 0)
+					return ItemStack.EMPTY;
+				StackWrapper w = ei.items.get(slot - 1);
+				return ItemHandlerHelper.copyStackWithSize(w.getStack(), MathHelper.clamp(w.getSize(), 1, w.getStack().getMaxStackSize()));
+			}
 		}
 
 		@Override
@@ -723,8 +764,25 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 				return null;
 		}
 
-		private boolean isPlayerOn() {
-			return tile == null || tile.isOn();
+		@Override
+		public ItemStack insertItem(ItemStack stack, boolean simulate) {
+			if (!isPlayerOn())
+				return stack;
+			return ei.insertItem(stack, simulate);
+		}
+
+		@Override
+		public ItemStack extractItem(int amount, boolean simulate) {
+			if (!isPlayerOn())
+				return ItemStack.EMPTY;
+			return ei.extractItem(s -> !s.isEmpty(), amount, simulate);
+		}
+
+		@Override
+		public ItemStack extractItem(ItemStack matchStack, int matchFlags, boolean simulate) {
+			if (!isPlayerOn())
+				return ItemStack.EMPTY;
+			return new DefaultSlotlessItemHandlerWrapper(this).extractItem(matchStack, matchFlags, simulate);
 		}
 
 	}

@@ -5,11 +5,14 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
+import org.cyclops.commoncapabilities.capability.itemhandler.SlotlessItemHandlerConfig;
+
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.tile.CommonTile;
 import mrriegel.limelib.tile.IHUDProvider;
 import mrriegel.limelib.util.GlobalBlockPos;
 import mrriegel.playerstorage.ExInventory;
+import mrriegel.playerstorage.PlayerStorage;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -29,13 +32,13 @@ public class TileInterface extends CommonTile implements IHUDProvider {
 
 	@Override
 	public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
-		return on && ((capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY || capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) && getPlayer() != null) || super.hasCapability(capability, facing);
+		return (on && (getPlayer() != null && (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY || capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY || (PlayerStorage.commonCaps && capability == SlotlessItemHandlerConfig.CAPABILITY)))) || super.hasCapability(capability, facing);
 	}
 
 	@Override
 	public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
 		EntityPlayer p = getPlayer();
-		if (p != null && on && (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY || capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY))
+		if (p != null && on && (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY || capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY || (PlayerStorage.commonCaps && capability == SlotlessItemHandlerConfig.CAPABILITY)))
 			return (T) new ExInventory.Handler(p, this);
 		return super.getCapability(capability, facing);
 	}
