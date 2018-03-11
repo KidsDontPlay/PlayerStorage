@@ -14,6 +14,7 @@ import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.Explosion;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.registries.IForgeRegistryEntry;
@@ -52,6 +53,11 @@ public class BlockKeeper extends CommonBlockContainer<TileKeeper> {
 			((TileKeeper) t).destroy((EntityPlayerMP) player);
 		}
 		return super.removedByPlayer(state, world, pos, player, willHarvest);
+	}
+
+	@Override
+	public void onBlockExploded(World world, BlockPos pos, Explosion explosion) {
+		//		super.onBlockExploded(world, pos, explosion);
 	}
 
 }
