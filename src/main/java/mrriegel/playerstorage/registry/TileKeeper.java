@@ -68,10 +68,9 @@ public class TileKeeper extends CommonTile implements IHUDProvider {
 					ItemStack rest = exi.insertItem(s, false);
 					if (rest.isEmpty()) {
 						EntityTracker entitytracker = ((WorldServer) world).getEntityTracker();
-						Vec3d vec = player.getLookVec();
-						vec = vec.normalize();
+						Vec3d vec = player.getLookVec().normalize();
 						Vec3d vecP = new Vec3d(player.posX, player.posY, player.posZ);
-						EntityItem ei = new EntityItem(world, vecP.add(vecP).x, player.posX + .3, vecP.add(vecP).z, s);
+						EntityItem ei = new EntityItem(world, vecP.add(vec).x, player.posY + .3, vecP.add(vec).z, s);
 						entitytracker.sendToTracking(ei, new SPacketCollectItem(ei.getEntityId(), player.getEntityId(), 1));
 					}
 					Block.spawnAsEntity(world, pos.up(), rest);
