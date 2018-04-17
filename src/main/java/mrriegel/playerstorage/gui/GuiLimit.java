@@ -3,6 +3,7 @@ package mrriegel.playerstorage.gui;
 import java.io.IOException;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 import org.lwjgl.input.Keyboard;
 
 import com.google.common.base.Predicate;
@@ -10,17 +11,14 @@ import com.google.common.base.Predicate;
 import mrriegel.limelib.gui.CommonGuiScreenSub;
 import mrriegel.limelib.gui.button.CommonGuiButton;
 import mrriegel.limelib.gui.button.CommonGuiButton.Design;
-import mrriegel.limelib.gui.element.AbstractSlot;
 import mrriegel.limelib.gui.element.AbstractSlot.FluidSlot;
 import mrriegel.limelib.gui.element.AbstractSlot.ItemSlot;
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.PacketHandler;
-import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.Enums.MessageAction;
 import mrriegel.playerstorage.ExInventory;
 import mrriegel.playerstorage.Limit;
 import mrriegel.playerstorage.Message2Server;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.renderer.GlStateManager;
@@ -33,41 +31,48 @@ import net.minecraftforge.fml.relauncher.Side;
 
 public class GuiLimit extends CommonGuiScreenSub {
 
-	AbstractSlot<?> slot;
+	Object stack;
 	ExInventory ei;
 	GuiTextField min, max;
 	boolean itemMode;
 
-	public GuiLimit(AbstractSlot<?> slot) {
+	private GuiLimit() {
 		super();
-		this.slot = slot;
-		this.ei = ExInventory.getInventory(Minecraft.getMinecraft().player);
 		ySize = 100;
 		xSize = 130;
-		itemMode = slot instanceof ItemSlot;
+	}
+
+	public GuiLimit(Object stack) {
+		this();
+		Validate.notNull(stack);
+		Validate.isTrue(stack instanceof ItemStack || stack instanceof FluidStack);
+		this.stack = stack;
+		itemMode = stack instanceof ItemStack;
 	}
 
 	@Override
 	public void initGui() {
 		super.initGui();
-		if (slot instanceof ItemSlot)
-			elementList.add(new ItemSlot((ItemStack) slot.stack, 0, 7 + guiLeft, 17 + guiTop, 1, drawer, false, false, false, !false));
-		else if (slot instanceof FluidSlot)
-			elementList.add(new FluidSlot((FluidStack) slot.stack, 0, 7 + guiLeft, 17 + guiTop, 1, drawer, false, false, false, !false));
+		ei = ExInventory.getInventory(mc.player);
+		if (itemMode)
+			elementList.add(new ItemSlot((ItemStack) stack, 0, 7 + guiLeft, 17 + guiTop, 1, drawer, false, false, false, !false));
+		else
+			elementList.add(new FluidSlot((FluidStack) stack, 0, 7 + guiLeft, 17 + guiTop, 1, drawer, false, false, false, !false));
 		buttonList.add(new CommonGuiButton(0, guiLeft + 78, guiTop + 75, 45, 18, "Apply").setDesign(Design.SIMPLE).setButtonColor(0xFF646464));
 		GuiButton rem = new CommonGuiButton(1, guiLeft + 6, guiTop + 75, 45, 18, "Remove").setDesign(Design.SIMPLE).setButtonColor(0xFF646464);
-		rem.visible = ei.mode == GuiMode.ITEM ? ei.itemLimits.containsKey(slot.stack) : ei.fluidLimits.containsKey(slot.stack);
+		rem.visible = itemMode ? ei.itemLimits.containsKey(stack) : ei.fluidLimits.containsKey(stack);
 		buttonList.add(rem);
-		buttonList.add(new GuiCheckBox(2, guiLeft + 75, guiTop + 19, "Void", itemMode ? ei.itemLimits.get(slot.stack).voidd : ei.fluidLimits.get(slot.stack).voidd));
+		Limit limit = itemMode ? ei.itemLimits.get(stack) : ei.fluidLimits.get(stack);
+		buttonList.add(new GuiCheckBox(2, guiLeft + 75, guiTop + 19, "Void", limit.voidd));
 		min = new GuiTextField(0, fontRenderer, guiLeft + 29, guiTop + 37, 80, fontRenderer.FONT_HEIGHT);
 		min.setMaxStringLength(11);
 		Predicate<String> pred = s -> s.isEmpty() || (StringUtils.isNumeric(s) && Integer.parseInt(s) >= 0 && Integer.parseInt(s) <= Limit.defaultValue.max);
 		min.setValidator(pred);
-		min.setText(itemMode ? ei.itemLimits.get(slot.stack).min + "" : ei.fluidLimits.get(slot.stack).min + "");
+		min.setText(limit.min + "");
 		max = new GuiTextField(0, fontRenderer, guiLeft + 29, guiTop + 57, 80, fontRenderer.FONT_HEIGHT);
 		max.setMaxStringLength(11);
 		max.setValidator(pred);
-		max.setText(itemMode ? ei.itemLimits.get(slot.stack).max + "" : ei.fluidLimits.get(slot.stack).max + "");
+		max.setText(limit.max + "");
 	}
 
 	@Override
@@ -97,8 +102,9 @@ public class GuiLimit extends CommonGuiScreenSub {
 		super.actionPerformed(button);
 		if (button.id == 0 || button.id == 1) {
 			NBTTagCompound nbt = new NBTTagCompound();
+			NBTHelper.set(nbt, "itemMode", itemMode);
 			MessageAction.SETLIMIT.set(nbt);
-			NBTHelper.set(nbt, "stack", slot.stack);
+			NBTHelper.set(nbt, "stack", stack);
 			if (button.id == 0) {
 				NBTHelper.set(nbt, "min", min.getText().isEmpty() ? 0 : Integer.parseInt(min.getText()));
 				NBTHelper.set(nbt, "max", max.getText().isEmpty() ? 0 : Integer.parseInt(max.getText()));

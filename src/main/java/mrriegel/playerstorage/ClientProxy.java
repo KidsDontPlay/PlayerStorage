@@ -44,6 +44,7 @@ public class ClientProxy extends CommonProxy {
 
 	public static final KeyBinding GUI = new KeyBinding("Open GUI", Keyboard.KEY_I, PlayerStorage.MODID);
 	public static final KeyBinding INVERTPICKUP = new KeyBinding("Invert Auto Pickup", Keyboard.KEY_LCONTROL, PlayerStorage.MODID);
+	public static final KeyBinding OPENLIMIT = new KeyBinding("Open Limit GUI", Keyboard.KEY_L, PlayerStorage.MODID);
 	public static Int2IntOpenHashMap colorMap = new Int2IntOpenHashMap(4);
 
 	@Override
@@ -51,6 +52,7 @@ public class ClientProxy extends CommonProxy {
 		super.preInit(event);
 		ClientRegistry.registerKeyBinding(GUI);
 		ClientRegistry.registerKeyBinding(INVERTPICKUP);
+		ClientRegistry.registerKeyBinding(OPENLIMIT);
 		Registry.initClient();
 	}
 

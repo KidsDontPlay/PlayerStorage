@@ -28,6 +28,7 @@ import mrriegel.limelib.network.PacketHandler;
 import mrriegel.limelib.plugin.JEI;
 import mrriegel.limelib.util.StackWrapper;
 import mrriegel.limelib.util.Utils;
+import mrriegel.playerstorage.ClientProxy;
 import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.Enums.MessageAction;
 import mrriegel.playerstorage.Message2Server;
@@ -40,6 +41,7 @@ import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
+import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -48,6 +50,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.oredict.OreDictionary;
@@ -66,7 +69,7 @@ public class GuiExI extends CommonGuiContainer {
 	protected ScrollBar scrollBar;
 	private Reference2ReferenceMap<ItemStack, ItemStack> itemMap = new Reference2ReferenceOpenHashMap<>();
 	private Reference2ReferenceMap<FluidStack, FluidStack> fluidMap = new Reference2ReferenceOpenHashMap<>();
-
+	private boolean fragezeichen;
 	private int gridWidth = 12, gridHeight;
 	private ContainerExI con;
 
@@ -145,9 +148,8 @@ public class GuiExI extends CommonGuiContainer {
 			slot.draw(mouseX, mouseY);
 		}
 		fontRenderer.setUnicodeFlag(uni);
-		boolean big = isPointInRegion(133, 9 + 18 * gridHeight, 18, 18, mouseX, mouseY);
 		int x = 133 + guiLeft + 9, y = 9 + 18 * gridHeight + guiTop + 17;
-		if (!big) {
+		if (hoverCounter <= Minecraft.getDebugFPS() / 5) {
 			GuiInventory.drawEntityOnScreen(x, y, 8, x - mouseX, y - mouseY, mc.player);
 		}
 
@@ -158,6 +160,8 @@ public class GuiExI extends CommonGuiContainer {
 		if (mode == GuiMode.ITEM)
 			fontRenderer.drawString("x", 63, 28 + 18 * gridHeight, 0xE0E0E0);
 		fontRenderer.drawString((con.ei.autofocus ? TextFormatting.GREEN : TextFormatting.RED) + "o", 103, 14 + 18 * gridHeight, 0xE0E0E0);
+		fragezeichen = isPointInRegion(-34, 98 + 18 * gridHeight, 10, 10, mouseX, mouseY);
+		fontRenderer.drawString(TextFormatting.BOLD + "?", -34, 98 + 18 * gridHeight, fragezeichen ? 0xa0a0f0 : 0xe0e0e0, true);
 		super.drawGuiContainerForegroundLayer(mouseX, mouseY);
 	}
 
@@ -186,6 +190,11 @@ public class GuiExI extends CommonGuiContainer {
 			String s = "Click to open vanilla inventory.";
 			drawString(fontRenderer, s, x - (fontRenderer.getStringWidth(s) / 2) + (mouseX - 133 - guiLeft), y + 8 + (mouseY - (9 + 18 * gridHeight) - guiTop), 0xE0E0E0);
 			GlStateManager.translate(0, 0, -900);
+		}
+		if (fragezeichen) {
+			List<String> lis = new ArrayList<>();
+			lis.add(TextFormatting.AQUA + "- " + TextFormatting.RESET + "Hover over an item in your inventory and press " + ClientProxy.OPENLIMIT.getDisplayName() + " to adjust the limit.");
+			GuiDrawer.renderToolTip(lis, mouseX, mouseY);
 		}
 
 	}
@@ -348,7 +357,7 @@ public class GuiExI extends CommonGuiContainer {
 				if (mouseButton == 0 || mouseButton == 1)
 					sendSlot(over, mouseButton);
 				else if (mouseButton == 2)
-					GuiDrawer.openGui(new GuiLimit(over));
+					GuiDrawer.openGui(new GuiLimit(over.stack));
 			lastClick = System.currentTimeMillis();
 		}
 		if (scrollBar.isMouseOver(mouseX, mouseY)) {
@@ -396,6 +405,7 @@ public class GuiExI extends CommonGuiContainer {
 
 	@Override
 	protected void keyTyped(char typedChar, int keyCode) throws IOException {
+		Slot slot = null;
 		if (LimeLib.jeiLoaded && over != null && over.stack != null && (over instanceof FluidSlot || !((ItemStack) over.stack).isEmpty()) && (keyCode == Keyboard.KEY_R || keyCode == Keyboard.KEY_U) && (!searchBar.isFocused() || searchBar.getText().isEmpty())) {
 			if (keyCode == Keyboard.KEY_R)
 				JEI.showRecipes(over.stack);
@@ -405,6 +415,14 @@ public class GuiExI extends CommonGuiContainer {
 		} else if (this.searchBar.textboxKeyTyped(typedChar, keyCode)) {
 			if (con.ei.jeiSearch && LimeLib.jeiLoaded)
 				JEI.setFilterText(searchBar.getText());
+			return;
+		} else if ((slot = getSlotUnderMouse()) != null && slot.inventory == mc.player.inventory && slot.getHasStack() && keyCode == ClientProxy.OPENLIMIT.getKeyCode()) {
+			ItemStack under = slot.getStack();
+			FluidStack fs = FluidUtil.getFluidContained(under);
+			if (fs != null)
+				GuiDrawer.openGui(new GuiLimit(fs));
+			else
+				GuiDrawer.openGui(new GuiLimit(under));
 			return;
 		}
 		super.keyTyped(typedChar, keyCode);

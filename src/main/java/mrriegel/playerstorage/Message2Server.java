@@ -228,7 +228,7 @@ public class Message2Server extends AbstractMessage {
 				ei.defaultGUI ^= true;
 				break;
 			case SETLIMIT:
-				if (ei.mode == GuiMode.ITEM) {
+				if (NBTHelper.get(nbt, "itemMode", boolean.class)) {
 					ItemStack stack = NBTHelper.get(nbt, "stack", ItemStack.class);
 					if (NBTHelper.get(nbt, "remove", boolean.class))
 						ei.itemLimits.remove(stack);

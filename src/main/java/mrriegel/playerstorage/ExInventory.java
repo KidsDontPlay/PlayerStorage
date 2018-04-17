@@ -299,7 +299,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		int absLimit = (ConfigHandler.infiniteSpace || ignoreLimit ? Integer.MAX_VALUE : fluidLimit);
 		int limit = fluidLimits.get(stack).max;
 		FluidStack dummy = stack.copy();
-		int canFill = Math.max(0, Math.min(limit - (stack.amount + getAmountFluid(s -> s.isFluidEqual(dummy))), absLimit - (stack.amount + getFluidCount())));
+		int canFill = Math.max(0, Math.min(limit - (/*stack.amount +*/ getAmountFluid(s -> s.isFluidEqual(dummy))), absLimit - (stack.amount + getFluidCount())));
 		if (canFill == 0)
 			return voidd ? voidSize : 0;
 		canFill = Math.min(stack.amount, canFill);
