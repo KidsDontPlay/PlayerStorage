@@ -104,9 +104,12 @@ public class ClientProxy extends CommonProxy {
 
 	@SubscribeEvent
 	public static void key(InputEvent.KeyInputEvent event) {
+		boolean keydown1 = Keyboard.isKeyDown(GUI.getKeyCode());
+		boolean keydown2 = GUI.isKeyDown();
+		boolean pressed = GUI.isPressed();
 		if (!Minecraft.getMinecraft().inGameHasFocus)
 			return;
-		if (GUI.isPressed() && Minecraft.getMinecraft().player.hasCapability(ExInventory.EXINVENTORY, null)) {
+		if ((pressed || keydown1 || keydown2) && Minecraft.getMinecraft().player.hasCapability(ExInventory.EXINVENTORY, null)) {
 			PacketHandler.sendToServer(new OpenGuiMessage(PlayerStorage.MODID, 0, null));
 		}
 		if (Keyboard.getEventKey() == INVERTPICKUP.getKeyCode()) {
