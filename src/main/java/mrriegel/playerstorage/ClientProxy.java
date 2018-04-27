@@ -42,9 +42,9 @@ import net.minecraftforge.oredict.OreDictionary;
 @EventBusSubscriber(modid = PlayerStorage.MODID, value = { Side.CLIENT })
 public class ClientProxy extends CommonProxy {
 
-	public static final KeyBinding GUI = new KeyBinding("Open GUI", Keyboard.KEY_I, PlayerStorage.MODID);
-	public static final KeyBinding INVERTPICKUP = new KeyBinding("Invert Auto Pickup", Keyboard.KEY_LCONTROL, PlayerStorage.MODID);
-	public static final KeyBinding OPENLIMIT = new KeyBinding("Open Limit GUI", Keyboard.KEY_L, PlayerStorage.MODID);
+	public static final KeyBinding GUI = new KeyBinding("keybinding.playerstorage:gui", Keyboard.KEY_I, PlayerStorage.MODID);
+	public static final KeyBinding INVERTPICKUP = new KeyBinding("keybinding.playerstorage:invert", Keyboard.KEY_LCONTROL, PlayerStorage.MODID);
+	public static final KeyBinding OPENLIMIT = new KeyBinding("keybinding.playerstorage:limit", Keyboard.KEY_L, PlayerStorage.MODID);
 	public static Int2IntOpenHashMap colorMap = new Int2IntOpenHashMap(4);
 
 	@Override
@@ -104,12 +104,9 @@ public class ClientProxy extends CommonProxy {
 
 	@SubscribeEvent
 	public static void key(InputEvent.KeyInputEvent event) {
-		boolean keydown1 = Keyboard.isKeyDown(GUI.getKeyCode());
-		boolean keydown2 = GUI.isKeyDown();
-		boolean pressed = GUI.isPressed();
 		if (!Minecraft.getMinecraft().inGameHasFocus)
 			return;
-		if ((pressed || keydown1 || keydown2) && Minecraft.getMinecraft().player.hasCapability(ExInventory.EXINVENTORY, null)) {
+		if (GUI.isPressed() && Minecraft.getMinecraft().player.hasCapability(ExInventory.EXINVENTORY, null)) {
 			PacketHandler.sendToServer(new OpenGuiMessage(PlayerStorage.MODID, 0, null));
 		}
 		if (Keyboard.getEventKey() == INVERTPICKUP.getKeyCode()) {
