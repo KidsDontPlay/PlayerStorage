@@ -29,6 +29,7 @@ import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.TextureStitchEvent;
+import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -42,23 +43,23 @@ import net.minecraftforge.oredict.OreDictionary;
 @EventBusSubscriber(modid = PlayerStorage.MODID, value = { Side.CLIENT })
 public class ClientProxy extends CommonProxy {
 
-	public static final KeyBinding GUI = new KeyBinding("keybinding.playerstorage:gui", Keyboard.KEY_I, PlayerStorage.MODID);
-	public static final KeyBinding INVERTPICKUP = new KeyBinding("keybinding.playerstorage:invert", Keyboard.KEY_LCONTROL, PlayerStorage.MODID);
-	public static final KeyBinding OPENLIMIT = new KeyBinding("keybinding.playerstorage:limit", Keyboard.KEY_L, PlayerStorage.MODID);
+	public static final KeyBinding GUI = new KeyBinding("keybinding.playerstorage.gui", KeyConflictContext.IN_GAME, Keyboard.KEY_I, PlayerStorage.MODID);
+	public static final KeyBinding INVERTPICKUP = new KeyBinding("keybinding.playerstorage.invert", KeyConflictContext.IN_GAME, Keyboard.KEY_LCONTROL, PlayerStorage.MODID);
+	public static final KeyBinding OPENLIMIT = new KeyBinding("keybinding.playerstorage.limit", KeyConflictContext.GUI, Keyboard.KEY_L, PlayerStorage.MODID);
 	public static Int2IntOpenHashMap colorMap = new Int2IntOpenHashMap(4);
 
 	@Override
 	public void preInit(FMLPreInitializationEvent event) {
 		super.preInit(event);
-		ClientRegistry.registerKeyBinding(GUI);
-		ClientRegistry.registerKeyBinding(INVERTPICKUP);
-		ClientRegistry.registerKeyBinding(OPENLIMIT);
 		Registry.initClient();
 	}
 
 	@Override
 	public void init(FMLInitializationEvent event) {
 		super.init(event);
+		ClientRegistry.registerKeyBinding(GUI);
+		ClientRegistry.registerKeyBinding(INVERTPICKUP);
+		ClientRegistry.registerKeyBinding(OPENLIMIT);
 		Minecraft.getMinecraft().getItemColors().registerItemColorHandler((stack, tint) -> {
 			/** @author mezz */
 			if (tint != 0)

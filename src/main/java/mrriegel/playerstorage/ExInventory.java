@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -655,7 +654,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	@Interface(iface = "org.cyclops.commoncapabilities.api.capability.itemhandler.ISlotlessItemHandler", modid = "commoncapabilities")
 	public static class Handler implements IItemHandler, IFluidHandler, ISlotlessItemHandler {
 
-		private final static Function<StackWrapper, Stream<ItemStack>> func = s -> {
+		private final static Stream<ItemStack> func(StackWrapper s) {
 			final int max = s.getStack().getMaxStackSize(), size = (int) Math.ceil(s.getSize() / (double) max);
 			List<ItemStack> lis = new ArrayList<>(size);
 			for (int i = 0; i < size; i++) {
@@ -682,7 +681,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 		private void refresh() {
 			if (ei.itemlist == null) {
-				ei.itemlist = ei.items.stream().flatMap(func).filter(st -> !st.isEmpty()).collect(Collectors.toList());
+				ei.itemlist = ei.items.stream().flatMap(Handler::func).filter(st -> !st.isEmpty()).collect(Collectors.toList());
 			}
 		}
 
