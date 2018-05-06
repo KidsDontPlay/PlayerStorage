@@ -33,6 +33,7 @@ import mrriegel.playerstorage.registry.TileInterface;
 import mrriegel.playerstorage.registry.TileKeeper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityTracker;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.InventoryCrafting;
@@ -225,6 +226,8 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	}
 
 	private ItemStack insertItem(ItemStack stack, boolean ignoreLimit, boolean simulate) {
+		if (stack.isEmpty())
+			return stack;
 		int absLimit = (ConfigHandler.infiniteSpace || ignoreLimit ? Integer.MAX_VALUE : itemLimit);
 		int limit = itemLimits.get(stack).max;
 		boolean voidd = itemLimits.get(stack).voidd;
@@ -594,14 +597,15 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	@SubscribeEvent(priority = EventPriority.LOW)
 	public static void pickup(EntityItemPickupEvent event) {
 		ExInventory ei = ExInventory.getInventory(event.getEntityPlayer());
-		if (ei.autoPickup != ei.autopickupInverted) {
-			int count = event.getItem().getItem().getCount();
-			ItemStack rest = ei.insertItem(event.getItem().getItem(), false);
+		EntityItem e = event.getItem();
+		if (ei.autoPickup != ei.autopickupInverted && !e.getItem().isEmpty()) {
+			int count = e.getItem().getCount();
+			ItemStack rest = ei.insertItem(e.getItem(), false);
 			if (rest.getCount() != count) {
 				EntityTracker entitytracker = ((WorldServer) event.getEntityPlayer().world).getEntityTracker();
-				entitytracker.sendToTracking(event.getItem(), new SPacketCollectItem(event.getItem().getEntityId(), event.getEntityPlayer().getEntityId(), count - rest.getCount()));
+				entitytracker.sendToTracking(e, new SPacketCollectItem(e.getEntityId(), event.getEntityPlayer().getEntityId(), count - rest.getCount()));
 			}
-			event.getItem().getItem().setCount(rest.getCount());
+			e.getItem().setCount(rest.getCount());
 		}
 	}
 
