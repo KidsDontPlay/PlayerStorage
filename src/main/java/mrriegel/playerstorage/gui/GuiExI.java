@@ -11,6 +11,7 @@ import org.apache.commons.lang3.Validate;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
+import baubles.client.gui.GuiPlayerExpanded;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import mrriegel.limelib.LimeLib;
@@ -32,6 +33,7 @@ import mrriegel.playerstorage.ClientProxy;
 import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.Enums.MessageAction;
 import mrriegel.playerstorage.Message2Server;
+import mrriegel.playerstorage.PlayerStorage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
@@ -88,6 +90,8 @@ public class GuiExI extends CommonGuiContainer {
 	@Override
 	public void initGui() {
 		xSize = 248;
+		if (PlayerStorage.baubles)
+			xSize += 22;
 		ySize = 112 + 18 * gridHeight;
 		super.initGui();
 		searchBar = new GuiTextField(0, fontRenderer, guiLeft + 9, guiTop + 14 + 18 * gridHeight, 85, fontRenderer.FONT_HEIGHT);
@@ -125,6 +129,11 @@ public class GuiExI extends CommonGuiContainer {
 		drawDefaultBackground();
 		super.drawGuiContainerBackgroundLayer(partialTicks, mouseX, mouseY);
 		drawer.drawBackgroundTexture();
+		if (PlayerStorage.baubles) {
+			mc.getTextureManager().bindTexture(GuiPlayerExpanded.background);
+			drawTexturedModalRect(245 + guiLeft, 7 + guiTop, 76, 7, 18, 18 * 4);
+			drawTexturedModalRect(245 + guiLeft, 7 + 18 * 4 + guiTop, 76 + 19, 7, 18, 18 * 3);
+		}
 		drawer.drawPlayerSlots(79, 29 + 18 * gridHeight);
 		drawer.drawSlots(151, 9 + 18 * gridHeight, 5, 1);
 		drawer.drawSlot(115, 9 + 18 * gridHeight);

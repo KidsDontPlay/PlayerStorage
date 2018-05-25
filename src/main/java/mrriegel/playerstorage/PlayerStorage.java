@@ -18,7 +18,7 @@ public class PlayerStorage {
 	@Instance(PlayerStorage.MODID)
 	public static PlayerStorage instance;
 
-	public static boolean commonCaps = false;
+	public static boolean commonCaps, baubles;
 
 	@SidedProxy(clientSide = "mrriegel.playerstorage.ClientProxy", serverSide = "mrriegel.playerstorage.CommonProxy")
 	public static CommonProxy proxy;
@@ -27,6 +27,7 @@ public class PlayerStorage {
 	public void preInit(FMLPreInitializationEvent event) {
 		proxy.preInit(event);
 		commonCaps = Loader.isModLoaded("commoncapabilities");
+		baubles = Loader.isModLoaded("baubles");
 	}
 
 	@EventHandler

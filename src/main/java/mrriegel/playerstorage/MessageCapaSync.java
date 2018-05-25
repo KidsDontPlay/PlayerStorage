@@ -13,6 +13,20 @@ public class MessageCapaSync extends AbstractMessage {
 	public MessageCapaSync(EntityPlayer player) {
 		ExInventory ei = ExInventory.getInventory(player);
 		nbt = ei.serializeNBT();
+		/*for (int i = 0; i < Integer.MAX_VALUE; i++) {
+			String key = "item" + i;
+			if (nbt.hasKey(key))
+				nbt.removeTag(key);
+			else
+				break;
+		}
+		for (int i = 0; i < Integer.MAX_VALUE; i++) {
+			String key = "fluid" + i;
+			if (nbt.hasKey(key))
+				nbt.removeTag(key);
+			else
+				break;
+		}*/
 		ei.writeSyncOnlyNBT(nbt);
 	}
 

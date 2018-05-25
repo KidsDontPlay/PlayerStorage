@@ -20,6 +20,8 @@ import org.cyclops.commoncapabilities.api.capability.itemhandler.ISlotlessItemHa
 import it.unimi.dsi.fastutil.Hash.Strategy;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ReferenceSet;
 import mrriegel.limelib.gui.ContainerNull;
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.PacketHandler;
@@ -120,6 +122,8 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	public Sort sort = Sort.NAME;
 	public GuiMode mode = GuiMode.ITEM;
 	public List<CraftingRecipe> recipes = new ArrayList<>();
+	public ReferenceSet<StackWrapper> dirtyStacks = new ReferenceOpenHashSet<>();
+	public ReferenceSet<FluidStack> dirtyFluids = new ReferenceOpenHashSet<>();
 
 	public ExInventory() {
 		itemLimits.defaultReturnValue(Limit.defaultValue);
@@ -239,6 +243,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 			if (s.canInsert(stack)) {
 				if (!simulate) {
 					s.insert(ItemHandlerHelper.copyStackWithSize(stack, stack.getCount() - rest.getCount()));
+					//					dirtyStacks.add(s);
 					markForSync();
 				}
 				return voidd ? ItemStack.EMPTY : rest;
@@ -616,9 +621,11 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 			World world = event.getEntityLiving().world;
 			while (p.getY() < world.getActualHeight()) {
 				if (world.isValid(p) && world.isAirBlock(p)) {
-					world.setBlockState(p, Registry.keeper.getDefaultState());
-					((TileKeeper) world.getTileEntity(p)).create(ExInventory.getInventory((EntityPlayer) event.getEntityLiving()));
-					event.getEntityLiving().sendMessage(new TextComponentString(TextFormatting.GOLD + "You lost your entire player storage."));
+					boolean placed = world.setBlockState(p, Registry.keeper.getDefaultState());
+					if (placed) {
+						((TileKeeper) world.getTileEntity(p)).create(ExInventory.getInventory((EntityPlayer) event.getEntityLiving()));
+						event.getEntityLiving().sendMessage(new TextComponentString(TextFormatting.GOLD + "You lost your entire player storage."));
+					}
 					break;
 				}
 				p = p.add(0, 1, 0);

@@ -9,10 +9,14 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.collect.Lists;
 
+import baubles.api.BaublesApi;
+import baubles.api.cap.IBaublesItemHandler;
+import baubles.common.container.SlotBauble;
 import mrriegel.limelib.gui.CommonContainer;
 import mrriegel.playerstorage.ClientProxy;
 import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.ExInventory;
+import mrriegel.playerstorage.PlayerStorage;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.player.EntityPlayer;
@@ -69,6 +73,12 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 				return ClientProxy.sprite;
 			}
 		});
+		if (PlayerStorage.baubles) {
+			EntityPlayer player = getPlayer();
+			IBaublesItemHandler baubles = BaublesApi.getBaublesHandler(player);
+			for (int i = 0; i < 7; i++)
+				addSlotToContainer(new SlotBauble(player, baubles, i, 246, 8 + i * 18));
+		}
 	}
 
 	@Override

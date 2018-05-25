@@ -30,6 +30,7 @@ minecraft {
 dependencies {
     compile project(":LimeLib")
     deobfCompile "org.cyclops.commoncapabilities:CommonCapabilities:1.12.2-1.4.0-190"
+    deobfCompile "com.azanor.baubles:Baubles:1.12-1.5.2"
 }
 
 processResources {
@@ -50,5 +51,9 @@ repositories {
   maven {
     name "Cyclops Repo"
     url "https://oss.jfrog.org/artifactory/simple/libs-release/"
+  }
+  maven {
+    name = "azanor"
+    url = "http://maven.thiakil.com"
   }
 }
