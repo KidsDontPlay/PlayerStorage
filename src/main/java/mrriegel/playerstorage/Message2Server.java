@@ -258,6 +258,23 @@ public class Message2Server extends AbstractMessage {
 				if (!player.world.isRemote)
 					((EntityPlayerMP) player).closeContainer();
 				break;
+			case HIGHLIGHT:
+				if (slot != null) {
+					if (NBTHelper.get(nbt, "item", boolean.class)) {
+						ItemStack stack = new ItemStack(slot);
+						if (ei.highlightItems.contains(stack))
+							ei.highlightItems.remove(stack);
+						else
+							ei.highlightItems.add(stack);
+					} else {
+						FluidStack stack = FluidStack.loadFluidStackFromNBT(slot);
+						if (ei.highlightFluids.contains(stack))
+							ei.highlightFluids.remove(stack);
+						else
+							ei.highlightFluids.add(stack);
+					}
+				}
+				break;
 			default:
 				break;
 			}

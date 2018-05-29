@@ -46,6 +46,7 @@ public class ClientProxy extends CommonProxy {
 	public static final KeyBinding GUI = new KeyBinding("keybinding.playerstorage.gui", KeyConflictContext.IN_GAME, Keyboard.KEY_I, PlayerStorage.MODID);
 	public static final KeyBinding INVERTPICKUP = new KeyBinding("keybinding.playerstorage.invert", KeyConflictContext.IN_GAME, Keyboard.KEY_LCONTROL, PlayerStorage.MODID);
 	public static final KeyBinding OPENLIMIT = new KeyBinding("keybinding.playerstorage.limit", KeyConflictContext.GUI, Keyboard.KEY_L, PlayerStorage.MODID);
+	public static final KeyBinding HIGHLIGHT = new KeyBinding("keybinding.playerstorage.highlight", KeyConflictContext.GUI, Keyboard.KEY_H, PlayerStorage.MODID);
 	public static Int2IntOpenHashMap colorMap = new Int2IntOpenHashMap(4);
 
 	@Override
@@ -60,6 +61,7 @@ public class ClientProxy extends CommonProxy {
 		ClientRegistry.registerKeyBinding(GUI);
 		ClientRegistry.registerKeyBinding(INVERTPICKUP);
 		ClientRegistry.registerKeyBinding(OPENLIMIT);
+		ClientRegistry.registerKeyBinding(HIGHLIGHT);
 		Minecraft.getMinecraft().getItemColors().registerItemColorHandler((stack, tint) -> {
 			/** @author mezz */
 			if (tint != 0)

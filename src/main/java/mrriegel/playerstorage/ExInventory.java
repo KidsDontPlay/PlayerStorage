@@ -20,6 +20,8 @@ import org.cyclops.commoncapabilities.api.capability.itemhandler.ISlotlessItemHa
 import it.unimi.dsi.fastutil.Hash.Strategy;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceSet;
 import mrriegel.limelib.gui.ContainerNull;
@@ -92,38 +94,16 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	private List<ItemStack> itemlist = null;
 	public Set<String> members = new HashSet<>();
 	public Set<GlobalBlockPos> tiles = new HashSet<>();
-	public Object2ObjectMap<ItemStack, Limit> itemLimits = new Object2ObjectOpenCustomHashMap<>(new Strategy<ItemStack>() {
-
-		@Override
-		public int hashCode(ItemStack o) {
-			return (o.getItem().getRegistryName().toString() + o.getItemDamage()).hashCode();
-		}
-
-		@Override
-		public boolean equals(ItemStack a, ItemStack b) {
-			return a == null || b == null ? false : a.isItemEqual(b);
-		}
-
-	});
-	public Object2ObjectMap<FluidStack, Limit> fluidLimits = new Object2ObjectOpenCustomHashMap<>(new Strategy<FluidStack>() {
-
-		@Override
-		public int hashCode(FluidStack o) {
-			return o.getFluid().getName().hashCode();
-		}
-
-		@Override
-		public boolean equals(FluidStack a, FluidStack b) {
-			return a == null || b == null ? false : a.getFluid() == b.getFluid();
-		}
-
-	});
+	public Object2ObjectMap<ItemStack, Limit> itemLimits = new Object2ObjectOpenCustomHashMap<>(itemStrategy);
+	public Object2ObjectMap<FluidStack, Limit> fluidLimits = new Object2ObjectOpenCustomHashMap<>(fluidStrategy);
 	public boolean jeiSearch = false, topdown = true, autofocus = true, autopickupInverted = false;
 	public Sort sort = Sort.NAME;
 	public GuiMode mode = GuiMode.ITEM;
 	public List<CraftingRecipe> recipes = new ArrayList<>();
 	public ReferenceSet<StackWrapper> dirtyStacks = new ReferenceOpenHashSet<>();
 	public ReferenceSet<FluidStack> dirtyFluids = new ReferenceOpenHashSet<>();
+	public ObjectSet<ItemStack> highlightItems = new ObjectOpenCustomHashSet<>(itemStrategy);
+	public ObjectSet<FluidStack> highlightFluids = new ObjectOpenCustomHashSet<>(fluidStrategy);
 
 	public ExInventory() {
 		itemLimits.defaultReturnValue(Limit.defaultValue);
@@ -430,6 +410,8 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		NBTHelper.set(nbt, "recipesize", recipes.size());
 		for (int i = 0; i < recipes.size(); i++)
 			NBTHelper.set(nbt, "recipe" + i, CraftingRecipe.serialize(recipes.get(i)));
+		NBTHelper.setList(nbt, "hItems", highlightItems.stream().map(s -> s.writeToNBT(new NBTTagCompound())).collect(Collectors.toList()));
+		NBTHelper.setList(nbt, "hFluids", highlightFluids.stream().map(s -> s.writeToNBT(new NBTTagCompound())).collect(Collectors.toList()));
 		return nbt;
 	}
 
@@ -489,7 +471,10 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 			if (cr != null)
 				recipes.add(cr);
 		}
-
+		highlightItems.clear();
+		highlightItems.addAll(NBTHelper.getList(nbt, "hItems", NBTTagCompound.class).stream().map(n -> new ItemStack(n)).collect(Collectors.toList()));
+		highlightFluids.clear();
+		highlightFluids.addAll(NBTHelper.getList(nbt, "hFluids", NBTTagCompound.class).stream().map(n -> FluidStack.loadFluidStackFromNBT(n)).collect(Collectors.toList()));
 	}
 
 	public void writeSyncOnlyNBT(NBTTagCompound nbt) {
@@ -516,6 +501,32 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	@CapabilityInject(ExInventory.class)
 	public static Capability<ExInventory> EXINVENTORY = null;
 	public static final ResourceLocation LOCATION = new ResourceLocation(PlayerStorage.MODID, "inventory");
+	public static Strategy<ItemStack> itemStrategy = new Strategy<ItemStack>() {
+
+		@Override
+		public int hashCode(ItemStack o) {
+			return (o.getItem().getRegistryName().toString() + o.getItemDamage()).hashCode();
+		}
+
+		@Override
+		public boolean equals(ItemStack a, ItemStack b) {
+			return a == null || b == null ? false : a.isItemEqual(b);
+		}
+
+	};
+	public static Strategy<FluidStack> fluidStrategy = new Strategy<FluidStack>() {
+
+		@Override
+		public int hashCode(FluidStack o) {
+			return o.getFluid().getName().hashCode();
+		}
+
+		@Override
+		public boolean equals(FluidStack a, FluidStack b) {
+			return a == null || b == null ? false : a.getFluid() == b.getFluid();
+		}
+
+	};
 
 	public static void register() {
 		CapabilityManager.INSTANCE.register(ExInventory.class, new IStorage<ExInventory>() {

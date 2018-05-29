@@ -116,9 +116,31 @@ public class GuiExI extends CommonGuiContainer {
 		for (int i = 0; i < gridHeight; i++) {
 			for (int j = 0; j < gridWidth; j++) {
 				if (mode == GuiMode.ITEM)
-					slots.add(new ItemSlot(ItemStack.EMPTY, 0, guiLeft + 8 + j * 18, guiTop + 8 + i * 18, 0, drawer, true, true, false, true));
+					slots.add(new ItemSlot(ItemStack.EMPTY, 0, guiLeft + 8 + j * 18, guiTop + 8 + i * 18, 0, drawer, true, true, false, true) {
+						@Override
+						public void draw(int mouseX, int mouseY) {
+							if (!stack.isEmpty() && con.ei.highlightItems.contains(stack)) {
+								int color = 0xFF008BBB;
+								GlStateManager.disableLighting();
+								drawer.drawFrame(x - 1, y - 1, 17, 17, 1, color);
+								GlStateManager.enableLighting();
+							}
+							super.draw(mouseX, mouseY);
+						}
+					});
 				else
-					slots.add(new FluidSlot(null, 0, guiLeft + 8 + j * 18, guiTop + 8 + i * 18, 0, drawer, true, true, false, true));
+					slots.add(new FluidSlot(null, 0, guiLeft + 8 + j * 18, guiTop + 8 + i * 18, 0, drawer, true, true, false, true) {
+						@Override
+						public void draw(int mouseX, int mouseY) {
+							if (stack != null && con.ei.highlightFluids.contains(stack)) {
+								int color = 0xFF4BBB00;
+								GlStateManager.disableLighting();
+								drawer.drawFrame(x - 1, y - 1, 17, 17, 1, color);
+								GlStateManager.enableLighting();
+							}
+							super.draw(mouseX, mouseY);
+						}
+					});
 			}
 		}
 		updateScreen();
@@ -203,6 +225,7 @@ public class GuiExI extends CommonGuiContainer {
 		if (fragezeichen) {
 			List<String> lis = new ArrayList<>();
 			lis.add(TextFormatting.AQUA + "- " + TextFormatting.RESET + "Hover over an item in your inventory and press " + ClientProxy.OPENLIMIT.getDisplayName() + " to adjust the limit.");
+			lis.add(TextFormatting.AQUA + "- " + TextFormatting.RESET + "Hover over an item/fluid in your storage and press " + ClientProxy.HIGHLIGHT.getDisplayName() + " to highlight it.");
 			GuiDrawer.renderToolTip(lis, mouseX, mouseY);
 		}
 
@@ -433,6 +456,21 @@ public class GuiExI extends CommonGuiContainer {
 			else
 				GuiDrawer.openGui(new GuiLimit(under));
 			return;
+		} else if (over != null && over.stack != null && (over instanceof FluidSlot || !((ItemStack) over.stack).isEmpty()) && keyCode == ClientProxy.HIGHLIGHT.getKeyCode()) {
+			NBTTagCompound nbt = new NBTTagCompound();
+			MessageAction.HIGHLIGHT.set(nbt);
+			if (over instanceof ItemSlot) {
+				if (!((ItemSlot) over).stack.isEmpty())
+					NBTHelper.set(nbt, "slot", itemMap.get(((ItemSlot) over).stack).writeToNBT(new NBTTagCompound()));
+				NBTHelper.set(nbt, "item", true);
+			} else if (over instanceof FluidSlot) {
+				if (((FluidSlot) over).stack != null)
+					NBTHelper.set(nbt, "slot", fluidMap.get(((FluidSlot) over).stack).writeToNBT(new NBTTagCompound()));
+			} else
+				throw new RuntimeException();
+			PacketHandler.sendToServer(new Message2Server(nbt));
+			new Message2Server().handleMessage(mc.player, nbt, Side.CLIENT);
+			return;
 		}
 		super.keyTyped(typedChar, keyCode);
 	}
@@ -442,6 +480,9 @@ public class GuiExI extends CommonGuiContainer {
 		List<StackWrapper> tmp = search.isEmpty() ? new ArrayList<>(items) : items.stream().filter(w -> match(w.getStack(), search)).collect(Collectors.toList());
 		int mul = !con.ei.topdown ? -1 : 1;
 		tmp.sort((StackWrapper o2, StackWrapper o1) -> {
+			int t = Boolean.compare(con.ei.highlightItems.contains(o1.getStack()), con.ei.highlightItems.contains(o2.getStack()));
+			if (t != 0)
+				return t;
 			switch (con.ei.sort) {
 			case AMOUNT:
 				return Integer.compare(o1.getSize(), o2.getSize()) * mul;
@@ -460,6 +501,9 @@ public class GuiExI extends CommonGuiContainer {
 		List<FluidStack> tmp = search.isEmpty() ? new ArrayList<>(fluids) : fluids.stream().filter(w -> match(w, search)).collect(Collectors.toList());
 		int mul = !con.ei.topdown ? -1 : 1;
 		tmp.sort((FluidStack o2, FluidStack o1) -> {
+			int t = Boolean.compare(con.ei.highlightFluids.contains(o1), con.ei.highlightFluids.contains(o2));
+			if (t != 0)
+				return t;
 			switch (con.ei.sort) {
 			case AMOUNT:
 				return Integer.compare(o1.amount, o2.amount) * mul;
