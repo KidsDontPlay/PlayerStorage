@@ -39,6 +39,7 @@ import net.minecraftforge.fluids.FluidActionResult;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
+import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
@@ -77,8 +78,13 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 			EntityPlayer player = getPlayer();
 			IBaublesItemHandler baubles = BaublesApi.getBaublesHandler(player);
 			for (int i = 0; i < 7; i++)
-				addSlotToContainer(new SlotBauble(player, baubles, i, 246, 8 + i * 18));
+				addSlotToContainer(getSlot(baubles, i, 246, 8 + i * 18));
 		}
+	}
+
+	@Optional.Method(modid = "baubles")
+	private Slot getSlot(IBaublesItemHandler baubles, int slot, int x, int y) {
+		return new SlotBauble(getPlayer(), baubles, slot, x, y);
 	}
 
 	@Override

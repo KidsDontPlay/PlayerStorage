@@ -639,7 +639,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 					}
 					break;
 				}
-				p = p.add(0, 1, 0);
+				p = p.up();
 			}
 		}
 	}
@@ -687,7 +687,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 				}
 			}
 			return lis.stream();
-		};
+		}
 
 		ExInventory ei;
 		TileInterface tile;
