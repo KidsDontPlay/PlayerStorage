@@ -153,7 +153,12 @@ public class GuiExI extends CommonGuiContainer {
 		updateActivePotionEffects();
 		potion = null;
 		if (hasActivePotionEffects && guiLeft < 160) {
-			buttonList.add(potion = new CommonGuiButton(12000, guiLeft + 62, guiTop + 88 + 18 * gridHeight, 16, 16, "").setFrameColor(0xFF444444).setButtonColor(0xFF999999).setDesign(Design.SIMPLE).setStack(new ItemStack(Items.POTIONITEM)));
+			buttonList.add(potion = new CommonGuiButton(12000, guiLeft + 62, guiTop + 88 + 18 * gridHeight, 16, 16, "") {
+				@Override
+				public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
+					return false;
+				}
+			}.setFrameColor(0xFF444444).setButtonColor(0xFF999999).setDesign(Design.SIMPLE).setStack(new ItemStack(Items.POTIONITEM)));
 		}
 		updateScreen();
 	}
