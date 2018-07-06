@@ -11,6 +11,7 @@ import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.tile.CommonTile;
 import mrriegel.limelib.tile.IHUDProvider;
 import mrriegel.limelib.util.GlobalBlockPos;
+import mrriegel.playerstorage.ConfigHandler;
 import mrriegel.playerstorage.ExInventory;
 import mrriegel.playerstorage.PlayerStorage;
 import net.minecraft.entity.player.EntityPlayer;
@@ -32,13 +33,13 @@ public class TileInterface extends CommonTile implements IHUDProvider {
 
 	@Override
 	public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
-		return (on && (getPlayer() != null && (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY || capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY || (PlayerStorage.commonCaps && capability == SlotlessItemHandlerConfig.CAPABILITY)))) || super.hasCapability(capability, facing);
+		return (on && (getPlayer() != null && ((capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && ConfigHandler.useFluidStorage) || capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY || (PlayerStorage.commonCaps && capability == SlotlessItemHandlerConfig.CAPABILITY)))) || super.hasCapability(capability, facing);
 	}
 
 	@Override
 	public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
 		EntityPlayer p = getPlayer();
-		if (p != null && on && (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY || capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY || (PlayerStorage.commonCaps && capability == SlotlessItemHandlerConfig.CAPABILITY)))
+		if (p != null && on && ((capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && ConfigHandler.useFluidStorage) || capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY || (PlayerStorage.commonCaps && capability == SlotlessItemHandlerConfig.CAPABILITY)))
 			return (T) new ExInventory.Handler(p, this);
 		return super.getCapability(capability, facing);
 	}

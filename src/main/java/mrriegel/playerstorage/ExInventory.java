@@ -241,7 +241,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 				return voidd ? ItemStack.EMPTY : rest;
 			}
 		if (!simulate) {
-			ItemStack s=ItemHandlerHelper.copyStackWithSize(stack, 1);
+			ItemStack s = ItemHandlerHelper.copyStackWithSize(stack, 1);
 			if (s.isEmpty()) {
 				String fin = System.lineSeparator() + "Why does this bug happen?" + System.lineSeparator();
 				fin += "this: " + s + System.lineSeparator();
@@ -301,7 +301,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	}
 
 	private int insertFluid(FluidStack stack, boolean ignoreLimit, boolean simulate) {
-		if (stack == null)
+		if (stack == null || !ConfigHandler.useFluidStorage)
 			return 0;
 		boolean voidd = fluidLimits.get(stack).voidd;
 		int voidSize = stack.amount;
@@ -334,7 +334,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	}
 
 	private FluidStack extractFluid(Predicate<FluidStack> pred, int size, boolean useMembers, boolean simulate) {
-		if (size <= 0 || pred == null || pred.test(null))
+		if (size <= 0 || pred == null || pred.test(null) || !ConfigHandler.useFluidStorage)
 			return null;
 		for (int i = 0; i < fluids.size(); i++) {
 			FluidStack s = fluids.get(i);
@@ -381,6 +381,8 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	}
 
 	public int getFluidCount() {
+		if (!ConfigHandler.useFluidStorage)
+			return 0;
 		return MathHelper.clamp(fluids.stream().mapToInt(s -> s.amount).sum(), 0, Integer.MAX_VALUE);
 	}
 
@@ -389,6 +391,8 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	}
 
 	public int getAmountFluid(Predicate<FluidStack> pred) {
+		if (!ConfigHandler.useFluidStorage)
+			return 0;
 		return fluids.stream().filter(s -> pred.test(s)).mapToInt(s -> s.amount).findAny().orElse(0);
 	}
 
