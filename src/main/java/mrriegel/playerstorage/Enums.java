@@ -44,7 +44,8 @@ public class Enums {
 		INVERTPICKUP, //
 		WATER, //
 		NOSHIFT, //
-		HIGHLIGHT;
+		HIGHLIGHT, //
+		REFILL;
 
 		public NBTTagCompound set(NBTTagCompound nbt) {
 			NBTHelper.set(nbt, "action", this);

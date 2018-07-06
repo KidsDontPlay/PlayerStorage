@@ -3,12 +3,16 @@ package mrriegel.playerstorage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -64,7 +68,11 @@ import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent.Finish;
+import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent.Start;
+import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent.Stop;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
+import net.minecraftforge.event.entity.player.PlayerDestroyItemEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.Clone;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
@@ -89,7 +97,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	public List<StackWrapper> items = new ArrayList<>(), itemsPlusTeam = new ArrayList<>();
 	public List<FluidStack> fluids = new ArrayList<>(), fluidsPlusTeam = new ArrayList<>();
 	public int itemLimit = ConfigHandler.itemCapacity, fluidLimit = ConfigHandler.fluidCapacity, gridHeight = 4;
-	public boolean needSync = true, defaultGUI = true, autoPickup, infiniteWater, noshift;
+	public boolean needSync = true, defaultGUI = true, autoPickup, infiniteWater, noshift, refill;
 	public NonNullList<ItemStack> matrix = NonNullList.withSize(9, ItemStack.EMPTY);
 	private List<ItemStack> itemlist = null;
 	public Set<String> members = new HashSet<>();
@@ -400,6 +408,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		NBTHelper.set(nbt, "autoPickup", autoPickup);
 		NBTHelper.set(nbt, "infiniteWater", infiniteWater);
 		NBTHelper.set(nbt, "noshift", noshift);
+		NBTHelper.set(nbt, "refill", refill);
 		NBTHelper.setList(nbt, "members", new ArrayList<>(members));
 		NBTHelper.setList(nbt, "tilesInt", tiles.stream().map(g -> g.getDimension()).collect(Collectors.toList()));
 		NBTHelper.setList(nbt, "tilesPos", tiles.stream().map(g -> g.getPos()).collect(Collectors.toList()));
@@ -447,6 +456,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		autoPickup = NBTHelper.get(nbt, "autoPickup", Boolean.class);
 		infiniteWater = NBTHelper.get(nbt, "infiniteWater", Boolean.class);
 		noshift = NBTHelper.get(nbt, "noshift", Boolean.class);
+		refill = NBTHelper.get(nbt, "refill", Boolean.class);
 		members = new HashSet<>(NBTHelper.getList(nbt, "members", String.class));
 		List<Integer> ints = NBTHelper.getList(nbt, "tilesInt", Integer.class);
 		List<BlockPos> poss = NBTHelper.getList(nbt, "tilesPos", BlockPos.class);
@@ -640,6 +650,40 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 					break;
 				}
 				p = p.up();
+			}
+		}
+	}
+
+	@SubscribeEvent
+	public static void destroy(PlayerDestroyItemEvent event) {
+		ExInventory ei = ExInventory.getInventory(event.getEntityPlayer());
+		if (ei.refill && !event.getEntityPlayer().world.isRemote && event.getEntityPlayer().getHeldItem(event.getHand()).isEmpty()) {
+			event.getEntityPlayer().setHeldItem(event.getHand(), ei.extractItem(s -> s.isItemEqualIgnoreDurability(event.getOriginal()), event.getOriginal().getMaxStackSize(), false));
+			event.getEntityPlayer().openContainer.detectAndSendChanges();
+		}
+	}
+
+	private static Map<UUID, ItemStack> usedStacks = new HashMap<>();
+
+	@SubscribeEvent
+	public static void start(Start event) {
+		if (!event.getEntityLiving().world.isRemote && event.getEntityLiving() instanceof EntityPlayer) {
+			ExInventory ei = ExInventory.getInventory((EntityPlayer) event.getEntityLiving());
+			if (ei.refill) {
+				usedStacks.put(event.getEntityLiving().getUniqueID(), event.getItem().copy());
+			}
+		}
+	}
+
+	@SubscribeEvent
+	public static void finish(Finish event) {
+		if (!event.getEntityLiving().world.isRemote && event.getEntityLiving() instanceof EntityPlayer && event.getResultStack().isEmpty()) {
+			ExInventory ei = ExInventory.getInventory((EntityPlayer) event.getEntityLiving());
+			if (ei.refill) {
+				ItemStack stack = usedStacks.get(event.getEntityLiving().getUniqueID());
+				usedStacks.remove(event.getEntityLiving().getUniqueID());
+				event.setResultStack(ei.extractItem(s -> s.isItemEqual(stack), stack.getMaxStackSize(), false));
+				ei.player.openContainer.detectAndSendChanges();
 			}
 		}
 	}

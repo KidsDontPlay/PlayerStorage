@@ -95,12 +95,12 @@ public class GuiInfo extends CommonGuiScreenSub {
 			void tooltip() {
 				if (buttonList.get(0).isMouseOver()) {
 					drawHoveringText(Lists.newArrayList("Insert picked up items into your storage.", "Hold " + Keyboard.getKeyName(ClientProxy.INVERTPICKUP.getKeyCode()) + " to invert temporarily."), GuiDrawer.getMouseX(), GuiDrawer.getMouseY());
-				}
-				if (buttonList.get(1).isMouseOver()) {
+				} else if (buttonList.get(1).isMouseOver()) {
 					drawHoveringText("If enabled water will be generated when there are at least 2 buckets in your storage (to 10 buckets).", GuiDrawer.getMouseX(), GuiDrawer.getMouseY());
-				}
-				if (buttonList.get(2).isMouseOver()) {
+				} else if (buttonList.get(2).isMouseOver()) {
 					drawHoveringText("Usually you use shift-click to transfer items into the player storage. When this is enabled you transfer items with CTRL, so you can use shift to transfer items between player inventory and hotbar.", GuiDrawer.getMouseX(), GuiDrawer.getMouseY());
+				} else if (buttonList.get(3).isMouseOver()) {
+					drawHoveringText("If enabled broken tools/used items will be replaced with items from the player storage.", GuiDrawer.getMouseX(), GuiDrawer.getMouseY());
 				}
 			}
 
@@ -109,11 +109,12 @@ public class GuiInfo extends CommonGuiScreenSub {
 				buttonList.add(new GuiCheckBox(MessageAction.PICKUP.ordinal(), guiLeft + 10, guiTop + 10, "Auto Pickup", ei.autoPickup));
 				buttonList.add(new GuiCheckBox(MessageAction.WATER.ordinal(), guiLeft + 10, guiTop + 24, "Infinite Water", ei.infiniteWater));
 				buttonList.add(new GuiCheckBox(MessageAction.NOSHIFT.ordinal(), guiLeft + 10, guiTop + 38, "CTRL <-> SHIFT", ei.noshift));
+				buttonList.add(new GuiCheckBox(MessageAction.REFILL.ordinal(), guiLeft + 10, guiTop + 52, "Auto Refill", ei.refill));
 			}
 
 			@Override
 			void draw() {
-				drawer.drawColoredRectangle(7, 7, 216, 45, 0x44000000);
+				drawer.drawColoredRectangle(7, 7, 216, 45 + 14, 0x44000000);
 			}
 
 			@Override
@@ -134,6 +135,12 @@ public class GuiInfo extends CommonGuiScreenSub {
 					NBTTagCompound nbt = new NBTTagCompound();
 					MessageAction.NOSHIFT.set(nbt);
 					NBTHelper.set(nbt, "shift", ((GuiCheckBox) button).isChecked());
+					PacketHandler.sendToServer(new Message2Server(nbt));
+					new Message2Server().handleMessage(mc.player, nbt, Side.CLIENT);
+				} else if (button.id == MessageAction.REFILL.ordinal()) {
+					NBTTagCompound nbt = new NBTTagCompound();
+					MessageAction.REFILL.set(nbt);
+					NBTHelper.set(nbt, "refill", ((GuiCheckBox) button).isChecked());
 					PacketHandler.sendToServer(new Message2Server(nbt));
 					new Message2Server().handleMessage(mc.player, nbt, Side.CLIENT);
 				}

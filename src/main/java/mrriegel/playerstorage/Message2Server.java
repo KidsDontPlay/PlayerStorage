@@ -275,6 +275,9 @@ public class Message2Server extends AbstractMessage {
 					}
 				}
 				break;
+			case REFILL:
+				ei.refill = NBTHelper.get(nbt, "refill", Boolean.class);
+				break;
 			default:
 				break;
 			}
