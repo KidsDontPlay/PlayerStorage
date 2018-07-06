@@ -220,13 +220,17 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	private ItemStack insertItem(ItemStack stack, boolean ignoreLimit, boolean simulate) {
 		if (stack.isEmpty())
 			return stack;
+		ItemStack copy = stack.copy();
+		String stackstring1 = stack.toString();
 		int absLimit = (ConfigHandler.infiniteSpace || ignoreLimit ? Integer.MAX_VALUE : itemLimit);
 		int limit = itemLimits.get(stack).max;
 		boolean voidd = itemLimits.get(stack).voidd;
+		String stackstring2 = stack.toString();
 		ItemStack rest = ItemHandlerHelper.copyStackWithSize(stack, Math.max(0, Math.max((stack.getCount() + getAmountItem(s -> ItemHandlerHelper.canItemStacksStack(stack, s))) - limit, (stack.getCount() + getItemCount()) - absLimit)));
 		rest.setCount(Math.min(stack.getCount(), rest.getCount()));
 		if (rest.getCount() == stack.getCount())
 			return voidd ? ItemStack.EMPTY : rest;
+		String stackstring3 = stack.toString();
 		for (StackWrapper s : items)
 			if (s.canInsert(stack)) {
 				if (!simulate) {
@@ -237,7 +241,17 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 				return voidd ? ItemStack.EMPTY : rest;
 			}
 		if (!simulate) {
-			items.add(new StackWrapper(ItemHandlerHelper.copyStackWithSize(stack, 1), stack.getCount() - rest.getCount()));
+			ItemStack s=ItemHandlerHelper.copyStackWithSize(stack, 1);
+			if (s.isEmpty()) {
+				String fin = System.lineSeparator() + "Why does this bug happen?" + System.lineSeparator();
+				fin += "this: " + s + System.lineSeparator();
+				fin += "copy: " + copy + System.lineSeparator();
+				fin += "1: " + stackstring1 + System.lineSeparator();
+				fin += "2: " + stackstring2 + System.lineSeparator();
+				fin += "3: " + stackstring3;
+				throw new RuntimeException(fin);
+			}
+			items.add(new StackWrapper(s, stack.getCount() - rest.getCount()));
 			markForSync();
 		}
 		return voidd ? ItemStack.EMPTY : rest;
