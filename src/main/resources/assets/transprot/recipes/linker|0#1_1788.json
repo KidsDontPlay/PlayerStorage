@@ -1,0 +1,19 @@
+{
+  "result": {
+    "item": "transprot:linker"
+  },
+  "pattern": [
+    "i  ",
+    " p ",
+    "  i"
+  ],
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "p": {
+      "item": "minecraft:paper"
+    },
+    "i": {
+      "item": "minecraft:iron_ingot"
+    }
+  }
+}

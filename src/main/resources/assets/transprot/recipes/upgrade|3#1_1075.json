@@ -1,0 +1,19 @@
+{
+  "result": {
+    "item": "transprot:upgrade",
+    "data": 3
+  },
+  "pattern": [
+    "ueu"
+  ],
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "u": {
+      "item": "transprot:upgrade",
+      "data": 2
+    },
+    "e": {
+      "item": "minecraft:emerald"
+    }
+  }
+}

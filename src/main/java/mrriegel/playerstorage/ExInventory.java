@@ -1,5 +1,6 @@
 package mrriegel.playerstorage;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -12,7 +13,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -45,6 +45,7 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.InventoryCrafting;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.NBTBase;
@@ -70,7 +71,6 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent.Finish;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent.Start;
-import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent.Stop;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.event.entity.player.PlayerDestroyItemEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.Clone;
@@ -87,6 +87,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 
@@ -221,16 +222,16 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		if (stack.isEmpty())
 			return stack;
 		ItemStack copy = stack.copy();
-		String stackstring1 = stack.toString();
+		String stackstring1 = string(stack);
 		int absLimit = (ConfigHandler.infiniteSpace || ignoreLimit ? Integer.MAX_VALUE : itemLimit);
 		int limit = itemLimits.get(stack).max;
 		boolean voidd = itemLimits.get(stack).voidd;
-		String stackstring2 = stack.toString();
+		String stackstring2 = string(stack);
 		ItemStack rest = ItemHandlerHelper.copyStackWithSize(stack, Math.max(0, Math.max((stack.getCount() + getAmountItem(s -> ItemHandlerHelper.canItemStacksStack(stack, s))) - limit, (stack.getCount() + getItemCount()) - absLimit)));
 		rest.setCount(Math.min(stack.getCount(), rest.getCount()));
 		if (rest.getCount() == stack.getCount())
 			return voidd ? ItemStack.EMPTY : rest;
-		String stackstring3 = stack.toString();
+		String stackstring3 = string(stack);
 		for (StackWrapper s : items)
 			if (s.canInsert(stack)) {
 				if (!simulate) {
@@ -241,20 +242,37 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 				return voidd ? ItemStack.EMPTY : rest;
 			}
 		if (!simulate) {
+			String stackstring4 = string(stack);
 			ItemStack s = ItemHandlerHelper.copyStackWithSize(stack, 1);
+			String stackstring5 = string(stack);
 			if (s.isEmpty()) {
 				String fin = System.lineSeparator() + "Why does this bug happen?" + System.lineSeparator();
-				fin += "this: " + s + System.lineSeparator();
-				fin += "copy: " + copy + System.lineSeparator();
+				fin += "this: " + string(s) + System.lineSeparator();
+				fin += "copy: " + string(copy) + System.lineSeparator();
 				fin += "1: " + stackstring1 + System.lineSeparator();
 				fin += "2: " + stackstring2 + System.lineSeparator();
-				fin += "3: " + stackstring3;
+				fin += "3: " + stackstring3 + System.lineSeparator();
+				fin += "4: " + stackstring4 + System.lineSeparator();
+				fin += "5: " + stackstring5;
 				throw new RuntimeException(fin);
 			}
 			items.add(new StackWrapper(s, stack.getCount() - rest.getCount()));
 			markForSync();
 		}
 		return voidd ? ItemStack.EMPTY : rest;
+	}
+
+	Field raw = ReflectionHelper.findField(ItemStack.class, "item", "field_151002_e");
+
+	private String string(ItemStack stack) {
+		Item ra = null;
+		try {
+			ra = (Item) raw.get(stack);
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
+		String size = stack.getCount() + "", item = stack.getItem() == null ? "null" : stack.getItem().getRegistryName().toString() + "", rawitem = ra == null ? "null" : ra.getRegistryName().toString(), nbt = String.valueOf(stack.getTagCompound()), meta = stack.getMetadata() + "";
+		return "[size=" + size + ", item=" + item + ", rawitem=" + rawitem + ", nbt=" + nbt + ", meta=" + meta + "]";
 	}
 
 	public ItemStack insertItem(ItemStack stack, boolean simulate) {
