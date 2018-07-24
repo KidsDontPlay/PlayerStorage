@@ -692,6 +692,8 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 
 	@SubscribeEvent
 	public static void destroy(PlayerDestroyItemEvent event) {
+		if (event.getHand() == null)
+			return;
 		ExInventory ei = ExInventory.getInventory(event.getEntityPlayer());
 		if (ei.refill && !event.getEntityPlayer().world.isRemote && event.getEntityPlayer().getHeldItem(event.getHand()).isEmpty()) {
 			event.getEntityPlayer().setHeldItem(event.getHand(), ei.extractItem(s -> s.isItemEqualIgnoreDurability(event.getOriginal()), event.getOriginal().getMaxStackSize(), false));
