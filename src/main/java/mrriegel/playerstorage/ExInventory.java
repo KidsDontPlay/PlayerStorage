@@ -695,9 +695,14 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		if (event.getHand() == null)
 			return;
 		ExInventory ei = ExInventory.getInventory(event.getEntityPlayer());
-		if (ei.refill && !event.getEntityPlayer().world.isRemote && event.getEntityPlayer().getHeldItem(event.getHand()).isEmpty()) {
-			event.getEntityPlayer().setHeldItem(event.getHand(), ei.extractItem(s -> s.isItemEqualIgnoreDurability(event.getOriginal()), event.getOriginal().getMaxStackSize(), false));
-			event.getEntityPlayer().openContainer.detectAndSendChanges();
+		if (ei.refill && !event.getEntityPlayer().world.isRemote) {
+			new Thread(() -> event.getEntityPlayer().world.getMinecraftServer().addScheduledTask(() -> {
+				if (event.getEntityPlayer().getHeldItem(event.getHand()).isEmpty()) {
+					ItemStack ss = ei.extractItem(s -> s.isItemEqualIgnoreDurability(event.getOriginal()), event.getOriginal().getMaxStackSize(), false);
+					event.getEntityPlayer().setHeldItem(event.getHand(), ss);
+					event.getEntityPlayer().openContainer.detectAndSendChanges();
+				}
+			})).start();
 		}
 	}
 
