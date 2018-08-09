@@ -30,6 +30,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
+import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -47,6 +48,7 @@ public class ClientProxy extends CommonProxy {
 	public static final KeyBinding INVERTPICKUP = new KeyBinding("keybinding.playerstorage.invert", KeyConflictContext.IN_GAME, Keyboard.KEY_LCONTROL, PlayerStorage.MODID);
 	public static final KeyBinding OPENLIMIT = new KeyBinding("keybinding.playerstorage.limit", KeyConflictContext.GUI, Keyboard.KEY_L, PlayerStorage.MODID);
 	public static final KeyBinding HIGHLIGHT = new KeyBinding("keybinding.playerstorage.highlight", KeyConflictContext.GUI, Keyboard.KEY_H, PlayerStorage.MODID);
+	public static final KeyBinding DELETE = new KeyBinding("keybinding.playerstorage.delete", KeyConflictContext.GUI, KeyModifier.CONTROL, Keyboard.KEY_D, PlayerStorage.MODID);
 	public static Int2IntOpenHashMap colorMap = new Int2IntOpenHashMap(4);
 
 	@Override

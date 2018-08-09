@@ -278,6 +278,19 @@ public class Message2Server extends AbstractMessage {
 			case REFILL:
 				ei.refill = NBTHelper.get(nbt, "refill", Boolean.class);
 				break;
+			case DELETE:
+				if (slot != null) {
+					if (NBTHelper.get(nbt, "item", boolean.class)) {
+						ItemStack stack = new ItemStack(slot);
+						ei.items.removeIf(s -> ItemHandlerHelper.canItemStacksStack(s.getStack(), stack));
+						ei.markForSync();
+					} else {
+						FluidStack stack = FluidStack.loadFluidStackFromNBT(slot);
+						ei.fluids.removeIf(s -> s != null && s.isFluidEqual(stack));
+						ei.markForSync();
+					}
+				}
+				break;
 			default:
 				break;
 			}

@@ -45,7 +45,8 @@ public class Enums {
 		WATER, //
 		NOSHIFT, //
 		HIGHLIGHT, //
-		REFILL;
+		REFILL, //
+		DELETE;
 
 		public NBTTagCompound set(NBTTagCompound nbt) {
 			NBTHelper.set(nbt, "action", this);

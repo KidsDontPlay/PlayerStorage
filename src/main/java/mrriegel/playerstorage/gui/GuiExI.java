@@ -243,6 +243,7 @@ public class GuiExI extends CommonGuiContainer {
 			List<String> lis = new ArrayList<>();
 			lis.add(TextFormatting.AQUA + "- " + TextFormatting.RESET + "Hover over an item in your inventory and press " + ClientProxy.OPENLIMIT.getDisplayName() + " to adjust the limit.");
 			lis.add(TextFormatting.AQUA + "- " + TextFormatting.RESET + "Hover over an item/fluid in your storage and press " + ClientProxy.HIGHLIGHT.getDisplayName() + " to highlight it.");
+			lis.add(TextFormatting.AQUA + "- " + TextFormatting.RESET + "Hover over an item/fluid in your storage and press " + ClientProxy.DELETE.getDisplayName() + " to delete it.");
 			GuiDrawer.renderToolTip(lis, mouseX, mouseY);
 		}
 		if (hasActivePotionEffects) {
@@ -479,9 +480,14 @@ public class GuiExI extends CommonGuiContainer {
 			else
 				GuiDrawer.openGui(new GuiLimit(under));
 			return;
-		} else if (over != null && over.stack != null && (over instanceof FluidSlot || !((ItemStack) over.stack).isEmpty()) && keyCode == ClientProxy.HIGHLIGHT.getKeyCode()) {
+		} else if (over != null && over.stack != null && (over instanceof FluidSlot || !((ItemStack) over.stack).isEmpty())) {
 			NBTTagCompound nbt = new NBTTagCompound();
-			MessageAction.HIGHLIGHT.set(nbt);
+			if (ClientProxy.HIGHLIGHT.isActiveAndMatches(keyCode)) {
+				MessageAction.HIGHLIGHT.set(nbt);
+			} else if (ClientProxy.DELETE.isActiveAndMatches(keyCode)) {
+				MessageAction.DELETE.set(nbt);
+			} else
+				return;
 			if (over instanceof ItemSlot) {
 				if (!((ItemSlot) over).stack.isEmpty())
 					NBTHelper.set(nbt, "slot", itemMap.get(((ItemSlot) over).stack).writeToNBT(new NBTTagCompound()));
@@ -653,9 +659,9 @@ public class GuiExI extends CommonGuiContainer {
 					s1 = s1 + " " + I18n.format("enchantment.level.4");
 				}
 
-				this.fontRenderer.drawStringWithShadow(s1, (float) (i + 10 + 18), (float) (j + 6), 16777215);
+				this.fontRenderer.drawStringWithShadow(s1, i + 10 + 18, j + 6, 16777215);
 				String s = Potion.getPotionDurationString(potioneffect, 1.0F);
-				this.fontRenderer.drawStringWithShadow(s, (float) (i + 10 + 18), (float) (j + 6 + 10), 8355711);
+				this.fontRenderer.drawStringWithShadow(s, i + 10 + 18, j + 6 + 10, 8355711);
 				j += l;
 			}
 		}

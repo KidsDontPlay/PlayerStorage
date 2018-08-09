@@ -4,3 +4,4 @@ keybinding.playerstorage.gui=Open GUI
 keybinding.playerstorage.limit=Open Limit GUI
 keybinding.playerstorage.invert=Invert Auto Pickup
 keybinding.playerstorage.highlight=Highlight
+keybinding.playerstorage.delete=Delete
