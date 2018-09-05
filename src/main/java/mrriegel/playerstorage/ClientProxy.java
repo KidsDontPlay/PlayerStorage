@@ -64,6 +64,7 @@ public class ClientProxy extends CommonProxy {
 		ClientRegistry.registerKeyBinding(INVERTPICKUP);
 		ClientRegistry.registerKeyBinding(OPENLIMIT);
 		ClientRegistry.registerKeyBinding(HIGHLIGHT);
+		ClientRegistry.registerKeyBinding(DELETE);
 		Minecraft.getMinecraft().getItemColors().registerItemColorHandler((stack, tint) -> {
 			/** @author mezz */
 			if (tint != 0)

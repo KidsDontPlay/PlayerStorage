@@ -14,6 +14,7 @@ import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 
@@ -50,6 +51,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.play.server.SPacketCollectItem;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.NonNullList;
@@ -430,6 +432,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		NBTHelper.set(nbt, "fluidsize", fluids.size());
 		for (int i = 0; i < fluids.size(); i++)
 			NBTHelper.set(nbt, "fluid" + i, fluids.get(i).writeToNBT(new NBTTagCompound()));
+		//TODO use NBTHelper.setlist
 		NBTHelper.set(nbt, "itemLimit", itemLimit);
 		NBTHelper.set(nbt, "fluidLimit", fluidLimit);
 		NBTHelper.setList(nbt, "matrix", matrix);
@@ -524,24 +527,32 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	}
 
 	public void writeSyncOnlyNBT(NBTTagCompound nbt) {
-		NBTHelper.set(nbt, "itemsize+", itemsPlusTeam.size());
-		for (int i = 0; i < itemsPlusTeam.size(); i++)
-			NBTHelper.set(nbt, "item+" + i, itemsPlusTeam.get(i).writeToNBT(new NBTTagCompound()));
-		NBTHelper.set(nbt, "fluidsize+", fluidsPlusTeam.size());
-		for (int i = 0; i < fluidsPlusTeam.size(); i++)
-			NBTHelper.set(nbt, "fluid+" + i, fluidsPlusTeam.get(i).writeToNBT(new NBTTagCompound()));
+		NBTTagList list = new NBTTagList();
+		itemsPlusTeam.stream().map(sw -> sw.writeToNBT(new NBTTagCompound())).forEachOrdered(list::appendTag);
+		nbt.setTag("items+", list);
+		list = new NBTTagList();
+		fluidsPlusTeam.stream().map(fs -> fs.writeToNBT(new NBTTagCompound())).forEachOrdered(list::appendTag);
+		nbt.setTag("fluids+", list);
+		//		NBTHelper.set(nbt, "itemsize+", itemsPlusTeam.size());
+		//		for (int i = 0; i < itemsPlusTeam.size(); i++)
+		//			NBTHelper.set(nbt, "item+" + i, itemsPlusTeam.get(i).writeToNBT(new NBTTagCompound()));
+		//		NBTHelper.set(nbt, "fluidsize+", fluidsPlusTeam.size());
+		//		for (int i = 0; i < fluidsPlusTeam.size(); i++)
+		//			NBTHelper.set(nbt, "fluid+" + i, fluidsPlusTeam.get(i).writeToNBT(new NBTTagCompound()));
 
 	}
 
 	public void readSyncOnlyNBT(NBTTagCompound nbt) {
-		int size = NBTHelper.get(nbt, "itemsize+", Integer.class);
 		itemsPlusTeam.clear();
-		for (int i = 0; i < size; i++)
-			itemsPlusTeam.add(StackWrapper.loadStackWrapperFromNBT(NBTHelper.get(nbt, "item+" + i, NBTTagCompound.class)));
-		size = NBTHelper.get(nbt, "fluidsize+", Integer.class);
 		fluidsPlusTeam.clear();
-		for (int i = 0; i < size; i++)
-			fluidsPlusTeam.add(FluidStack.loadFluidStackFromNBT(NBTHelper.get(nbt, "fluid+" + i, NBTTagCompound.class)));
+		itemsPlusTeam.addAll(StreamSupport.stream(nbt.getTagList("items+", 10).spliterator(), false).map(n -> StackWrapper.loadStackWrapperFromNBT((NBTTagCompound) n)).collect(Collectors.toList()));
+		fluidsPlusTeam.addAll(StreamSupport.stream(nbt.getTagList("fluids+", 10).spliterator(), false).map(n -> FluidStack.loadFluidStackFromNBT((NBTTagCompound) n)).collect(Collectors.toList()));
+		//		int size = NBTHelper.get(nbt, "itemsize+", Integer.class);
+		//		for (int i = 0; i < size; i++)
+		//			itemsPlusTeam.add(StackWrapper.loadStackWrapperFromNBT(NBTHelper.get(nbt, "item+" + i, NBTTagCompound.class)));
+		//		size = NBTHelper.get(nbt, "fluidsize+", Integer.class);
+		//		for (int i = 0; i < size; i++)
+		//			fluidsPlusTeam.add(FluidStack.loadFluidStackFromNBT(NBTHelper.get(nbt, "fluid+" + i, NBTTagCompound.class)));
 	}
 
 	@CapabilityInject(ExInventory.class)
