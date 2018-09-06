@@ -527,6 +527,10 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	}
 
 	public void writeSyncOnlyNBT(NBTTagCompound nbt) {
+		//		Collector<NBTBase, NBTTagList, NBTTagList> collector = Collector.of(NBTTagList::new, NBTTagList::appendTag, (l, r) -> {
+		//			r.forEach(l::appendTag);
+		//			return l;
+		//		});
 		NBTTagList list = new NBTTagList();
 		itemsPlusTeam.stream().map(sw -> sw.writeToNBT(new NBTTagCompound())).forEachOrdered(list::appendTag);
 		nbt.setTag("items+", list);

@@ -234,7 +234,7 @@ public class ContainerExI extends CommonContainer<EntityPlayer> {
 
 	@Override
 	public void onCraftMatrixChanged(IInventory inventoryIn) {
-		super.onCraftMatrixChanged(inventoryIn);
+		//		super.onCraftMatrixChanged(inventoryIn);
 		if (recipe == null || !recipe.matches(getMatrix(), getPlayer().world))
 			recipe = CraftingManager.findMatchingRecipe(getMatrix(), getPlayer().world);
 		invs.get("result").setInventorySlotContents(0, recipe == null ? ItemStack.EMPTY : recipe.getCraftingResult(getMatrix()));

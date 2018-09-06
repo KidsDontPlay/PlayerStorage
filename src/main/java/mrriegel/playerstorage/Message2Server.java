@@ -54,7 +54,11 @@ public class Message2Server extends AbstractMessage {
 			switch (ma) {
 			case CLEAR:
 				for (int i = 0; i < con.getMatrix().getSizeInventory(); i++) {
+					if (con.getMatrix().getStackInSlot(i).isEmpty())
+						continue;
 					con.getMatrix().setInventorySlotContents(i, ei.insertItem(con.getMatrix().getStackInSlot(i), false));
+					if (con.getMatrix().getStackInSlot(i).isEmpty())
+						continue;
 					con.getMatrix().setInventorySlotContents(i, ItemHandlerHelper.insertItemStacked(new PlayerMainInvWrapper(player.inventory), con.getMatrix().getStackInSlot(i), false));
 				}
 				break;
