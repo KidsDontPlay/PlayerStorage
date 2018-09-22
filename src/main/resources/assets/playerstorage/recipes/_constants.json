@@ -23,20 +23,6 @@
   {
     "ingredient": {
       "type": "forge:ore_dict",
-      "ore": "nuggetIron"
-    },
-    "name": "NUGGETIRON"
-  },
-  {
-    "ingredient": {
-      "type": "forge:ore_dict",
-      "ore": "paper"
-    },
-    "name": "PAPER"
-  },
-  {
-    "ingredient": {
-      "type": "forge:ore_dict",
       "ore": "stone"
     },
     "name": "STONE"

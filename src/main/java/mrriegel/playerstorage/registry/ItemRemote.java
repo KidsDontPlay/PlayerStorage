@@ -3,17 +3,14 @@ package mrriegel.playerstorage.registry;
 import java.util.Optional;
 
 import mrriegel.limelib.item.CommonItem;
-import mrriegel.playerstorage.ConfigHandler;
 import mrriegel.playerstorage.ExInventory;
 import mrriegel.playerstorage.PlayerStorage;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
-import net.minecraftforge.common.capabilities.ICapabilityProvider;
 
 public class ItemRemote extends CommonItem {
 
@@ -29,11 +26,11 @@ public class ItemRemote extends CommonItem {
 		return super.onItemRightClick(worldIn, playerIn, handIn);
 	}
 
-	@Override
-	public ICapabilityProvider initCapabilities(ItemStack stack, NBTTagCompound nbt) {
-		if (!ConfigHandler.remote)
-			stack.setCount(0);
-		return super.initCapabilities(stack, nbt);
-	}
+	//	@Override
+	//	public ICapabilityProvider initCapabilities(ItemStack stack, NBTTagCompound nbt) {
+	//		if (!ConfigHandler.remote)
+	//			stack.setCount(0);
+	//		return super.initCapabilities(stack, nbt);
+	//	}
 
 }

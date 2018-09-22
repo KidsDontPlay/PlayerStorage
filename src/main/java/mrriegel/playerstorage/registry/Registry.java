@@ -25,7 +25,8 @@ public class Registry {
 		interfac.registerBlock();
 		keeper.registerBlock();
 		apple.registerItem();
-		remote.registerItem();
+		if (ConfigHandler.remote)
+			remote.registerItem();
 
 		for (int i = 0; i < ConfigHandler.appleList.size(); i++) {
 			String ore = ConfigHandler.appleList.get(i);
@@ -33,13 +34,18 @@ public class Registry {
 			RegistryHelper.register(new ShapedOreRecipe(rl, new ItemStack(apple, 1, i), " o ", "oao", " o ", 'a', Items.APPLE, 'o', ore).setRegistryName(rl));
 		}
 		RecipeHelper.addShapedRecipe(new ItemStack(interfac.getItemBlock(), 2), "ses", "did", "ses", 's', "stone", 'e', "enderpearl", 'd', "gemDiamond", 'i', "ingotIron");
-		RecipeHelper.addShapedRecipe(new ItemStack(remote), "iii", "ipi", "iii", 'i', "nuggetIron", 'p', "paper");
+		if (ConfigHandler.remote) {
+			//			RecipeHelper.addShapedRecipe(new ItemStack(remote), "iii", "ipi", "iii", 'i', "nuggetIron", 'p', "paper");
+			ResourceLocation rl = new ResourceLocation(PlayerStorage.MODID, "remote_recipe");
+			RegistryHelper.register(new ShapedOreRecipe(rl, new ItemStack(remote), "iii", "ipi", "iii", 'i', "nuggetIron", 'p', "paper").setRegistryName(rl));
+		}
 	}
 
 	public static void initClient() {
 		interfac.initModel();
 		apple.initModel();
-		remote.initModel();
+		if (ConfigHandler.remote)
+			remote.initModel();
 	}
 
 }
