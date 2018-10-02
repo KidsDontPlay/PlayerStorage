@@ -68,17 +68,17 @@ public class GuiInfo extends CommonGuiScreenSub {
 				int w = 208, h = 11;
 				int c = 0xffffc800;
 				drawer.drawColoredRectangle(10, 13, w, 11, ColorHelper.darker(c, .5));
-				double foo = ConfigHandler.infiniteSpace ? .5 : ei.getItemCount() / (double) ei.itemLimit;
+				double foo = ConfigHandler.infiniteSpace ? .5 : ei.itemCount / (double) ei.itemLimit;
 				drawer.drawColoredRectangle(10, 13, (int) (w * foo), h, c);
 				drawer.drawFrame(10, 13, w, h, 1, 0xFF000000);
-				fontRenderer.drawString((isShiftKeyDown() ? ei.getItemCount() : Utils.formatNumber(ei.getItemCount())) + "/" + (ConfigHandler.infiniteSpace ? "" : isShiftKeyDown() ? ei.itemLimit : Utils.formatNumber(ei.itemLimit)) + " Items", guiLeft + 11, guiTop + 28, 0x3e3e3e);
+				fontRenderer.drawString((isShiftKeyDown() ? ei.itemCount : Utils.formatNumber(ei.itemCount)) + "/" + (ConfigHandler.infiniteSpace ? "" : isShiftKeyDown() ? ei.itemLimit : Utils.formatNumber(ei.itemLimit)) + " Items", guiLeft + 11, guiTop + 28, 0x3e3e3e);
 
 				c = 0xff485ec9;
 				drawer.drawColoredRectangle(10, 45, w, h, ColorHelper.darker(c, .5));
-				foo = ConfigHandler.infiniteSpace ? .5 : ei.getFluidCount() / (double) ei.fluidLimit;
+				foo = ConfigHandler.infiniteSpace ? .5 : ei.fluidCount / (double) ei.fluidLimit;
 				drawer.drawColoredRectangle(10, 45, (int) (w * foo), h, c);
 				drawer.drawFrame(10, 45, w, h, 1, 0xFF000000);
-				fontRenderer.drawString((isShiftKeyDown() ? ei.getFluidCount() : Utils.formatNumber(ei.getFluidCount())) + "/" + (ConfigHandler.infiniteSpace ? "" : isShiftKeyDown() ? ei.fluidLimit : Utils.formatNumber(ei.fluidLimit)) + " mB", guiLeft + 11, guiTop + 60, 0x3e3e3e);
+				fontRenderer.drawString((isShiftKeyDown() ? ei.fluidCount : Utils.formatNumber(ei.fluidCount)) + "/" + (ConfigHandler.infiniteSpace ? "" : isShiftKeyDown() ? ei.fluidLimit : Utils.formatNumber(ei.fluidLimit)) + " mB", guiLeft + 11, guiTop + 60, 0x3e3e3e);
 
 				String inter = "Interfaces";
 				drawer.drawColoredRectangle(10, 78, fontRenderer.getStringWidth(inter) + 2, fontRenderer.FONT_HEIGHT + 1, 0xffe1e1e1);

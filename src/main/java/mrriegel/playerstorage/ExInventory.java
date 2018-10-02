@@ -115,6 +115,7 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 	public ReferenceSet<FluidStack> dirtyFluids = new ReferenceOpenHashSet<>();
 	public ObjectSet<ItemStack> highlightItems = new ObjectOpenCustomHashSet<>(itemStrategy);
 	public ObjectSet<FluidStack> highlightFluids = new ObjectOpenCustomHashSet<>(fluidStrategy);
+	public int itemCount, fluidCount;
 
 	public ExInventory() {
 		itemLimits.defaultReturnValue(Limit.defaultValue);
@@ -537,6 +538,8 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		list = new NBTTagList();
 		fluidsPlusTeam.stream().map(fs -> fs.writeToNBT(new NBTTagCompound())).forEachOrdered(list::appendTag);
 		nbt.setTag("fluids+", list);
+		nbt.setInteger("itemCount", getItemCount());
+		nbt.setInteger("fluidCount", getFluidCount());
 		//		NBTHelper.set(nbt, "itemsize+", itemsPlusTeam.size());
 		//		for (int i = 0; i < itemsPlusTeam.size(); i++)
 		//			NBTHelper.set(nbt, "item+" + i, itemsPlusTeam.get(i).writeToNBT(new NBTTagCompound()));
@@ -551,6 +554,8 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		fluidsPlusTeam.clear();
 		itemsPlusTeam.addAll(StreamSupport.stream(nbt.getTagList("items+", 10).spliterator(), false).map(n -> StackWrapper.loadStackWrapperFromNBT((NBTTagCompound) n)).collect(Collectors.toList()));
 		fluidsPlusTeam.addAll(StreamSupport.stream(nbt.getTagList("fluids+", 10).spliterator(), false).map(n -> FluidStack.loadFluidStackFromNBT((NBTTagCompound) n)).collect(Collectors.toList()));
+		itemCount=nbt.getInteger("itemCount");
+		fluidCount=nbt.getInteger("fluidCount");
 		//		int size = NBTHelper.get(nbt, "itemsize+", Integer.class);
 		//		for (int i = 0; i < size; i++)
 		//			itemsPlusTeam.add(StackWrapper.loadStackWrapperFromNBT(NBTHelper.get(nbt, "item+" + i, NBTTagCompound.class)));
