@@ -554,8 +554,8 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		fluidsPlusTeam.clear();
 		itemsPlusTeam.addAll(StreamSupport.stream(nbt.getTagList("items+", 10).spliterator(), false).map(n -> StackWrapper.loadStackWrapperFromNBT((NBTTagCompound) n)).collect(Collectors.toList()));
 		fluidsPlusTeam.addAll(StreamSupport.stream(nbt.getTagList("fluids+", 10).spliterator(), false).map(n -> FluidStack.loadFluidStackFromNBT((NBTTagCompound) n)).collect(Collectors.toList()));
-		itemCount=nbt.getInteger("itemCount");
-		fluidCount=nbt.getInteger("fluidCount");
+		itemCount = nbt.getInteger("itemCount");
+		fluidCount = nbt.getInteger("fluidCount");
 		//		int size = NBTHelper.get(nbt, "itemsize+", Integer.class);
 		//		for (int i = 0; i < size; i++)
 		//			itemsPlusTeam.add(StackWrapper.loadStackWrapperFromNBT(NBTHelper.get(nbt, "item+" + i, NBTTagCompound.class)));
