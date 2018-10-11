@@ -1,12 +1,15 @@
 package mrriegel.playerstorage;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
+
+import com.google.common.primitives.Ints;
 
 import mrriegel.limelib.helper.InvHelper;
 import mrriegel.limelib.helper.NBTHelper;
 import mrriegel.limelib.network.AbstractMessage;
-import mrriegel.limelib.util.FilterItem;
 import mrriegel.playerstorage.Enums.GuiMode;
 import mrriegel.playerstorage.Enums.MessageAction;
 import mrriegel.playerstorage.gui.ContainerExI;
@@ -14,7 +17,10 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
 import net.minecraft.network.play.server.SPacketSetSlot;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
@@ -200,24 +206,26 @@ public class Message2Server extends AbstractMessage {
 					boolean isempty = ei.matrix.stream().allMatch(ItemStack::isEmpty);
 					if (isempty) {
 						for (int i = 0; i < 9; i++) {
-							boolean ore = false;
-							List<ItemStack> stacks = NBTHelper.getList(nbt, i + "l", ItemStack.class);
-							if (stacks.isEmpty()) {
-								stacks = OreDictionary.getOres(NBTHelper.get(nbt, i + "s", String.class));
-								ore = true;
+							Predicate<ItemStack> pred = null;
+							NBTBase base = nbt.getTag(i + "");
+							if (base instanceof NBTTagString) {
+								pred = s -> !s.isEmpty() && Ints.contains(OreDictionary.getOreIDs(s), OreDictionary.getOreID(((NBTTagString) base).getString()));
+							} else {
+								NBTTagList list = (NBTTagList) base;
+								List<ItemStack> stacks = new ArrayList<>();
+								for (NBTBase n : list)
+									stacks.add(new ItemStack((NBTTagCompound) n));
+								pred = s -> {
+									for (ItemStack ss : stacks) {
+										if (s.getItem() == ss.getItem() && s.getMetadata() == ss.getMetadata() && Objects.equals(s.getTagCompound(), ss.getTagCompound()))
+											return true;
+									}
+									return false;
+								};
 							}
-							ItemStack ingredient = ItemStack.EMPTY;
-							for (ItemStack s : stacks) {
-								ingredient = InvHelper.extractItem(new PlayerMainInvWrapper(player.inventory), new FilterItem(s, true, ore, true), 1, false);
-								if (!ingredient.isEmpty())
-									break;
-							}
+							ItemStack ingredient = InvHelper.extractItem(new PlayerMainInvWrapper(player.inventory), pred, 1, false);
 							if (ingredient.isEmpty())
-								for (ItemStack s : stacks) {
-									ingredient = ei.extractItem(new FilterItem(s, true, ore, true), 1, false);
-									if (!ingredient.isEmpty())
-										break;
-								}
+								ingredient = ei.extractItem(pred, 1, false);
 							if (!ingredient.isEmpty()) {
 								ei.matrix.set(i, ingredient);
 							}
