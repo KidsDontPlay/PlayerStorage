@@ -282,13 +282,15 @@ public class ExInventory implements INBTSerializable<NBTTagCompound> {
 		return insertItem(stack, false, simulate);
 	}
 
+	public boolean ignoreMin = false;
+
 	private ItemStack extractItem(Predicate<ItemStack> pred, int size, boolean useMembers, boolean simulate) {
 		if (size <= 0 || pred == null || pred.test(ItemStack.EMPTY))
 			return ItemStack.EMPTY;
 		for (int i = 0; i < items.size(); i++) {
 			StackWrapper s = items.get(i);
 			if (pred.test(s.getStack())) {
-				size = MathHelper.clamp(s.getSize() - itemLimits.get(s.getStack()).min, 0, size);
+				size = MathHelper.clamp(s.getSize() - (ignoreMin ? 0 : itemLimits.get(s.getStack()).min), 0, size);
 				if (size <= 0)
 					return ItemStack.EMPTY;
 				if (!simulate) {

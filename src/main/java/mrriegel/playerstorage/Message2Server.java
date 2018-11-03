@@ -92,7 +92,9 @@ public class Message2Server extends AbstractMessage {
 							break;
 						ItemStack stack = new ItemStack(slot);
 						int size = ctrl ? 1 : mouse == 0 ? stack.getMaxStackSize() : Math.max(1, stack.getMaxStackSize() / 2);
+						ei.ignoreMin = true;
 						ItemStack newStack = ei.extractItem(stack, size, false);
+						ei.ignoreMin = false;
 						if (!newStack.isEmpty()) {
 							if (shift) {
 								player.dropItem(ItemHandlerHelper.insertItemStacked(new PlayerMainInvWrapper(player.inventory), newStack, false), false);
