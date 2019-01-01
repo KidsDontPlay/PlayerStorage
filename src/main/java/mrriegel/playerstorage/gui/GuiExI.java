@@ -372,7 +372,7 @@ public class GuiExI extends CommonGuiContainer {
 		super.actionPerformed(button);
 		if (button.id == 1000) {
 			GuiDrawer.openGui(new GuiInfo());
-		} else {
+		} else if (button.id < MessageAction.values().length) {
 			NBTTagCompound nbt = new NBTTagCompound();
 			NBTHelper.set(nbt, "action", MessageAction.values()[button.id]);
 			PacketHandler.sendToServer(new Message2Server(nbt));
